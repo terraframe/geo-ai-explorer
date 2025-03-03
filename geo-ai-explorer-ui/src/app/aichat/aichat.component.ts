@@ -2,10 +2,11 @@ import { Component, HostListener } from '@angular/core';
 import { ChatService } from '../chat-service.service';
 import { FormsModule } from '@angular/forms'; // <-- Import FormsModule
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
     selector: 'aichat',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ButtonModule],
     templateUrl: './aichat.component.html',
     styleUrl: './aichat.component.scss'
 })
