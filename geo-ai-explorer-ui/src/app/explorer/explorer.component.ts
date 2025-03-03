@@ -46,8 +46,6 @@ export interface GeoObject {
 })
 export class ExplorerComponent implements AfterViewInit {
 
-  @ViewChild('template', { static: true }) template!: TemplateRef<any>;
-
   @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
 
   map?: Map;
@@ -114,11 +112,13 @@ export class ExplorerComponent implements AfterViewInit {
 
       this.parseStylesText();
       this.initializeMap();
-      this.openModal(this.template);
-      
-    //   for (let i = 0; i < 20; ++i) {
-    //     console.log(ColorGen().hexString());
-    //   }
+
+      this.loadTestQuery();
+  }
+
+  loadTestQuery() {
+    this.onSelectQuery();
+    this.loadSparql();
   }
   
   openModal(viewUserTemplate: TemplateRef<any>) {
@@ -520,7 +520,7 @@ export class ExplorerComponent implements AfterViewInit {
     }
   }
 
-  public getObjectUrl(go: GeoObject): string { return this.getObjectUrl(go); }
+  public getObjectUrl(go: GeoObject): string { return ExplorerComponent.getObjectUrl(go); }
 
   public static getObjectUrl(go: GeoObject): string {
     if (go.properties.type.indexOf("Program") != -1
