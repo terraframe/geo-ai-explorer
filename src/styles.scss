@@ -1,0 +1,15 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+.horizontal-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.vertical-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

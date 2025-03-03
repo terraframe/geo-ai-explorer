@@ -1,0 +1,102 @@
+<div *ngIf="data">
+
+    <!-- <select *ngIf="relationships" id="relationshipId" name="relationshipId" class="select-area" [(ngModel)]="graphOid"
+      (change)="onSelectRelationship()" required style="margin:10px;width:auto;min-width:200px;">
+      <option *ngIf="relationships.length === 0"></option>
+      <option *ngFor="let loopRel of relationships" [value]="loopRel.oid">{{loopRel.label.localizedValue}}</option>
+    </select>
+
+    <div style="padding-top: 20px;">
+      <boolean-field [(value)]="restrictToMapBounds" (change)="fetchData()" localizeLabelKey="graph.visualizer.restrictToMapBounds"></boolean-field>
+    </div>
+
+    
+    <div class="legend">
+      <div class="legend-item" *ngFor="let item of typeLegend | keyvalue">
+        <div class="square" [ngStyle]="{ background: item.value.color }"></div>
+        
+        <label>{{ item.value.label }}</label>
+      </div>
+    </div> -->
+
+    <div>
+      <div class="hierarchy-content">
+        <div id="graph-container">
+
+          <ngx-graph #graph class="chart-container" [links]="data!.edges"
+            [nodes]="data!.nodes" [animate]="false" [autoZoom]="true" [autoCenter]="true" [draggingEnabled]="false"
+          >
+            <!--
+            [view]="[svgWidth!, svgHeight!]"
+            [animate]="false" [autoZoom]="true" [autoCenter]="true" [layout]="layout"
+            [curve]="curve" [draggingEnabled]="false" [panToNode$]="panToNode$" [update$]="update$"
+            -->
+          <!-- [layoutSettings]="{orientation: (relationship.layout === 'VERTICAL') ? CONSTANTS.ORIENTATION.TOP_TO_BOTTOM : CONSTANTS.ORIENTATION.LEFT_TO_RIGHT}" -->
+
+
+            <!-- Draw an arrow on relationships for directed graph types -->
+            <ng-template #defsTemplate>
+              <ng-container>
+                <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+                  <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+                </svg:marker>
+              </ng-container>
+            </ng-template>
+
+            <!-- Node Template -->
+            <ng-template #nodeTemplate let-node>
+              <svg:g (click)=" onClickNode(node)" class="node" [style.cursor]="false ? 'default' : 'pointer'" >
+                <svg:polygon [attr.points]="getHexagonPoints(node)"
+                  [attr.fill]="getSelectedId() != null && getSelectedId() == node.id ? SELECTED_NODE_COLOR : this.getTypeLegend()![node.type].color"
+                  ></polygon>
+
+                <foreignObject
+                  [attr.x]="(relationship.layout === 'VERTICAL') ? (node.relation === 'CHILD' ? 0 : (this.DIMENSIONS.LABEL.WIDTH + DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.NODE.WIDTH) / 2 + this.DIMENSIONS.NODE.WIDTH / 2 + this.DIMENSIONS.PADDING.NODE_LABEL) : (node.relation === 'PARENT' ? DIMENSIONS.PADDING.NODE_LABEL : (node.relation === 'SELECTED' ? (DIMENSIONS.NODE.WIDTH + DIMENSIONS.PADDING.NODE_LABEL + DIMENSIONS.PADDING.NODE_EDGE) : (DIMENSIONS.NODE.WIDTH + DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.PADDING.NODE_EDGE)))"
+                  [attr.y]="(relationship.layout === 'VERTICAL') ? (node.relation === 'CHILD' ? DIMENSIONS.NODE.HEIGHT + DIMENSIONS.PADDING.NODE_LABEL: 0) : node.relation === 'SELECTED' ? 0 : 0"
+                  [attr.width]="DIMENSIONS.LABEL.WIDTH" [attr.height]="DIMENSIONS.LABEL.HEIGHT">
+                  <span [style]="'width:' + DIMENSIONS.LABEL.WIDTH + 'px; height:' + DIMENSIONS.LABEL.HEIGHT + 'px; overflow:hidden; display: inline-block;'">
+                    <p xmlns="http://www.w3.org/1999/xhtml" text-anchor="start"
+                    [style]="'font-size: ' + DIMENSIONS.LABEL.FONTSIZE + 'px; display: table-cell; vertical-align: middle; height:' + DIMENSIONS.LABEL.HEIGHT + 'px; width:' + DIMENSIONS.LABEL.WIDTH + 'px; line-height:' + DIMENSIONS.LABEL.FONTSIZE + 'px;'">
+                      {{node.label}}</p>
+                  </span>
+                </foreignObject>
+              </svg:g>
+            </ng-template>
+
+            <!-- Link Template -->
+             <!-- <ng-template #linkTemplate let-link>
+              <svg:g class="edge">
+                <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+
+                <foreignObject
+                  [attr.x]="link.x"
+                  [attr.y]="link.y"
+                  [attr.width]="DIMENSIONS.LABEL.WIDTH" [attr.height]="DIMENSIONS.LABEL.HEIGHT">
+                  <span [style]="'width:' + DIMENSIONS.LABEL.WIDTH + 'px; height:' + DIMENSIONS.LABEL.HEIGHT + 'px; overflow:hidden; display: inline-block;'">
+                    <p xmlns="http://www.w3.org/1999/xhtml" text-anchor="start"
+                    [style]="'font-size: ' + DIMENSIONS.LABEL.FONTSIZE + 'px; display: table-cell; vertical-align: middle; height:' + DIMENSIONS.LABEL.HEIGHT + 'px; width:' + DIMENSIONS.LABEL.WIDTH + 'px; line-height:' + DIMENSIONS.LABEL.FONTSIZE + 'px;'">
+                      {{link.label}}</p>
+                  </span>
+                </foreignObject>
+              </svg:g>
+            </ng-template> -->
+            <ng-template #linkTemplate let-link>
+                <svg:g class="edge">
+                  <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+                  <svg:text class="edge-label" text-anchor="middle">
+                    <textPath
+                      class="text-path"
+                      [attr.href]="'#' + link.id"
+                      [style.dominant-baseline]="link.dominantBaseline"
+                      startOffset="50%"
+                    >
+                      {{link.label}}
+                    </textPath>
+                  </svg:text>
+                </svg:g>
+              </ng-template>
+          </ngx-graph>
+        </div>
+      </div>
+    </div>
+  </div>
