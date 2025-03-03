@@ -1,6 +1,5 @@
 import { Component, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
 import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat } from "maplibre-gl";
-import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { Parser, Quad, Store } from 'n3';
 import { CommonModule } from '@angular/common';
 import { parse, GeoJSONGeometryOrNull, GeoJSONGeometry } from 'wellknown';
@@ -8,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { defaultQueries, StyleConfig, QueryConfig, stateCentroid, locationCriteriaSparql, SELECTED_COLOR } from './defaultQueries';
-import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import JSON5 from 'json5'
 
 // @ts-ignore
@@ -38,8 +36,7 @@ export interface GeoObject {
 
 @Component({
     selector: 'app-explorer',
-    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, BsDropdownModule],
-    providers: [BsModalService],
+    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
@@ -48,8 +45,6 @@ export class ExplorerComponent implements AfterViewInit {
   @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
 
   map?: Map;
-  
-  modalRef?: BsModalRef;
 
   // file?: string;
 
@@ -100,7 +95,7 @@ export class ExplorerComponent implements AfterViewInit {
 
   orderedTypes: string[] = [];
   
-  constructor(private modalService: BsModalService) {
+  constructor() {
     // (mapboxgl as any).accessToken = "pk.eyJ1IjoianVzdGlubGV3aXMiLCJhIjoiY2l0YnlpdWRkMDlkNjJ5bzZuMTR3MHZ3YyJ9.Ad0fQd8onRSYR9QZP6VyUw";
   }
   
@@ -119,12 +114,6 @@ export class ExplorerComponent implements AfterViewInit {
     this.queryConfig = this.defaultQueries[index];
     this.onSelectQuery();
     this.loadSparql();
-  }
-  
-  openModal(viewUserTemplate: TemplateRef<any>) {
-    this.modalRef = this.modalService.show(viewUserTemplate, {
-        ignoreBackdropClick: true
-      });
   }
   
   async loadSparql() {
@@ -151,8 +140,6 @@ export class ExplorerComponent implements AfterViewInit {
             this.importError = "The query did not return any results!";
             return;
         }
-
-        this.modalRef?.hide();
 
         this.render();
     } catch (e: any) {
