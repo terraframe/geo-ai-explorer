@@ -113,10 +113,11 @@ export class ExplorerComponent implements AfterViewInit {
       this.parseStylesText();
       this.initializeMap();
 
-      this.loadTestQuery();
+      this.loadTestQuery(0);
   }
 
-  loadTestQuery() {
+  loadTestQuery(index: number) {
+    this.queryConfig = this.defaultQueries[index];
     this.onSelectQuery();
     this.loadSparql();
   }

@@ -97,30 +97,28 @@ export const defaultQueries: QueryConfig[] = [
     ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1
     FROM lpgv: 
     WHERE {
+      BIND(geo:Feature as ?gf1) .
+      BIND(lpgvs:SchoolZone as ?ft1) .
+      ?f1 a ?ft1 .
+      ?f1 geo:hasGeometry ?g1 .
+      ?g1 geo:asWKT ?wkt1 .
+      ?f1 rdfs:label ?lbl1 .
 
-
-    BIND(geo:Feature as ?gf1) .
-    BIND(lpgvs:SchoolZone as ?ft1) .
-    ?f1 a ?ft1 .
-    ?f1 geo:hasGeometry ?g1 .
-    ?g1 geo:asWKT ?wkt1 .
-    ?f1 rdfs:label ?lbl1 .
-
-    # Only include these specific school districts
-    FILTER(?lbl1 IN (
-        "Pine Bluff School District", 
-        "Hamburg School District", 
-        "Dermott School District", 
-        "Dumas School District", 
-        "Lakeside School District", 
-        "McGehee School District",
-        "Avoyelles Parish School District",
-        "Catahoula Parish School District",
-        "Concordia Parish School District",
-        "East Carroll Parish School District",
-        "Franklin Parish School District"
-  ))
-  }
+      # Only include these specific school districts
+      FILTER(?lbl1 IN (
+          "Pine Bluff School District", 
+          "Hamburg School District", 
+          "Dermott School District", 
+          "Dumas School District", 
+          "Lakeside School District", 
+          "McGehee School District",
+          "Avoyelles Parish School District",
+          "Catahoula Parish School District",
+          "Concordia Parish School District",
+          "East Carroll Parish School District",
+          "Franklin Parish School District"
+      ))
+    }
     LIMIT 10`,
         wktVar: "COALESCE(?wkt5,?wkt4,?wkt3,?wkt2,?wkt1)",
         styles: defaultStyles,

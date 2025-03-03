@@ -28,7 +28,7 @@ export class AichatComponent {
   }
 
   refreshMessages() {
-    this.messages = [...this.chatService.getMessages()];
+    this.messages = [...this.chatService.getMessages()].reverse();
   }
 
   mapIt(message: string) {
