@@ -14,7 +14,32 @@
     border: 1px solid #ccc; /* Border around messages */
     padding: 10px;
     margin: 3px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
+
+  .message {
+    display: grid;
+    grid-template-columns: 4em auto; /* Sender column width, Message takes remaining space */
+    align-items: start;
+    gap: 10px;
+  }
+  
+  .message strong {
+    display: block;
+    text-align: right; /* Align sender text to the right */
+    white-space: nowrap; /* Prevent sender label from wrapping */
+  }
+  
+  .message label {
+    display: block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    flex: 1;
+  }
+  
   
   .input-container {
     display: flex;

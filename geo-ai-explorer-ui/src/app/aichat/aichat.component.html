@@ -2,12 +2,13 @@
     <div class="messages">
       <div *ngFor="let msg of messages" class="message">
         <strong>{{ msg.sender }}:</strong>
-        <ng-container *ngIf="msg.text.startsWith('#mappable'); else showMessage">
-          <button class="btn btn-primary" (click)="mapIt(msg.text)">Map It!</button>
-        </ng-container>
-        <ng-template #showMessage>
-          {{ msg.text }}
-        </ng-template>
+        <label>
+          {{ msg.text.replace("#mappable", "") }}
+
+          <ng-container *ngIf="msg.text.startsWith('#mappable')">
+            <button class="btn btn-primary" (click)="mapIt(msg.text)">Map It!</button>
+          </ng-container>
+        </label>
       </div>
     </div>
     <div class="input-container">
