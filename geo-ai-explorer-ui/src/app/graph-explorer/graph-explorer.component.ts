@@ -55,12 +55,11 @@ export const DIMENSIONS = {
 };
 
 @Component({
-  selector: 'graph-explorer',
-  standalone: true,
-  imports: [CommonModule, GraphModule],
-  providers: [],
-  templateUrl: './graph-explorer.component.html',
-  styleUrl: './graph-explorer.component.scss'
+    selector: 'graph-explorer',
+    imports: [CommonModule, GraphModule],
+    providers: [],
+    templateUrl: './graph-explorer.component.html',
+    styleUrl: './graph-explorer.component.scss'
 })
 export class GraphExplorerComponent {
 

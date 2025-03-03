@@ -2,11 +2,10 @@ import { Component, Input } from '@angular/core';
 import { ExplorerComponent, GeoObject } from '../explorer/explorer.component';
 
 @Component({
-  selector: 'attribute-panel',
-  standalone: true,
-  imports: [],
-  templateUrl: './attribute-panel.component.html',
-  styleUrl: './attribute-panel.component.scss'
+    selector: 'attribute-panel',
+    imports: [],
+    templateUrl: './attribute-panel.component.html',
+    styleUrl: './attribute-panel.component.scss'
 })
 export class AttributePanelComponent {
   @Input() public selectedObject!: GeoObject;

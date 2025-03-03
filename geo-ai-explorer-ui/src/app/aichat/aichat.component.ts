@@ -4,11 +4,10 @@ import { FormsModule } from '@angular/forms'; // <-- Import FormsModule
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'aichat',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './aichat.component.html',
-  styleUrl: './aichat.component.scss'
+    selector: 'aichat',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './aichat.component.html',
+    styleUrl: './aichat.component.scss'
 })
 export class AichatComponent {
   message: string = '';

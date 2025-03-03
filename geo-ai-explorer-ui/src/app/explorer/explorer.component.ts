@@ -37,12 +37,11 @@ export interface GeoObject {
 }
 
 @Component({
-  selector: 'app-explorer',
-  standalone: true,
-  imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, BsDropdownModule],
-  providers: [BsModalService],
-  templateUrl: './explorer.component.html',
-  styleUrl: './explorer.component.scss'
+    selector: 'app-explorer',
+    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, BsDropdownModule],
+    providers: [BsModalService],
+    templateUrl: './explorer.component.html',
+    styleUrl: './explorer.component.scss'
 })
 export class ExplorerComponent implements AfterViewInit {
 
