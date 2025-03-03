@@ -6,14 +6,14 @@
           {{ msg.text.replace("#mappable", "") }}
 
           <ng-container *ngIf="msg.text.startsWith('#mappable')">
-            <button class="btn btn-primary" (click)="mapIt(msg.text)">Map It!</button>
+            <p-button class="btn btn-primary" (click)="mapIt(msg.text)">Map It!</p-button>
           </ng-container>
         </label>
       </div>
     </div>
     <div class="input-container">
       <input type="text" [(ngModel)]="message" placeholder="Type a message..." />
-      <button class="btn btn-primary" (click)="sendMessage()">Send</button>
+      <p-button class="btn btn-primary" (click)="sendMessage()">Send</p-button>
     </div>
   </div>
   
