@@ -8,11 +8,12 @@ import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.compone
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { defaultQueries, StyleConfig, QueryConfig, stateCentroid, locationCriteriaSparql, SELECTED_COLOR } from './defaultQueries';
 import JSON5 from 'json5'
-
 // @ts-ignore
 import ColorGen from "color-generator";
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
+import { ResultsTableComponent } from '../results-table/results-table.component';
+import { TableModule } from 'primeng/table';
 
 
 export interface SPARQLResultSetBinding {
@@ -36,7 +37,7 @@ export interface GeoObject {
 
 @Component({
     selector: 'app-explorer',
-    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule],
+    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, ResultsTableComponent],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
@@ -56,7 +57,7 @@ export class ExplorerComponent implements AfterViewInit {
 
   tripleStore?: Store;
 
-  private geoObjects: GeoObject[] = [];
+  public geoObjects: GeoObject[] = [];
 
   public typeLegend: { [key: string]: { label: string, color: string } } = {};
 
@@ -170,7 +171,8 @@ export class ExplorerComponent implements AfterViewInit {
         }
     }
 
-    this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+    if (this.graphExplorer)
+        this.graphExplorer.renderGeoObjects(this, this.geoObjects);
   }
 
   processSPARQLResponse(rs: SPARQLResultSet) : void {
@@ -233,7 +235,7 @@ export class ExplorerComponent implements AfterViewInit {
 
     this.geoObjects.forEach(go => go.properties.label = (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1));
 
-    // console.log(this.geoObjects);
+    console.log(this.geoObjects);
   }
 
   onSelectQuery() {
@@ -723,7 +725,9 @@ export class ExplorerComponent implements AfterViewInit {
             if (feature.properties['uri'] != null) {
                 let uri = feature.properties['uri'];
                 this.selectObject(uri);
-                this.graphExplorer?.zoomToUri(uri);
+
+                if (this.graphExplorer)
+                    this.graphExplorer?.zoomToUri(uri);
             }
         } else {
             this.selectObject();

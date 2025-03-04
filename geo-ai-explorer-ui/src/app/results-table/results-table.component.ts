@@ -1,11 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { GeoObject } from '../explorer/explorer.component';
 
 @Component({
-    selector: 'app-results-table',
-    imports: [],
+    selector: 'results-table',
+    imports: [TableModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss'
 })
 export class ResultsTableComponent {
-
+    @Input() public objects: GeoObject[] = [];
 }
