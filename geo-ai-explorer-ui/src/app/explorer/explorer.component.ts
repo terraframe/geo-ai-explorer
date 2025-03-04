@@ -108,10 +108,10 @@ export class ExplorerComponent implements AfterViewInit {
       this.parseStylesText();
       this.initializeMap();
 
-      this.loadTestQuery(0);
+      this.loadTestQuery();
   }
 
-  loadTestQuery(index: number) {
+  loadTestQuery(index: number = 0) {
     this.queryConfig = this.defaultQueries[index];
     this.onSelectQuery();
     this.loadSparql();
@@ -235,7 +235,7 @@ export class ExplorerComponent implements AfterViewInit {
 
     this.geoObjects.forEach(go => go.properties.label = (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1));
 
-    console.log(this.geoObjects);
+    // console.log(this.geoObjects);
   }
 
   onSelectQuery() {
@@ -285,7 +285,26 @@ export class ExplorerComponent implements AfterViewInit {
     return geojson as GeoJSONGeometry;
   }
 
+  clearAllMapData() {
+    if (!this.map) return;
+
+    this.map!.getStyle().layers.forEach(layer => {
+        if (this.map!.getLayer(layer.id) && this.baseLayers[0].id !== layer.id) {
+            this.map!.removeLayer(layer.id);
+        }
+    });
+    
+    Object.keys(this.map!.getStyle().sources).forEach(source => {
+        if (this.map!.getSource(source) && source !== 'mapbox') {
+            this.map!.removeSource(source);
+        }
+    });    
+  }
+
   mapGeoObjects() {
+    this.clearAllMapData();
+
+    // setTimeout(() => {
     // Find the index of the first symbol layer in the map style
     const layers = this.map?.getStyle().layers;
     let firstSymbolId;
@@ -347,6 +366,7 @@ export class ExplorerComponent implements AfterViewInit {
             }
         });
     }
+    // },10);
   }
 
   private layerConfig(type: string, geometryType: string): any {
@@ -471,7 +491,7 @@ export class ExplorerComponent implements AfterViewInit {
     }
   }
 
-  public getUsaceUri(go: GeoObject): string { return this.getUsaceUri(go); }
+  public getUsaceUri(go: GeoObject): string { return ExplorerComponent.getUsaceUri(go); }
 
   public static getUsaceUri(go: GeoObject): string {
     if (go.properties.uri.indexOf('dime.usace.mil') !== -1) {

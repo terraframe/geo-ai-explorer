@@ -6,7 +6,7 @@
 	<div id="aichat-column" class="vertical-layout">
 		<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 		
-		<aichat></aichat>
+		<aichat [explorer]="this"></aichat>
 
 		<results-table *ngIf="selectedObject == null" [objects]="geoObjects"></results-table>
 		<div *ngIf="selectedObject" id="graphExplorerContainer"><graph-explorer #graphExplorer></graph-explorer></div>
