@@ -44,7 +44,7 @@ public class ChatService
 
   public List<Location> getLocations(History history)
   {
-    String statement = this.bedrock.generateSparql(history.toText());
+    String statement = this.bedrock.getLocationSparql(history);
 
     return this.jena.query(statement);
   }

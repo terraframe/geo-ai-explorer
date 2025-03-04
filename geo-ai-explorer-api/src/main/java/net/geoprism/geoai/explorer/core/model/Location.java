@@ -1,22 +1,29 @@
 package net.geoprism.geoai.explorer.core.model;
 
+import org.locationtech.jts.geom.Geometry;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import net.geoprism.geoai.explorer.core.serialization.GeometrySerializer;
+
 public class Location
 {
-  private String type;
+  private String   type;
 
-  private String code;
+  private String   code;
 
-  private String label;
+  private String   label;
 
-  private String wkt;
+  @JsonSerialize(using = GeometrySerializer.class)
+  private Geometry geometry;
 
-  public Location(String type, String code, String label, String wkt)
+  public Location(String type, String code, String label, Geometry geometry)
   {
     super();
     this.type = type;
     this.code = code;
     this.label = label;
-    this.wkt = wkt;
+    this.geometry = geometry;
   }
 
   public String getCode()
@@ -49,14 +56,13 @@ public class Location
     this.type = type;
   }
 
-  public String getWkt()
+  public Geometry getGeometry()
   {
-    return wkt;
+    return geometry;
   }
 
-  public void setWkt(String wkt)
+  public void setGeometry(Geometry geometry)
   {
-    this.wkt = wkt;
+    this.geometry = geometry;
   }
-
 }

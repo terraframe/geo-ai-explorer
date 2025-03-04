@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import net.geoprism.geoai.explorer.core.config.AppProperties;
+import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.Message;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials.Builder;
@@ -88,15 +89,20 @@ public class BedrockService
       }
 
     }
+    
+    String value = content.toString();
+    boolean mappable = value.endsWith("#mapit");
+    
 
     Message message = new Message();
-    message.setContent(content.toString());
+    message.setContent(value.replace("#mapit", ""));
     message.setSessionId(sessionId);
+    message.setMappable(mappable);
 
     return message;
   }
 
-  public String generateSparql(String inputText)
+  public String getLocationSparql(History history)
   {
     final StringBuilder content = new StringBuilder();
 
@@ -106,7 +112,7 @@ public class BedrockService
           .agentId(properties.getSparqlAgentId()) //
           .agentAliasId(properties.getSparqlAgentAliasId()) //
           .sessionId(UUID.randomUUID().toString()) //
-          .inputText(inputText) //
+          .inputText(history.toText()) //
           .enableTrace(false) //
           // .sessionState(SessionState.builder()
           // .sessionAttributes(Map.of("Authorization", authToken))

@@ -1,6 +1,6 @@
 package net.geoprism.geoai.explorer.core.service;
 
-import java.util.UUID;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -15,44 +15,21 @@ import net.geoprism.geoai.explorer.core.config.TestConfiguration;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.HistoryMessage;
 import net.geoprism.geoai.explorer.core.model.HistoryMessageType;
-import net.geoprism.geoai.explorer.core.model.Message;
+import net.geoprism.geoai.explorer.core.model.Location;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = TestConfiguration.class)
 @AutoConfigureMockMvc
-public class BedrockServiceIntegrationTest
+public class ChatServiceIntegrationTest
 {
 
   @Autowired
-  private BedrockService service;
+  private ChatService service;
 
   @Test
   public void test()
   {
     // Placeholder
-  }
-
-  @Test
-  @Ignore
-  public void testPrompt()
-  {
-    String sessionId = UUID.randomUUID().toString();
-
-    Message message = service.prompt(sessionId, "what is the total population impacted if channel reach_25 floods?");
-
-    System.out.println(message.getContent());
-
-    Assert.assertTrue(message.getContent().trim().length() > 0);
-    Assert.assertFalse(message.getMappable());
-    Assert.assertEquals(sessionId, message.getSessionId());
-
-    message = service.prompt(sessionId, "CEMVK_RR_03_ONE_25");
-
-    System.out.println(message.getContent());
-
-    Assert.assertTrue(message.getContent().trim().length() > 0);
-    Assert.assertTrue(message.getMappable());
-    Assert.assertEquals(sessionId, message.getSessionId());
   }
 
   @Test
@@ -65,14 +42,10 @@ public class BedrockServiceIntegrationTest
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "CEMVK_RR_03_ONE_25"));
     history.addMessage(new HistoryMessage(HistoryMessageType.AI, "The total population that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 431,826 people."));
 
-    String sparql = service.getLocationSparql(history);
+    List<Location> locations = service.getLocations(history);
 
-    System.out.println(sparql);
-    
-    Assert.assertTrue(sparql.contains("?type"));
-    Assert.assertTrue(sparql.contains("?code"));
-    Assert.assertTrue(sparql.contains("?label"));
-    Assert.assertTrue(sparql.contains("?wkt"));
+    Assert.assertTrue(locations.size() > 0);
+
   }
 
 }

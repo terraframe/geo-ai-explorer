@@ -1,0 +1,21 @@
+# Agent ID and version alias ID of the bedrock agent responsible for chat responses
+bedrock.chat.agent.id=
+bedrock.chat.agent.alias.id=
+
+# Agent ID and version alias ID of the bedrock agent responsible for generating location SPARQL
+bedrock.sparql.agent.id=
+bedrock.sparql.agent.alias.id=
+
+# AWS region of the bedrock agents
+bedrock.region=
+
+# URL of the JENA instance and dataset
+jena.url=http://example.com/jena:3030/flood/
+
+# User name and password able to log into the geo-ai-explorer server
+spring.security.user.name=
+spring.security.user.password=
+
+# AWS access key and secret key for IAM user which can execute bedrock methods
+access.key.id=
+secret.access.key=

@@ -6,6 +6,17 @@ public class HistoryMessage
 
   private String             content;
 
+  public HistoryMessage()
+  {
+  }
+
+  public HistoryMessage(HistoryMessageType type, String content)
+  {
+    super();
+    this.type = type;
+    this.content = content;
+  }
+
   public HistoryMessageType getType()
   {
     return type;
