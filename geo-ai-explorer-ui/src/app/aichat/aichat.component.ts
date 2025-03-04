@@ -1,19 +1,21 @@
 import { Component, HostListener } from '@angular/core';
-import { ChatService } from '../chat-service.service';
+import { ChatService, ChatMessage } from '../chat-service.service';
 import { FormsModule } from '@angular/forms'; // <-- Import FormsModule
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 @Component({
     selector: 'aichat',
-    imports: [CommonModule, FormsModule, ButtonModule],
+    imports: [CommonModule, FormsModule, ButtonModule, ProgressSpinnerModule],
     templateUrl: './aichat.component.html',
     styleUrl: './aichat.component.scss'
 })
 export class AichatComponent {
   message: string = '';
-  messages: { sender: string; text: string }[] = [];
-  currentUser: 'user' | 'system' = 'user';
+  messages: ChatMessage[] = [];
+
+  public loading:boolean = false;
 
   constructor(private chatService: ChatService) {
     this.refreshMessages();
@@ -21,9 +23,15 @@ export class AichatComponent {
 
   sendMessage() {
     if (this.message.trim()) {
-      this.chatService.addMessage({ sender: this.currentUser, text: this.message });
+      const message: ChatMessage = { sender: 'user', text: this.message, mappable: false };
       this.message = '';
-      this.refreshMessages();
+
+      this.loading = true;
+      this.chatService.sendChat(message).then((response) => {
+        this.refreshMessages();
+      }).finally(() => {
+        this.loading = false;
+      })
     }
   }
 
@@ -31,7 +39,7 @@ export class AichatComponent {
     this.messages = [...this.chatService.getMessages()].reverse();
   }
 
-  mapIt(message: string) {
+  mapIt(message: ChatMessage) {
     console.log("Mapping triggered for:", message);
     // Implement mapping logic here
   }
