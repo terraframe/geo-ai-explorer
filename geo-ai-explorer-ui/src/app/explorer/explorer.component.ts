@@ -13,7 +13,7 @@ import ColorGen from "color-generator";
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { TableModule } from 'primeng/table';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 
 export interface SPARQLResultSetBinding {
@@ -37,7 +37,7 @@ export interface GeoObject {
 
 @Component({
     selector: 'app-explorer',
-    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, ResultsTableComponent],
+    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, ResultsTableComponent, ProgressSpinnerModule],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
@@ -53,7 +53,7 @@ export class ExplorerComponent implements AfterViewInit {
 
   public defaultQueries = defaultQueries;
 
-  public loadingQuads: boolean = false;
+  public loading: boolean = false;
 
   tripleStore?: Store;
 
@@ -108,17 +108,17 @@ export class ExplorerComponent implements AfterViewInit {
       this.parseStylesText();
       this.initializeMap();
 
-      this.loadTestQuery(0);
+      this.loadTestQuery();
   }
 
-  loadTestQuery(index: number) {
+  loadTestQuery(index: number = 0) {
     this.queryConfig = this.defaultQueries[index];
     this.onSelectQuery();
     this.loadSparql();
   }
   
   async loadSparql() {
-    this.loadingQuads = true;
+    this.loading = true;
 
     let url = this.sparqlUrl + "?query=" + encodeURIComponent(this.sparqlText!);
 
@@ -135,7 +135,7 @@ export class ExplorerComponent implements AfterViewInit {
 
         this.processSPARQLResponse(rs)
 
-        this.loadingQuads = false;
+        this.loading = false;
 
         if (this.geoObjects.length == 0) {
             this.importError = "The query did not return any results!";
@@ -147,7 +147,7 @@ export class ExplorerComponent implements AfterViewInit {
         console.log(e);
         this.importError = e.message;
     } finally {
-        this.loadingQuads = false;
+        this.loading = false;
     }
   }
 
@@ -235,7 +235,7 @@ export class ExplorerComponent implements AfterViewInit {
 
     this.geoObjects.forEach(go => go.properties.label = (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1));
 
-    console.log(this.geoObjects);
+    // console.log(this.geoObjects);
   }
 
   onSelectQuery() {
@@ -285,7 +285,26 @@ export class ExplorerComponent implements AfterViewInit {
     return geojson as GeoJSONGeometry;
   }
 
+  clearAllMapData() {
+    if (!this.map) return;
+
+    this.map!.getStyle().layers.forEach(layer => {
+        if (this.map!.getLayer(layer.id) && this.baseLayers[0].id !== layer.id) {
+            this.map!.removeLayer(layer.id);
+        }
+    });
+    
+    Object.keys(this.map!.getStyle().sources).forEach(source => {
+        if (this.map!.getSource(source) && source !== 'mapbox') {
+            this.map!.removeSource(source);
+        }
+    });    
+  }
+
   mapGeoObjects() {
+    this.clearAllMapData();
+
+    // setTimeout(() => {
     // Find the index of the first symbol layer in the map style
     const layers = this.map?.getStyle().layers;
     let firstSymbolId;
@@ -347,6 +366,7 @@ export class ExplorerComponent implements AfterViewInit {
             }
         });
     }
+    // },10);
   }
 
   private layerConfig(type: string, geometryType: string): any {
@@ -471,7 +491,7 @@ export class ExplorerComponent implements AfterViewInit {
     }
   }
 
-  public getUsaceUri(go: GeoObject): string { return this.getUsaceUri(go); }
+  public getUsaceUri(go: GeoObject): string { return ExplorerComponent.getUsaceUri(go); }
 
   public static getUsaceUri(go: GeoObject): string {
     if (go.properties.uri.indexOf('dime.usace.mil') !== -1) {
@@ -637,7 +657,7 @@ export class ExplorerComponent implements AfterViewInit {
   }
 
   async loadRdf(file: File) {
-    this.loadingQuads = true;
+    this.loading = true;
 
     let text = await file.text();
     this.tripleStore = new Store();
@@ -648,14 +668,14 @@ export class ExplorerComponent implements AfterViewInit {
         {
             console.log(error);
             this.importError = error.message;
-            this.loadingQuads = false;
+            this.loading = false;
         }
         else if (quad) {
             this.tripleStore?.add(quad);
         }
         else {
             console.log("Successfully loaded " + this.tripleStore?.size + " quads into memory.");
-            this.loadingQuads = false;
+            this.loading = false;
             this.modalRef?.hide();
         }
     });
@@ -725,9 +745,6 @@ export class ExplorerComponent implements AfterViewInit {
             if (feature.properties['uri'] != null) {
                 let uri = feature.properties['uri'];
                 this.selectObject(uri);
-
-                if (this.graphExplorer)
-                    this.graphExplorer?.zoomToUri(uri);
             }
         } else {
             this.selectObject();
@@ -756,6 +773,13 @@ export class ExplorerComponent implements AfterViewInit {
         if (previousSelected != null && previousSelected != this.selectedObject) {
             this.map!.setFeatureState({source: previousSelected.properties.type, id: previousSelected.properties.id}, {selected: false});
         }
+
+        setTimeout(() => {
+            this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+
+            if (uri)
+                setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+        }, 1);
     }
   
 }

@@ -1,16 +1,15 @@
 <div>
-
   <div id="panel-columns" class="horizontal-layout">
 	<!-- Attribute Panel -->
 	<!-- <attribute-panel *ngIf="selectedObject" [selectedObject]="selectedObject"></attribute-panel> -->
 	
 	<div id="aichat-column" class="vertical-layout">
-		<aichat></aichat>
-
-		<!-- Graph -->
-		<!-- <div id="graphExplorerContainer"><graph-explorer #graphExplorer></graph-explorer></div>	 -->
+		<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 		
-		<results-table [objects]="geoObjects"></results-table>
+		<aichat [explorer]="this"></aichat>
+
+		<results-table *ngIf="selectedObject == null" [objects]="geoObjects"></results-table>
+		<div *ngIf="selectedObject" id="graphExplorerContainer"><graph-explorer #graphExplorer></graph-explorer></div>
 	</div>
 
 	<!-- Map -->

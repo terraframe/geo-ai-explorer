@@ -1,9 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, Input } from '@angular/core';
 import { ChatService, ChatMessage } from '../chat-service.service';
 import { FormsModule } from '@angular/forms'; // <-- Import FormsModule
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ExplorerComponent } from '../explorer/explorer.component';
 
 @Component({
     selector: 'aichat',
@@ -12,6 +13,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     styleUrl: './aichat.component.scss'
 })
 export class AichatComponent {
+  @Input() explorer!: ExplorerComponent;
+
   message: string = '';
   messages: ChatMessage[] = [];
 
@@ -40,8 +43,7 @@ export class AichatComponent {
   }
 
   mapIt(message: ChatMessage) {
-    console.log("Mapping triggered for:", message);
-    // Implement mapping logic here
+    this.explorer.loadTestQuery(1);
   }
 
   @HostListener('document:keydown.enter', ['$event'])

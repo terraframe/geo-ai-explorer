@@ -91,6 +91,23 @@ let defaultStyles = {
 
 export const defaultQueries: QueryConfig[] = [
   {
+    title: "Show me some data",
+    sparql: prefixes + `
+SELECT
+?gf1 ?ft1 ?f1 ?wkt1 ?lbl1
+FROM lpgv: 
+WHERE {
+  BIND(geo:Feature as ?gf1) .
+  ?f1 a ?ft1 .
+  ?f1 geo:hasGeometry ?g1 .
+  ?g1 geo:asWKT ?wkt1 .
+  ?f1 rdfs:label ?lbl1 .
+}
+LIMIT 10`,
+    wktVar: "COALESCE(?wkt5,?wkt4,?wkt3,?wkt2,?wkt1)",
+    styles: defaultStyles
+},
+  {
         title: "Flooded School Districts AI Query",
         sparql: prefixes + `
     SELECT
@@ -121,8 +138,7 @@ export const defaultQueries: QueryConfig[] = [
     }
     LIMIT 10`,
         wktVar: "COALESCE(?wkt5,?wkt4,?wkt3,?wkt2,?wkt1)",
-        styles: defaultStyles,
-        // focus: "https://dev-georegistry.geoprism.net/lpg/deliverable2024/0#Project-PROJ819"
+        styles: defaultStyles
     }
 
 
