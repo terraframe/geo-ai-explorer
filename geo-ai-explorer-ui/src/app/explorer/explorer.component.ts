@@ -13,7 +13,7 @@ import ColorGen from "color-generator";
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { TableModule } from 'primeng/table';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 
 export interface SPARQLResultSetBinding {
@@ -37,7 +37,7 @@ export interface GeoObject {
 
 @Component({
     selector: 'app-explorer',
-    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, ResultsTableComponent],
+    imports: [CommonModule, FormsModule, GraphExplorerComponent, AichatComponent, AttributePanelComponent, DragDropModule, ResultsTableComponent, ProgressSpinnerModule],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
@@ -53,7 +53,7 @@ export class ExplorerComponent implements AfterViewInit {
 
   public defaultQueries = defaultQueries;
 
-  public loadingQuads: boolean = false;
+  public loading: boolean = false;
 
   tripleStore?: Store;
 
@@ -118,7 +118,7 @@ export class ExplorerComponent implements AfterViewInit {
   }
   
   async loadSparql() {
-    this.loadingQuads = true;
+    this.loading = true;
 
     let url = this.sparqlUrl + "?query=" + encodeURIComponent(this.sparqlText!);
 
@@ -135,7 +135,7 @@ export class ExplorerComponent implements AfterViewInit {
 
         this.processSPARQLResponse(rs)
 
-        this.loadingQuads = false;
+        this.loading = false;
 
         if (this.geoObjects.length == 0) {
             this.importError = "The query did not return any results!";
@@ -147,7 +147,7 @@ export class ExplorerComponent implements AfterViewInit {
         console.log(e);
         this.importError = e.message;
     } finally {
-        this.loadingQuads = false;
+        this.loading = false;
     }
   }
 
@@ -637,7 +637,7 @@ export class ExplorerComponent implements AfterViewInit {
   }
 
   async loadRdf(file: File) {
-    this.loadingQuads = true;
+    this.loading = true;
 
     let text = await file.text();
     this.tripleStore = new Store();
@@ -648,14 +648,14 @@ export class ExplorerComponent implements AfterViewInit {
         {
             console.log(error);
             this.importError = error.message;
-            this.loadingQuads = false;
+            this.loading = false;
         }
         else if (quad) {
             this.tripleStore?.add(quad);
         }
         else {
             console.log("Successfully loaded " + this.tripleStore?.size + " quads into memory.");
-            this.loadingQuads = false;
+            this.loading = false;
             this.modalRef?.hide();
         }
     });
@@ -725,9 +725,6 @@ export class ExplorerComponent implements AfterViewInit {
             if (feature.properties['uri'] != null) {
                 let uri = feature.properties['uri'];
                 this.selectObject(uri);
-
-                if (this.graphExplorer)
-                    this.graphExplorer?.zoomToUri(uri);
             }
         } else {
             this.selectObject();
@@ -756,6 +753,13 @@ export class ExplorerComponent implements AfterViewInit {
         if (previousSelected != null && previousSelected != this.selectedObject) {
             this.map!.setFeatureState({source: previousSelected.properties.type, id: previousSelected.properties.id}, {selected: false});
         }
+
+        setTimeout(() => {
+            this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+
+            if (uri)
+                setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+        }, 1);
     }
   
 }
