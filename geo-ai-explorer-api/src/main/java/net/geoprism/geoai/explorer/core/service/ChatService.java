@@ -46,6 +46,6 @@ public class ChatService
   {
     String statement = this.bedrock.generateSparql(history.toText());
 
-    return this.jena.execute(statement);
+    return this.jena.query(statement);
   }
 }

@@ -47,4 +47,9 @@ public class AppProperties
     return env.getProperty("secret.access.key");
   }
 
+  public String getJenaUrl()
+  {
+    return env.getProperty("jena.url");
+  }
+
 }

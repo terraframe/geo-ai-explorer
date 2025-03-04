@@ -18,6 +18,9 @@ package net.geoprism.geoai.explorer.core.service;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +37,25 @@ public class JenaService
   @Autowired
   private AppProperties       properties;
 
-  public List<Location> execute(String statement)
+  public List<Location> query(String statement)
   {
-    return new LinkedList<>();
+    LinkedList<Location> results = new LinkedList<>();
+
+    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
+        .destination(properties.getJenaUrl());
+
+    try (RDFConnection conn = builder.build())
+    {
+      conn.querySelect(statement, (qs) -> {
+        String type = qs.getResource("type").getURI();
+        String code = qs.getLiteral("code").getString();
+        String label = qs.getLiteral("label").getString();
+        String wkt = qs.getLiteral("wkt").getString();
+
+        results.add(new Location(type, code, label, wkt));
+      });
+    }
+
+    return results;
   }
 }

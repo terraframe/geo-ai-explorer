@@ -2,13 +2,22 @@ package net.geoprism.geoai.explorer.core.model;
 
 public class Location
 {
+  private String type;
+
   private String code;
 
   private String label;
 
-  private String type;
-
   private String wkt;
+
+  public Location(String type, String code, String label, String wkt)
+  {
+    super();
+    this.type = type;
+    this.code = code;
+    this.label = label;
+    this.wkt = wkt;
+  }
 
   public String getCode()
   {
