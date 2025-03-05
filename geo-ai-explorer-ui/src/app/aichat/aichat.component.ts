@@ -66,7 +66,7 @@ export class AichatComponent {
 
       if (index !== -1) {
         const history = [...messages];
-        history.splice(0, index);
+        history.splice(index);
 
         this.loading = true;
 

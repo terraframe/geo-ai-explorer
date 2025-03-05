@@ -68,7 +68,6 @@ export class GraphQueryService {
 
                     geoObject.properties.type = r[v].value;
                     geoObject.properties.uri = uri;
-                    geoObject.properties.id = Math.floor(Math.random() * 2147483647);
                     readGeoObjectUri = true;
                     i++;
                 } else if (geoObject == null) {

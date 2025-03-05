@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createReducer, on } from '@ngrx/store';
 import { ChatMessage } from '../models/chat.model';
 import { ChatActions } from './chat.actions';
+import { MockUtil } from '../mock-util';
 
 export interface ChatStateModel {
     sessionId: string;
@@ -9,7 +10,7 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: [],
+    messages: MockUtil.messages,
     sessionId: uuidv4()
 }
 

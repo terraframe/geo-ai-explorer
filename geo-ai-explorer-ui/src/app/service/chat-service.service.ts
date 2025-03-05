@@ -59,7 +59,11 @@ export class ChatService {
       content: message.text
     }))
 
-    return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data }));
+    return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data })).then(objects => {
+      objects.map(object => object.properties.uri = '<' + object.id + '>');
+
+      return objects;
+    });
   }
 
 }
