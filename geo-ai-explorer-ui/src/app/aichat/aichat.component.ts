@@ -70,12 +70,16 @@ export class AichatComponent {
         const history = [...messages];
         history.splice(0, index);
 
+        this.loading = true;
+
         this.chatService.getLocations(history).then((response) => {
           console.log('Locations', response)
 
           // TODO update the explorer state with the response 
-        })
-      }
+          alert('Found: ' + response.length + ' Locations')
+        }).finally(() => {
+          this.loading = false;
+        })      }
     });
   }
 

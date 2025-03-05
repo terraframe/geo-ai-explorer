@@ -1,13 +1,10 @@
 <div class="chat-container">
   <div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
-
-  {{messages$ == null}}
-
   <div class="messages">
     <div *ngFor="let msg of (messages$ | async)" class="message">
       <strong>{{ msg.sender }}:</strong>
       <label>
-        {{ msg.text.replace("#mappable", "") }}
+        {{ msg.text }}
 
         <ng-container *ngIf="msg.mappable">
           <p-button class="btn btn-primary" (click)="mapIt(msg)">Map It!</p-button>

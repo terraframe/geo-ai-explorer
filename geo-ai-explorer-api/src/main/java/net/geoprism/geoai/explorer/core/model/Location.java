@@ -1,5 +1,8 @@
 package net.geoprism.geoai.explorer.core.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.locationtech.jts.geom.Geometry;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -8,52 +11,31 @@ import net.geoprism.geoai.explorer.core.serialization.GeometrySerializer;
 
 public class Location
 {
-  private String   type;
+  private Map<String, Object> properties;
 
-  private String   code;
+  private String              type;
 
-  private String   label;
+  private String              id;
 
   @JsonSerialize(using = GeometrySerializer.class)
-  private Geometry geometry;
+  private Geometry            geometry;
+
+  public Location()
+  {
+    this.type = "Feature";
+    this.properties = new HashMap<>();
+  }
 
   public Location(String type, String code, String label, Geometry geometry)
   {
-    super();
-    this.type = type;
-    this.code = code;
-    this.label = label;
+    this();
+
+    this.id = type + "-" + code;
     this.geometry = geometry;
-  }
 
-  public String getCode()
-  {
-    return code;
-  }
-
-  public void setCode(String code)
-  {
-    this.code = code;
-  }
-
-  public String getLabel()
-  {
-    return label;
-  }
-
-  public void setLabel(String label)
-  {
-    this.label = label;
-  }
-
-  public String getType()
-  {
-    return type;
-  }
-
-  public void setType(String type)
-  {
-    this.type = type;
+    this.properties.put("type", type);
+    this.properties.put("code", code);
+    this.properties.put("label", label);
   }
 
   public Geometry getGeometry()
@@ -64,5 +46,35 @@ public class Location
   public void setGeometry(Geometry geometry)
   {
     this.geometry = geometry;
+  }
+
+  public Map<String, Object> getProperties()
+  {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties)
+  {
+    this.properties = properties;
+  }
+
+  public String getId()
+  {
+    return id;
+  }
+
+  public void setId(String id)
+  {
+    this.id = id;
+  }
+
+  public String getType()
+  {
+    return type;
+  }
+
+  public void setType(String type)
+  {
+    this.type = type;
   }
 }

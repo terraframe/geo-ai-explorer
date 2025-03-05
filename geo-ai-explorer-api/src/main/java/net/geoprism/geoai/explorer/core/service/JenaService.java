@@ -18,12 +18,11 @@ package net.geoprism.geoai.explorer.core.service;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.jena.geosparql.implementation.parsers.wkt.WKTReader;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
-import org.geotools.geometry.jts.WKTReader2;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,6 @@ public class JenaService
     try (RDFConnection conn = builder.build())
     {
       LinkedList<Location> results = new LinkedList<>();
-      WKTReader2 reader = new WKTReader2();
 
       conn.querySelect(statement, (qs) -> {
         String type = qs.getResource("type").getURI();
@@ -56,16 +54,10 @@ public class JenaService
         String label = qs.getLiteral("label").getString();
         String wkt = qs.getLiteral("wkt").getString();
 
-        try
-        {
-          Geometry geometry = reader.read(wkt);
+        WKTReader reader = WKTReader.extract(wkt);
+        Geometry geometry = reader.getGeometry();
 
-          results.add(new Location(type, code, label, geometry));
-        }
-        catch (ParseException e)
-        {
-          throw new RuntimeException(e);
-        }
+        results.add(new Location(type, code, label, geometry));
 
       });
 
