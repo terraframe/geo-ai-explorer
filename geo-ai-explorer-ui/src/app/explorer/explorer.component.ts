@@ -14,20 +14,7 @@ import { AttributePanelComponent } from '../attribute-panel/attribute-panel.comp
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-
-
-export interface SPARQLResultSetBinding {
-    type: string, value: string, datatype?: string
-}
-
-export interface SPARQLResultSet {
-    head: { vars: [string] };
-    results: {
-        bindings: [ {
-            [key: string] : SPARQLResultSetBinding
-        } ]
-    };
-}
+import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
 
 export interface GeoObject {
     type: string,
@@ -66,8 +53,6 @@ export class ExplorerComponent implements AfterViewInit {
   public static GEO_FEATURE = ExplorerComponent.GEO + "Feature";
 
   public static GEO_WKT_LITERAL = ExplorerComponent.GEO + "wktLiteral";
-
-  public sparqlUrl: string = "http://staging-georegistry.geoprism.net:3030/usace/sparql";
   
   public queryConfig: QueryConfig = this.defaultQueries[0];
 
@@ -96,8 +81,7 @@ export class ExplorerComponent implements AfterViewInit {
 
   orderedTypes: string[] = [];
   
-  constructor() {
-    // (mapboxgl as any).accessToken = "pk.eyJ1IjoianVzdGlubGV3aXMiLCJhIjoiY2l0YnlpdWRkMDlkNjJ5bzZuMTR3MHZ3YyJ9.Ad0fQd8onRSYR9QZP6VyUw";
+  constructor(private queryService: GraphQueryService) {
   }
   
   ngAfterViewInit() {
@@ -114,40 +98,28 @@ export class ExplorerComponent implements AfterViewInit {
   loadTestQuery(index: number = 0) {
     this.queryConfig = this.defaultQueries[index];
     this.onSelectQuery();
-    this.loadSparql();
+    this.query();
   }
-  
-  async loadSparql() {
-    this.loading = true;
 
-    let url = this.sparqlUrl + "?query=" + encodeURIComponent(this.sparqlText!);
+  async query() {
+    this.loading = true;
+    this.importError = undefined;
 
     try {
-        const respObj = await fetch(url);
+      const result: SPARQLResultSet = await this.queryService.query(this.sparqlText);
+      this.geoObjects = this.queryService.convert(result);
 
-        if (!respObj.ok || respObj.status >= 400) {
-            let text = await respObj.text();
-            this.importError = text;
-            return;
-        }
+      if (this.geoObjects.length === 0) {
+        this.importError = 'The query did not return any results!';
+        return;
+      }
 
-        const rs: SPARQLResultSet = await respObj.json();
-
-        this.processSPARQLResponse(rs)
-
-        this.loading = false;
-
-        if (this.geoObjects.length == 0) {
-            this.importError = "The query did not return any results!";
-            return;
-        }
-
-        this.render();
-    } catch (e: any) {
-        console.log(e);
-        this.importError = e.message;
+      this.render();
+    } catch (error: any) {
+      console.error(error);
+      this.importError = error.message;
     } finally {
-        this.loading = false;
+      this.loading = false;
     }
   }
 
@@ -173,69 +145,6 @@ export class ExplorerComponent implements AfterViewInit {
 
     if (this.graphExplorer)
         this.graphExplorer.renderGeoObjects(this, this.geoObjects);
-  }
-
-  processSPARQLResponse(rs: SPARQLResultSet) : void {
-    this.geoObjects = [];
-    
-    rs.results.bindings.forEach(r => {
-        let geoObject: GeoObject | null | undefined = null;
-        let readGeoObjectUri: boolean = false;
-        let lastReadUri: string | null = null;
-        // rs.head.vars.forEach(v => {
-        for (let i: number = 0; i < rs.head.vars.length; ++i) {
-            let v = rs.head.vars[i];
-            if (r[v] == null) continue;
-
-            if (r[v].type === "uri" && r[v].value === ExplorerComponent.GEO_FEATURE) {
-                lastReadUri = null;
-                readGeoObjectUri = false;
-            } else {
-                if (i > 0 && r[v].type === "uri" && r[rs.head.vars[i-1]].value === ExplorerComponent.GEO_FEATURE) {
-                    let uri = r[rs.head.vars[i+1]].value;
-
-                    geoObject = this.geoObjects.find(go => go.properties.uri === uri);
-                    if (geoObject == null) {
-                        geoObject = {
-                            type: "Feature",
-                            geometry: null,
-                            properties: { uri: Math.random().toString(16).slice(2), edges: {} }
-                        } as unknown as GeoObject;
-                        this.geoObjects.push(geoObject);
-                    }
-
-                    geoObject.properties.type = r[v].value;
-                    geoObject.properties.uri = uri;
-                    geoObject.properties.id = Math.floor(Math.random() * 2147483647);
-                    readGeoObjectUri = true;
-                    i++;
-                } else if (geoObject == null) {
-                    throw new Error("Attempt to read property without associated geo feature. Does your query start with a geo:feature declaration?");
-                } else if (r[v].type === "literal" && r[v].datatype === ExplorerComponent.GEO_WKT_LITERAL) {
-                    geoObject.geometry = this.wktToGeometry(r[v].value);
-                } else if (r[v].type === "literal") {
-                    geoObject.properties.label = r[v].value;
-                } else if (r[v].type === "uri" && readGeoObjectUri) {
-                    if (lastReadUri == null) {
-                        lastReadUri = r[v].value;
-                    } else {
-                        if (geoObject.properties.edges[lastReadUri] == null) {
-                            geoObject.properties.edges[lastReadUri] = [] as any;
-                        }
-                        if (geoObject.properties.edges[lastReadUri].indexOf(r[v].value) === -1) {
-                            geoObject.properties.edges[lastReadUri].push(r[v].value);
-                        }
-
-                        lastReadUri = null;
-                    }
-                }
-            }
-        };
-    });
-
-    this.geoObjects.forEach(go => go.properties.label = (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1));
-
-    // console.log(this.geoObjects);
   }
 
   onSelectQuery() {
@@ -274,16 +183,6 @@ export class ExplorerComponent implements AfterViewInit {
   }
 
   getTypeLegend() { return this.typeLegend; }
-
-  wktToGeometry(wkt: string): GeoJSONGeometry
-  {
-    if (wkt.indexOf("<") != -1 && wkt.indexOf(">") != -1)
-        wkt = wkt.substring(wkt.indexOf(">") + 1).trim();
-
-    let geojson = parse(wkt);
-
-    return geojson as GeoJSONGeometry;
-  }
 
   clearAllMapData() {
     if (!this.map) return;
@@ -516,7 +415,6 @@ export class ExplorerComponent implements AfterViewInit {
             uri = uri.replace("Project-", "remis_project%23");
         } else {
             uri = uri.replace("-", "%23");
-            console.log(go);
         }
 
         if (uri.indexOf("ChannelReach") !== -1) {
@@ -774,12 +672,15 @@ export class ExplorerComponent implements AfterViewInit {
             this.map!.setFeatureState({source: previousSelected.properties.type, id: previousSelected.properties.id}, {selected: false});
         }
 
-        setTimeout(() => {
-            this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+        if (this.selectedObject != null) {
+            setTimeout(() => {
+                // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+                this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
 
-            if (uri)
-                setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
-        }, 1);
+                if (uri)
+                    setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+            }, 1);
+        }
     }
   
 }

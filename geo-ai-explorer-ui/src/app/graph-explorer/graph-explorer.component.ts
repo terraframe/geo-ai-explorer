@@ -2,7 +2,11 @@ import { Component, ViewChild } from '@angular/core';
 import { ExplorerComponent, GeoObject } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
-import { SELECTED_COLOR } from '../explorer/defaultQueries';
+import { defaultQueries, SELECTED_COLOR } from '../explorer/defaultQueries';
+import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+// @ts-ignore
+import ColorGen from "color-generator";
 
 // export interface Relationship {
 //   oid: string,
@@ -56,7 +60,7 @@ export const DIMENSIONS = {
 
 @Component({
     selector: 'graph-explorer',
-    imports: [CommonModule, GraphModule],
+    imports: [CommonModule, GraphModule, ProgressSpinnerModule],
     providers: [],
     templateUrl: './graph-explorer.component.html',
     styleUrl: './graph-explorer.component.scss'
@@ -71,6 +75,8 @@ export class GraphExplorerComponent {
 
   public SELECTED_NODE_COLOR = SELECTED_COLOR;
 
+  public loading:boolean = false;
+
   public svgHeight: number | null = null;
   public svgWidth: number | null = null;
 
@@ -79,9 +85,35 @@ export class GraphExplorerComponent {
 
   public relationship: any = { layout: "HORIZONTAL" }
 
-  
-
   public explorer?: ExplorerComponent;
+
+  private extraColors: any = {};
+
+  constructor(private queryService: GraphQueryService) {
+  }
+
+  public async renderGeoObjectAndNeighbors(explorer: ExplorerComponent, geoObject: GeoObject) {
+    try {
+      this.loading = true;
+
+      let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
+      const result: SPARQLResultSet = await this.queryService.query(sparql);
+      this.geoObjects = this.queryService.convert(result);
+
+      if (this.geoObjects.length === 0) {
+        console.error('The query did not return any results!');
+        return;
+      }
+
+      this.renderGeoObjects(explorer, this.geoObjects);
+
+      setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      this.loading = false;
+    }
+  }
 
   public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
     this.explorer = explorer;
@@ -94,23 +126,25 @@ export class GraphExplorerComponent {
 
     geoObjects.forEach(go => {
 
-      data.nodes.push({
+      let node = {
         label: (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1),
         id: this.uriToId(go.properties.uri),
         relation: Object.entries(go.properties.edges).length == 0 ? "CHILD" : "PARENT",
         type: go.properties.type
-      });
+      };
+      data.nodes.push(node);
 
       for (const [key, value] of Object.entries(go.properties.edges)) {
         // if (value === go.properties.uri) { continue; }
 
         value.forEach(v => {
-          data.edges.push({
+          let edge = {
             id: this.uriToId(Math.random().toString(16).slice(2)),
             source: this.uriToId(go.properties.uri),
             target: this.uriToId(v),
             label: ExplorerComponent.uriToLabel(key)
-          });
+          };
+          data.edges.push(edge);
         });
       }
     });
@@ -127,6 +161,19 @@ export class GraphExplorerComponent {
 
   public getTypeLegend() {
     return this.explorer?.getTypeLegend();
+  }
+
+  public getColor(node: any) {
+    var legend = this.getTypeLegend()!;
+
+    if (legend[node.type] != null)
+      return legend[node.type].color;
+    else if (this.extraColors[node.type] != null)
+      return this.extraColors[node.type];
+    else {
+      this.extraColors[node.type] = ColorGen().hexString();
+      return this.extraColors[node.type];
+    }
   }
 
   public getSelectedId() {
@@ -202,3 +249,4 @@ export class GraphExplorerComponent {
   }
 
 }
+
