@@ -1,5 +1,7 @@
 package net.geoprism.geoai.explorer.core.service;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.junit.Assert;
@@ -10,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.geoprism.geoai.explorer.core.config.TestConfiguration;
 import net.geoprism.geoai.explorer.core.model.History;
@@ -34,7 +38,7 @@ public class ChatServiceIntegrationTest
 
   @Test
   @Ignore
-  public void testGetLocations()
+  public void testGetLocations() throws IOException
   {
     History history = new History();
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "what is the total population impacted if channel reach_25 floods?"));
@@ -45,6 +49,25 @@ public class ChatServiceIntegrationTest
     List<Location> locations = service.getLocations(history);
 
     Assert.assertTrue(locations.size() > 0);
+
+    // Test serialization
+    ObjectMapper mapper = new ObjectMapper();
+
+    for (Location location : locations)
+    {
+
+      try (StringWriter writer = new StringWriter())
+      {
+        mapper.writeValue(writer, location);
+
+        String value = writer.toString();
+
+        System.out.println(value);
+
+        Assert.assertTrue(value.length() > 0);
+      }
+
+    }
 
   }
 

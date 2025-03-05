@@ -10,10 +10,3 @@ export interface ServerChatResponse {
   sessionId: string;
   mappable: boolean;
 }
-
-export interface Location {
-  type: string;
-  code: string;
-  label: string;
-  geometry: any;
-}

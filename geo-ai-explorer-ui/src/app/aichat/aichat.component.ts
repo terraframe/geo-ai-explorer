@@ -11,7 +11,7 @@ import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
 import { selectMessages, selectSessionId } from '../state/chat.selectors';
 import { ChatActions } from '../state/chat.actions';
-import { ExplorerComponent } from '../explorer/explorer.component';
+import { ExplorerActions } from '../state/explorer.actions';
 
 @Component({
   selector: 'aichat',
@@ -22,8 +22,6 @@ import { ExplorerComponent } from '../explorer/explorer.component';
 export class AichatComponent {
 
   private store = inject(Store);
-
-  @Input() explorer!: ExplorerComponent;
 
   message: string = '';
 
@@ -75,11 +73,11 @@ export class AichatComponent {
         this.chatService.getLocations(history).then((response) => {
           console.log('Locations', response)
 
-          // TODO update the explorer state with the response 
-          alert('Found: ' + response.length + ' Locations')
+          this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response }));
         }).finally(() => {
           this.loading = false;
-        })      }
+        })
+      }
     });
   }
 

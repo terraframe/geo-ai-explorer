@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { ExplorerComponent, GeoObject } from '../explorer/explorer.component';
+import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
 import { defaultQueries, SELECTED_COLOR } from '../explorer/defaultQueries';
@@ -7,6 +7,7 @@ import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.servi
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
+import { GeoObject } from '../models/geoobject.model';
 
 // export interface Relationship {
 //   oid: string,

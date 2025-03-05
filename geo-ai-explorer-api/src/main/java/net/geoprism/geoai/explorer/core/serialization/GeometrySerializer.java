@@ -3,7 +3,10 @@ package net.geoprism.geoai.explorer.core.serialization;
 import java.io.IOException;
 
 import org.geotools.geojson.geom.GeometryJSON;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.boot.json.JsonParseException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -28,7 +31,17 @@ public class GeometrySerializer extends StdSerializer<Geometry>
   @Override
   public void serialize(Geometry value, JsonGenerator gen, SerializerProvider provider) throws IOException
   {
-    gen.writeRawValue(new GeometryJSON().toString(value));
+    try
+    {
+      if (value != null)
+      {
+        gen.writeObject(new JSONParser().parse(new GeometryJSON().toString(value)));
+      }
+    }
+    catch (IOException | ParseException e)
+    {
+      throw new JsonParseException(e);
+    }
   }
 
 }

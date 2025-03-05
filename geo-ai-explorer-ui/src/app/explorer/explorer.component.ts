@@ -2,7 +2,6 @@ import { Component, AfterViewInit, TemplateRef, ViewChild } from '@angular/core'
 import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat } from "maplibre-gl";
 import { Parser, Quad, Store } from 'n3';
 import { CommonModule } from '@angular/common';
-import { parse, GeoJSONGeometryOrNull, GeoJSONGeometry } from 'wellknown';
 import { FormsModule } from '@angular/forms';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -15,12 +14,8 @@ import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
+import { GeoObject } from '../models/geoobject.model';
 
-export interface GeoObject {
-    type: string,
-    geometry: GeoJSONGeometry,
-    properties: { id: number; uri: string, type:string, label: string, edges: { [key: string]: [string] }, [key: string]: any }
-}
 
 @Component({
     selector: 'app-explorer',

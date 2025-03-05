@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { ExplorerComponent, GeoObject } from '../explorer/explorer.component';
-import { parse, GeoJSONGeometryOrNull, GeoJSONGeometry } from 'wellknown';
+import { ExplorerComponent, } from '../explorer/explorer.component';
+import { parse, GeoJSONGeometry } from 'wellknown';
+import { GeoObject } from '../models/geoobject.model';
 
 export interface SPARQLResultSetBinding {
     type: string, value: string, datatype?: string

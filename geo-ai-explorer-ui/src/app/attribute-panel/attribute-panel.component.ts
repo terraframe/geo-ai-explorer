@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { ExplorerComponent, GeoObject } from '../explorer/explorer.component';
+import { ExplorerComponent } from '../explorer/explorer.component';
+import { GeoObject } from '../models/geoobject.model';
 
 @Component({
     selector: 'attribute-panel',
