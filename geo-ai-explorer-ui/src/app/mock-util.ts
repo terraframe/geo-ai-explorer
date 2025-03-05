@@ -1,5 +1,6 @@
 import { ChatMessage } from "./models/chat.model";
 import { GeoObject } from "./models/geoobject.model";
+import { Style } from "./models/style.model";
 
 export class MockUtil {
   private static loremSentences: string[] = [
@@ -374,5 +375,88 @@ export class MockUtil {
         "type": "MultiPoint"
       }
     }
-  ]
+  ];
+
+  public static styles: { [key: string]: Style } = {
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#RealProperty": {
+      "color": "#79F294",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelReach": {
+      "color": "#79DAF2",
+      "order": 4
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Reservoir": {
+      "color": "#CAEEFB",
+      "order": 5
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#RecreationArea": {
+      "color": "#F2E779",
+      "order": 3
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#LeveedArea": {
+      "color": "#C379F2",
+      "order": 4
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#SchoolZone": {
+      "color": "#FBE3D6",
+      "order": 6
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Project": {
+      "color": "#C0F279",
+      "order": 6
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#LeveeArea": {
+      "color": "#D1D1D1",
+      "order": 4
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#School": {
+      "color": "#F2A579",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Levee": {
+      "color": "#F279E0",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Hospital": {
+      "color": "#F2799D",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Dam": {
+      "color": "#D5F279",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#River": {
+      "color": "#7999F2",
+      "order": 2
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#Watershed": {
+      "color": "#79F2C9",
+      "order": 4
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelArea": {
+      "color": "#156082",
+      "order": 4
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelLine": {
+      "color": "#79F2A0",
+      "order": 1
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#UsaceRecreationArea": {
+      "color": "#F2BE79",
+      "order": 3
+    },
+    "http://dime.usace.mil/ontologies/cwbi-concept#Program": {
+      "color": "#FF5733",
+      "order": 0
+    },
+    "https://localhost:4200/lpg/graph_801104/0/rdfs#WaterLock": {
+      "color": "#79F2E2",
+      "order": 0
+    }
+  }
+
+
+
+
 }

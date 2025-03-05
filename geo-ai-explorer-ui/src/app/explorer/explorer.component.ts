@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { defaultQueries, StyleConfig, QueryConfig, stateCentroid, locationCriteriaSparql, SELECTED_COLOR } from './defaultQueries';
+import { defaultQueries, QueryConfig, stateCentroid, locationCriteriaSparql, SELECTED_COLOR } from './defaultQueries';
 import JSON5 from 'json5'
 // @ts-ignore
 import ColorGen from "color-generator";
@@ -17,6 +17,8 @@ import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { selectObjects } from '../state/explorer.selectors';
+import { StyleConfig } from '../models/style.model';
+import { StyleService } from '../service/style-service.service';
 
 
 @Component({
@@ -34,7 +36,7 @@ import { selectObjects } from '../state/explorer.selectors';
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
-export class ExplorerComponent implements OnDestroy, AfterViewInit {
+export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private store = inject(Store);
 
@@ -78,7 +80,7 @@ export class ExplorerComponent implements OnDestroy, AfterViewInit {
 
     public selectedObject?: GeoObject;
 
-    resolvedStyles!: StyleConfig;
+    resolvedStyles: StyleConfig = {};
 
     baseLayers: any[] = [
         {
@@ -95,11 +97,17 @@ export class ExplorerComponent implements OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
-    constructor() {
+    constructor(private styleService: StyleService) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
             this.geoObjects = geoObjects;
 
             this.render();
+        })
+    }
+
+    ngOnInit(): void {
+        this.styleService.getStyles().then(styles => {
+            this.resolvedStyles = styles;
         })
     }
 

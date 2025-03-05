@@ -1,7 +1,7 @@
+import { StyleConfig } from "../models/style.model";
 
-export interface StyleConfig { [key: string]: {color:string, order:number, label?: string} }
 
-export interface QueryConfig { title:string, sparql: string, styles: StyleConfig, wktVar: string, focus?: string }
+export interface QueryConfig { title: string, sparql: string, styles: StyleConfig, wktVar: string, focus?: string }
 
 export const stateCentroid = {
   'Alabama': 'POINT(32.789086191041434 -86.7720711354423)',
@@ -57,7 +57,7 @@ export const stateCentroid = {
   'Wyoming': "POINT(43.138551556979436 -107.38018780284965)"
 };
 
-let prefixes:string = `PREFIX lpgs: <https://dev-georegistry.geoprism.net/lpg/rdfs#>
+let prefixes: string = `PREFIX lpgs: <https://dev-georegistry.geoprism.net/lpg/rdfs#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX lpgv: <https://dev-georegistry.geoprism.net/lpg/deliverable2024/0#>
@@ -68,25 +68,25 @@ PREFIX spatialF: <http://jena.apache.org/function/spatial#>
 export const SELECTED_COLOR = "#ffff00";
 
 let defaultStyles = {
-    'lpgvs:Hospital': {color:'#F2799D', order:0},
-    'lpgvs:Dam':{color:'#D5F279', order:0},
-    'lpgvs:Project':{color:'#C0F279', order:6, label:"Real Property Project"},
-    'lpgvs:Watershed':{color:'#79F2C9', order:4},
-    'lpgvs:LeveeArea':{color:'#d1d1d1', order:4}, 
-    'lpgvs:RealProperty':{color:'#79F294', order:0},
-    'lpgvs:Reservoir':{color:'#caeefb', order:5},
-    'lpgvs:ChannelArea':{color:'#156082',order:4},
-    'lpgvs:ChannelReach':{color:'#79DAF2',order:4},
-    'lpgvs:RecreationArea':{color:'#F2E779',order:3},
-    'lpgvs:School':{color:'#F2A579',order:0},
-    'lpgvs:ChannelLine':{color:'#79F2A0',order:1},
-    'lpgvs:LeveedArea':{color:'#C379F2',order:4},
-    'lpgvs:River':{color:'#7999F2',order:2},
-    'lpgvs:SchoolZone':{color:'#fbe3d6',order:6},
-    'lpgvs:Levee':{color:'#F279E0',order:0},
-    'lpgvs:WaterLock':{color:'#79F2E2',order:0},
-    'lpgvs:UsaceRecreationArea':{color:'#F2BE79',order:3},
-    'http://dime.usace.mil/ontologies/cwbi-concept#Program':{color:'#FF5733',order:0}
+  'lpgvs:Hospital': { color: '#F2799D', order: 0 },
+  'lpgvs:Dam': { color: '#D5F279', order: 0 },
+  'lpgvs:Project': { color: '#C0F279', order: 6, label: "Real Property Project" },
+  'lpgvs:Watershed': { color: '#79F2C9', order: 4 },
+  'lpgvs:LeveeArea': { color: '#d1d1d1', order: 4 },
+  'lpgvs:RealProperty': { color: '#79F294', order: 0 },
+  'lpgvs:Reservoir': { color: '#caeefb', order: 5 },
+  'lpgvs:ChannelArea': { color: '#156082', order: 4 },
+  'lpgvs:ChannelReach': { color: '#79DAF2', order: 4 },
+  'lpgvs:RecreationArea': { color: '#F2E779', order: 3 },
+  'lpgvs:School': { color: '#F2A579', order: 0 },
+  'lpgvs:ChannelLine': { color: '#79F2A0', order: 1 },
+  'lpgvs:LeveedArea': { color: '#C379F2', order: 4 },
+  'lpgvs:River': { color: '#7999F2', order: 2 },
+  'lpgvs:SchoolZone': { color: '#fbe3d6', order: 6 },
+  'lpgvs:Levee': { color: '#F279E0', order: 0 },
+  'lpgvs:WaterLock': { color: '#79F2E2', order: 0 },
+  'lpgvs:UsaceRecreationArea': { color: '#F2BE79', order: 3 },
+  'http://dime.usace.mil/ontologies/cwbi-concept#Program': { color: '#FF5733', order: 0 }
 };
 
 export const defaultQueries: QueryConfig[] = [
@@ -108,8 +108,8 @@ export const defaultQueries: QueryConfig[] = [
     styles: defaultStyles
   },
   {
-      title: "'Map It' AI Query",
-      sparql: prefixes + `
+    title: "'Map It' AI Query",
+    sparql: prefixes + `
   SELECT
   ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1
   FROM lpgv: 
@@ -137,8 +137,8 @@ export const defaultQueries: QueryConfig[] = [
     ))
   }
   LIMIT 10`,
-      wktVar: "COALESCE(?wkt5,?wkt4,?wkt3,?wkt2,?wkt1)",
-      styles: defaultStyles
+    wktVar: "COALESCE(?wkt5,?wkt4,?wkt3,?wkt2,?wkt1)",
+    styles: defaultStyles
   },
   {
     title: "Selected object's neighbors",
