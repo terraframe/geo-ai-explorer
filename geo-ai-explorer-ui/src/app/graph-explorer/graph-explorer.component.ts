@@ -118,6 +118,8 @@ export class GraphExplorerComponent {
   public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
     this.explorer = explorer;
 
+    console.log(geoObjects);
+
     this.geoObjects = geoObjects;
     let data: any = {
       edges: [],

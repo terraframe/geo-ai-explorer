@@ -7,7 +7,7 @@ import { Store } from '@ngrx/store';
 import { Observable, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ChatService } from '../chat-service.service';
+import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
 import { selectMessages, selectSessionId } from '../state/chat.selectors';
 import { ChatActions } from '../state/chat.actions';
