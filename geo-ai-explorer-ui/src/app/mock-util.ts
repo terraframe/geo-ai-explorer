@@ -1,4 +1,5 @@
 import { ChatMessage } from "./models/chat.model";
+import { GeoObject } from "./models/geoobject.model";
 
 export class MockUtil {
   private static loremSentences: string[] = [
@@ -29,4 +30,349 @@ export class MockUtil {
     { id: '7', sender: 'user', text: 'what is the total number of students impacted', mappable: false },
     { id: '8', sender: 'system', text: 'The total number of students that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 66,179 students.', mappable: true },
   ];
+
+  public static locations: any[] = [
+    {
+      "properties": {
+        "code": "220072002479",
+        "label": "BELLE PLACE ELEMENTARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220072002479",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.7549,
+            30.007
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220159001222",
+        "label": "CECILIA PRIMARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220159001222",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.852,
+            30.3396
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "228010002497",
+        "label": "CENTRAL LOUISIANA SUPPORTS AND SERVICES CENTER",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-228010002497",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.4971,
+            31.2965
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220072000519",
+        "label": "JEANERETTE SENIOR HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220072000519",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.7026,
+            29.9453
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220129001054",
+        "label": "D.F. HUDDLE ELEMENTARY",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220129001054",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.4754,
+            31.2976
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220156001209",
+        "label": "PORT BARRE ELEMENTARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220156001209",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.9504,
+            30.569
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220156001989",
+        "label": "NORTH CENTRAL HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220156001989",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.9845,
+            30.7278
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220129001053",
+        "label": "HORSESHOE DRIVE ELEMENTARY NEW VISION ACADEMY",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220129001053",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.4616,
+            31.2614
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220129001072",
+        "label": "POLAND JUNIOR HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220129001072",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.2757,
+            31.1673
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220159001220",
+        "label": "CATAHOULA ELEMENTARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220159001220",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.7098,
+            30.2173
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "228010001627",
+        "label": "RAYMOND LABORDE CORRECTIONAL CENTER",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-228010001627",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.0257,
+            30.9728
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220159001219",
+        "label": "BREAUX BRIDGE HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220159001219",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.8578,
+            30.255
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220015000073",
+        "label": "MARKSVILLE HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220015000073",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.0716,
+            31.1271
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220129001038",
+        "label": "ACADIAN ELEMENTARY",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220129001038",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.4119,
+            31.2872
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220159001218",
+        "label": "BREAUX BRIDGE PRIMARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220159001218",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.8912,
+            30.2786
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220129001080",
+        "label": "W.O. HALL 6TH GRADE ACADEMY",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220129001080",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.432,
+            31.2918
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220004702462",
+        "label": "CENTRAL SOUTHWEST ALTERNATIVE HIGH SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220004702462",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.1665,
+            30.9368
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "590014600046",
+        "label": "CHITIMACHA TRIBAL SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-590014600046",
+      "geometry": {
+        "coordinates": [
+          [
+            -91.5316,
+            29.885
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    },
+    {
+      "properties": {
+        "code": "220015000072",
+        "label": "MARKSVILLE ELEMENTARY SCHOOL",
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School"
+      },
+      "type": "Feature",
+      "id": "https://localhost:4200/lpg/graph_801104/0/rdfs#School-220015000072",
+      "geometry": {
+        "coordinates": [
+          [
+            -92.0731,
+            31.1277
+          ]
+        ],
+        "type": "MultiPoint"
+      }
+    }
+  ]
 }
