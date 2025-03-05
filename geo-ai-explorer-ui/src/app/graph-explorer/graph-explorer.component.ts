@@ -3,7 +3,7 @@ import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
 import { defaultQueries, SELECTED_COLOR } from '../explorer/defaultQueries';
-import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
+import { ExplorerService, SPARQLResultSet } from '../service/explorer.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
@@ -90,7 +90,7 @@ export class GraphExplorerComponent {
 
   private extraColors: any = {};
 
-  constructor(private queryService: GraphQueryService) {
+  constructor(private queryService: ExplorerService) {
   }
 
   public async renderGeoObjectAndNeighbors(explorer: ExplorerComponent, geoObject: GeoObject) {

@@ -1,6 +1,7 @@
 import { ChatMessage } from "./models/chat.model";
 import { GeoObject } from "./models/geoobject.model";
 import { Style } from "./models/style.model";
+import { ExplorerInit } from "./service/explorer.service";
 
 export class MockUtil {
   private static loremSentences: string[] = [
@@ -31,6 +32,10 @@ export class MockUtil {
     { id: '7', sender: 'user', text: 'what is the total number of students impacted', mappable: false },
     { id: '8', sender: 'system', text: 'The total number of students that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 66,179 students.', mappable: true },
   ];
+
+  public static explorerInit: ExplorerInit = {
+    
+  }
 
   public static locations: any[] = [
     {

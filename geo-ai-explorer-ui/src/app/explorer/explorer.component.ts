@@ -12,7 +12,7 @@ import { AttributePanelComponent } from '../attribute-panel/attribute-panel.comp
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
+import { ExplorerService, SPARQLResultSet } from '../service/explorer.service';
 import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -97,7 +97,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
-    constructor(private styleService: StyleService) {
+    constructor(private styleService: StyleService, private explorerService: ExplorerService) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
             this.geoObjects = geoObjects;
 
@@ -106,6 +106,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnInit(): void {
+        // TODO : Invoke explorerService.init instead
         this.styleService.getStyles().then(styles => {
             this.resolvedStyles = styles;
         })
