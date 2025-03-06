@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ExplorerComponent, } from '../explorer/explorer.component';
 import { parse, GeoJSONGeometry } from 'wellknown';
 import { GeoObject } from '../models/geoobject.model';
+import { MockUtil } from '../mock-util';
 
 export interface SPARQLResultSetBinding {
     type: string, value: string, datatype?: string
@@ -16,14 +17,26 @@ export interface SPARQLResultSet {
     };
 }
 
+export interface ExplorerInit {
+
+}
+
 @Injectable({
   providedIn: 'root'
 })
-export class GraphQueryService {
+export class ExplorerService {
 
   public sparqlUrl: string = "http://staging-georegistry.geoprism.net:3030/usace/sparql";
 
   constructor() { }
+
+  init(): Promise<ExplorerInit> {
+    return new Promise<ExplorerInit>((resolve) => {
+        setTimeout(() => {
+            resolve(MockUtil.explorerInit);
+        }, 3000); // Simulating 3-second network delay
+    });
+  }
 
   async query(sparqlText: string): Promise<SPARQLResultSet> {
     const url = `${this.sparqlUrl}?query=${encodeURIComponent(sparqlText)}`;

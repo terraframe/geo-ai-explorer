@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { GraphQueryService } from './graph-query.service';
+import { ExplorerService as ExplorerService } from './explorer.service';
 
 describe('GraphQueryService', () => {
-  let service: GraphQueryService;
+  let service: ExplorerService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(GraphQueryService);
+    service = TestBed.inject(ExplorerService);
   });
 
   it('should be created', () => {

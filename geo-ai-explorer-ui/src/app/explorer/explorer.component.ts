@@ -12,17 +12,18 @@ import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { GeoObject } from '../models/geoobject.model';
+import { StyleConfig } from '../models/style.model';
+
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { selectObjects, selectStyles } from '../state/explorer.selectors';
-import { StyleConfig } from '../models/style.model';
 import { StyleService } from '../service/style-service.service';
 import { ExplorerActions } from '../state/explorer.actions';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { defaultQueries, QueryConfig, stateCentroid, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, featureCollection, union } from '@turf/turf';
-import { BBox, Feature, GeoJsonObject, MultiPolygon, Polygon } from 'geojson';
+import { ExplorerService } from '../service/explorer.service';
 
 
 @Component({
@@ -94,7 +95,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
-    constructor(private styleService: StyleService) {
+    constructor(private styleService: StyleService, private explorerService: ExplorerService) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
             this.geoObjects = geoObjects;
 
@@ -134,6 +135,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnInit(): void {
+        // TODO : Invoke explorerService.init instead
         this.styleService.getStyles().then(styles => {
             this.store.dispatch(ExplorerActions.setStyles({ styles }));
         })
