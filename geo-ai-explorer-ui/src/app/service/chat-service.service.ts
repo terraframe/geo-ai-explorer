@@ -33,7 +33,7 @@ export class ChatService {
       }, 3000); // Simulating 3-second network delay
     });
 
-    // Uncomment below to make a real HTTP request
+    // // Uncomment below to make a real HTTP request
     // let params = new HttpParams();
     // params = params.append("sessionId", sessionId);
     // params = params.append("prompt", message.text);
@@ -52,27 +52,17 @@ export class ChatService {
   getLocations(messages: ChatMessage[]): Promise<GeoObject[]> {
     return new Promise<GeoObject[]>((resolve) => {
       setTimeout(() => {
-
-
         resolve(MockUtil.locations);
       }, 3000); // Simulating 3-second network delay
-    }).then(objects => {
-      objects.map(object => object.properties.uri = '<' + object.id + '>');
-
-      return objects;
     });
 
-    // // Uncomment below to make a real HTTP request
+    // // // Uncomment below to make a real HTTP request
     // const data = messages.map(message => ({
     //   type: message.sender === 'user' ? 'USER' : 'AI',
     //   content: message.text
     // }))
 
-    // return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data })).then(objects => {
-    //   objects.map(object => object.properties.uri = '<' + object.id + '>');
-
-    //   return objects;
-    // });
+    // return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data }));
   }
 
 }

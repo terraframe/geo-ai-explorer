@@ -21,8 +21,8 @@ import { selectObjects, selectStyles } from '../state/explorer.selectors';
 import { StyleService } from '../service/style-service.service';
 import { ExplorerActions } from '../state/explorer.actions';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
-import { defaultQueries, QueryConfig, stateCentroid, SELECTED_COLOR } from './defaultQueries';
-import { AllGeoJSON, bbox, bboxPolygon, featureCollection, union } from '@turf/turf';
+import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
+import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 
 
@@ -163,9 +163,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.mapGeoObjects();
 
+            // Fit the map to the bounds of all of the layers
             if (this.geoObjects.length > 0) {
 
                 const layerBounds = this.orderedTypes.map(type => {
+                    // TODO: Is there a better way to get the layer data from the map?
                     const data = ((this.map?.getSource(type) as GeoJSONSource)._data) as AllGeoJSON;
 
                     return bboxPolygon(bbox(data))

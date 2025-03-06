@@ -49,6 +49,7 @@ public class JenaService
       LinkedList<Location> results = new LinkedList<>();
 
       conn.querySelect(statement, (qs) -> {
+        String uri = qs.getResource("uri").getURI();
         String type = qs.getResource("type").getURI();
         String code = qs.getLiteral("code").getString();
         String label = qs.getLiteral("label").getString();
@@ -57,7 +58,7 @@ public class JenaService
         WKTReader reader = WKTReader.extract(wkt);
         Geometry geometry = reader.getGeometry();
 
-        results.add(new Location(type, code, label, geometry));
+        results.add(new Location(uri, type, code, label, geometry));
 
       });
 
