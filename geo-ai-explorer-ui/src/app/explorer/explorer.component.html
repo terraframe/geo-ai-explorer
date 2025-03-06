@@ -19,15 +19,17 @@
 	</div>
 
 	<!-- Legend -->
-	<div class="legend" cdkDropList (cdkDropListDropped)="drop($event)">
-		<div class="legend-item" *ngFor="let type of orderedTypes" cdkDrag>
-			<ng-container *ngIf="typeLegend[type] as legend">
-				<div class="square" [ngStyle]="{ background: legend.color }"></div>
-				
-				<label>{{ legend.label }}</label>
-			</ng-container>
+	<p-panel [toggleable]="true" header="Legend" collapsed="true" class="legend" *ngIf="orderedTypes.length > 0">
+		<div  cdkDropList (cdkDropListDropped)="drop($event)">
+			<div class="legend-item" *ngFor="let type of orderedTypes" cdkDrag>
+				<ng-container *ngIf="typeLegend[type] as legend">
+					<div class="square" [ngStyle]="{ background: legend.color }"></div>
+					
+					<label>{{ legend.label }}</label>
+				</ng-container>
+			</div>
 		</div>
-	</div>
+	</p-panel>
 
 	<div *ngIf="selectedObject" class="inspector">
 		<h2 class="inspector-title">{{selectedObject.properties.label}}</h2>

@@ -17,15 +17,15 @@ export class StyleService {
 
   getStyles(): Promise<StyleConfig> {
 
-    return new Promise<StyleConfig>((resolve) => {
-      setTimeout(() => {
-        // Simulated server response
-        resolve(MockUtil.styles);
-      }, 3000); // Simulating 3-second network delay
-    });
+    // return new Promise<StyleConfig>((resolve) => {
+    //   setTimeout(() => {
+    //     // Simulated server response
+    //     resolve(MockUtil.styles);
+    //   }, 3000); // Simulating 3-second network delay
+    // });
 
-    // // Uncomment below to make a real HTTP request
-    // return firstValueFrom(this.http.get<StyleConfig>(environment.apiUrl + 'api/style/get-default'));
+    // Uncomment below to make a real HTTP request
+    return firstValueFrom(this.http.get<StyleConfig>(environment.apiUrl + 'api/style/get-default'));
   }
 
 }

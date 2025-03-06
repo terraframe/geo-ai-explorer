@@ -91,7 +91,7 @@ public class BedrockService
     }
     
     String value = content.toString();
-    boolean mappable = value.endsWith("#mapit");
+    boolean mappable = value.contains("#mapit");
     
 
     Message message = new Message();

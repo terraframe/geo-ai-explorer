@@ -38,8 +38,6 @@ export class ChatService {
     // params = params.append("sessionId", sessionId);
     // params = params.append("prompt", message.text);
 
-
-
     // return firstValueFrom(this.http.get<ServerChatResponse>(environment.apiUrl + 'api/chat/prompt', { params })).then(response => {
     //   const chatMessage: ChatMessage = {
     //     id: uuidv4(),
@@ -64,7 +62,7 @@ export class ChatService {
       return objects;
     });
 
-    // Uncomment below to make a real HTTP request
+    // // Uncomment below to make a real HTTP request
     // const data = messages.map(message => ({
     //   type: message.sender === 'user' ? 'USER' : 'AI',
     //   content: message.text

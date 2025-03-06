@@ -1,24 +1,28 @@
 import { Component, AfterViewInit, TemplateRef, ViewChild, inject, OnInit, OnDestroy } from '@angular/core';
-import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat } from "maplibre-gl";
+import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat, GeoJSONSource, LngLatBoundsLike } from "maplibre-gl";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { defaultQueries, QueryConfig, stateCentroid, locationCriteriaSparql, SELECTED_COLOR } from './defaultQueries';
 import JSON5 from 'json5'
 // @ts-ignore
 import ColorGen from "color-generator";
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { PanelModule } from 'primeng/panel';
+import { Observable, Subscription, take } from 'rxjs';
+import { Store } from '@ngrx/store';
+
+import { GeoObject } from '../models/geoobject.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { GraphQueryService, SPARQLResultSet } from '../service/graph-query.service';
-import { GeoObject } from '../models/geoobject.model';
-import { Observable, Subscription } from 'rxjs';
-import { Store } from '@ngrx/store';
-import { selectObjects } from '../state/explorer.selectors';
+import { selectObjects, selectStyles } from '../state/explorer.selectors';
 import { StyleConfig } from '../models/style.model';
 import { StyleService } from '../service/style-service.service';
+import { ExplorerActions } from '../state/explorer.actions';
+import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
+import { defaultQueries, QueryConfig, stateCentroid, SELECTED_COLOR } from './defaultQueries';
+import { AllGeoJSON, bbox, bboxPolygon, featureCollection, union } from '@turf/turf';
+import { BBox, Feature, GeoJsonObject, MultiPolygon, Polygon } from 'geojson';
 
 
 @Component({
@@ -31,12 +35,19 @@ import { StyleService } from '../service/style-service.service';
         AttributePanelComponent,
         DragDropModule,
         ResultsTableComponent,
-        ProgressSpinnerModule
+        ProgressSpinnerModule,
+        PanelModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
 export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
+
+    public static GEO = "http://www.opengis.net/ont/geosparql#";
+
+    public static GEO_FEATURE = ExplorerComponent.GEO + "Feature";
+
+    public static GEO_WKT_LITERAL = ExplorerComponent.GEO + "wktLiteral";
 
     private store = inject(Store);
 
@@ -45,6 +56,12 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     geoObjects: GeoObject[] = [];
 
     onGeoObjectsChange: Subscription;
+
+    styles$: Observable<StyleConfig> = this.store.select(selectStyles);
+
+    onStylesChange: Subscription;
+
+    resolvedStyles: StyleConfig = {};
 
     @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
 
@@ -58,29 +75,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public loading: boolean = false;
 
-    // tripleStore?: Store;
-
     public typeLegend: { [key: string]: { label: string, color: string } } = {};
 
-    public static GEO = "http://www.opengis.net/ont/geosparql#";
-
-    public static GEO_FEATURE = ExplorerComponent.GEO + "Feature";
-
-    public static GEO_WKT_LITERAL = ExplorerComponent.GEO + "wktLiteral";
-
-    public queryConfig: QueryConfig = this.defaultQueries[0];
-
-    public stylesText: string = "";
-
-    public sparqlText: string = "";
-
-    public locationRestrict: any = null;
-
-    public locationRestrictOptions!: { label: string, centroid: string }[];
-
     public selectedObject?: GeoObject;
-
-    resolvedStyles: StyleConfig = {};
 
     baseLayers: any[] = [
         {
@@ -101,66 +98,62 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
             this.geoObjects = geoObjects;
 
+            const types = Object.keys(this.geoObjectsByType());
+
+            // Resolve the style of all of the types
+            this.styles$.pipe(take(1)).subscribe(styles => {
+                const missingStyles = types.filter(type => styles[type] == null);
+
+                if (missingStyles.length > 0) {
+                    const newStyles = { ...styles };
+
+                    types.forEach(type => {
+                        if (newStyles[type] == null) {
+                            newStyles[type] = {
+                                order: 0,
+                                color: ColorGen().hexString()
+                            }
+                        }
+                    })
+
+                    this.store.dispatch(ExplorerActions.setStyles({ styles: newStyles }));
+                }
+                else {
+                    this.render();
+                }
+            })
+
+
+        })
+
+        this.onStylesChange = this.styles$.subscribe(styles => {
+            this.resolvedStyles = styles;
+
             this.render();
         })
     }
 
     ngOnInit(): void {
         this.styleService.getStyles().then(styles => {
-            this.resolvedStyles = styles;
+            this.store.dispatch(ExplorerActions.setStyles({ styles }));
         })
     }
 
     ngOnDestroy(): void {
         this.onGeoObjectsChange.unsubscribe();
+        this.onStylesChange.unsubscribe();
     }
 
     ngAfterViewInit() {
-        this.stylesText = JSON.stringify(this.queryConfig.styles, null, 2);
-        this.sparqlText = this.queryConfig.sparql;
-        this.locationRestrictOptions = Object.entries(stateCentroid).map((e) => ({ "label": e[0], "centroid": e[1] }));
-
-        this.parseStylesText();
         this.initializeMap();
-
-        // this.loadTestQuery();
     }
-
-
-
-    // loadTestQuery(index: number = 0) {
-    //     this.queryConfig = this.defaultQueries[index];
-    //     this.onSelectQuery();
-    //     this.query();
-    // }
-
-    // async query() {
-    //     this.loading = true;
-    //     this.importError = undefined;
-
-    //     try {
-    //         const result: SPARQLResultSet = await this.queryService.query(this.sparqlText);
-    //         this.geoObjects = this.queryService.convert(result);
-
-    //         if (this.geoObjects.length === 0) {
-    //             this.importError = 'The query did not return any results!';
-    //             return;
-    //         }
-
-    //         this.render();
-    //     } catch (error: any) {
-    //         console.error(error);
-    //         this.importError = error.message;
-    //     } finally {
-    //         this.loading = false;
-    //     }
-    // }
 
     render(): void {
         if (this.initialized) {
+            const types = Object.keys(this.geoObjectsByType());
 
-            this.orderedTypes = Object.keys(this.geoObjectsByType());
-            this.orderedTypes = this.orderedTypes.sort((a, b) => {
+            // Order the types by the order defined in their style config
+            this.orderedTypes = types.sort((a, b) => {
                 return (this.resolvedStyles[a]?.order ?? 999) - (this.resolvedStyles[b]?.order ?? 999);
             });
 
@@ -168,25 +161,30 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.mapGeoObjects();
 
-            if (this.queryConfig.focus != null && this.geoObjects.find(go => go.properties.uri === this.queryConfig.focus) != null) {
-                this.zoomTo(this.queryConfig.focus);
-            } else if (this.geoObjects.length > 0) {
-                let go = this.geoObjects.find(go => go.geometry != null && go.properties.type != null);
+            if (this.geoObjects.length > 0) {
 
-                if (go != null) {
-                    this.zoomTo(go.properties.uri);
+                const layerBounds = this.orderedTypes.map(type => {
+                    const data = ((this.map?.getSource(type) as GeoJSONSource)._data) as AllGeoJSON;
+
+                    return bboxPolygon(bbox(data))
+                })
+
+                if (layerBounds.length > 1) {
+                    const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
+                        return union(a, b) as any
+                    }, layerBounds[0])) as LngLatBoundsLike
+
+                    this.map?.fitBounds(allBounds, { padding: 50 })
                 }
+                else {
+                    this.map?.fitBounds(bbox(layerBounds[0]) as LngLatBoundsLike, { padding: 50 })
+                }
+
             }
 
             if (this.graphExplorer)
                 this.graphExplorer.renderGeoObjects(this, this.geoObjects);
         }
-    }
-
-    onSelectQuery() {
-        this.stylesText = JSON.stringify(this.queryConfig.styles, null, 2);
-        this.sparqlText = (" " + this.queryConfig.sparql).slice(1); // Create a copy of the string from the query config so we don't modify it
-        this.locationRestrict = null;
     }
 
     calculateTypeLegend() {
@@ -195,17 +193,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.orderedTypes.forEach(type => {
             this.typeLegend[type] = {
                 label: this.labelForType(type),
-                color: (this.resolvedStyles[type] != null ? this.resolvedStyles[type].color : ColorGen().hexString())
+                color: this.resolvedStyles[type].color
             }
         });
-    }
-
-    onRestrictLocation() {
-        if (this.locationRestrict == null) { this.sparqlText = this.queryConfig.sparql; return; }
-
-        let criteria = locationCriteriaSparql.replace("{{centroid}}", this.locationRestrict.centroid).replace("{{wktVar}}", this.queryConfig.wktVar);
-
-        this.sparqlText = this.queryConfig.sparql.replace("}\nLIMIT", criteria + "\n}\nLIMIT");
     }
 
     labelForType(typeUri: string): string {
@@ -217,6 +207,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     public static uriToLabel(uri: string): string {
+        console.log(uri)
+
         let i = uri.lastIndexOf("#");
         if (i == -1) return uri;
 
@@ -378,58 +370,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         return gos;
     }
 
-    parsePrefixesFromSparql(): { [key: string]: string } {
-        let out: any = {};
-
-        let matches = this.sparqlText?.matchAll(/PREFIX (.*:) <(.*)>/g);
-        let result = matches!.next();
-        while (!result.done) {
-            out[result.value[1]] = result.value[2];
-            result = matches!.next();
-        }
-
-        return out;
-    }
-
-    parseStylesText() {
-        try {
-            this.queryConfig.styles = JSON5.parse(this.stylesText);
-
-            let prefixes = this.parsePrefixesFromSparql();
-
-            let newStyles: any = {};
-            for (const [key, value] of Object.entries(this.queryConfig.styles)) {
-                let newKey = key;
-
-                for (const [prefix, uri] of Object.entries(prefixes)) {
-                    if (key.startsWith(prefix)) {
-                        newKey = key.replace(prefix, uri);
-                        break;
-                    }
-                }
-
-                newStyles[newKey] = value;
-            }
-            this.resolvedStyles = newStyles;
-
-            // let changed = false;
-
-            // for (let i = 0; i < this.styles.length; ++i) {
-            //     let style = this.styles[i];
-
-            //     if (style.color == null || style.color == "") {
-            //         style.color = ColorGen().hexString();
-            //         changed = true;
-            //     }
-            // }
-
-            // if (changed) {
-            //     this.stylesText = JSON5.stringify(this.styles);
-            // }
-        } catch (ex: any) {
-            this.importError = ex.message;
-        }
-    }
 
     public getUsaceUri(go: GeoObject): string { return ExplorerComponent.getUsaceUri(go); }
 
@@ -468,7 +408,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
-    public getObjectUrl(go: GeoObject): string { return ExplorerComponent.getObjectUrl(go); }
+    public getObjectUrl(go: GeoObject): string {
+        return ExplorerComponent.getObjectUrl(go);
+    }
 
     public static getObjectUrl(go: GeoObject): string {
         if (go.properties.type.indexOf("Program") != -1
@@ -587,19 +529,19 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     /*
       async onFileChange(e: any) {
         const file:File = e.target.files[0];
-    
+     
         if (file != null)
         {
             this.loadRdf(file);
         }
       }
-    
+     
       async loadRdf(file: File) {
         this.loading = true;
-    
+     
         let text = await file.text();
         this.tripleStore = new Store();
-    
+     
         const parser = new Parser();
         parser.parse(text, (error, quad, prefixes) => {
             if (error)
