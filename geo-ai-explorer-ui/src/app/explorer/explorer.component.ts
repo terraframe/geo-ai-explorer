@@ -124,38 +124,38 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.parseStylesText();
         this.initializeMap();
 
-        // this.loadTestQuery();
+        this.loadTestQuery();
     }
 
 
 
-    // loadTestQuery(index: number = 0) {
-    //     this.queryConfig = this.defaultQueries[index];
-    //     this.onSelectQuery();
-    //     this.query();
-    // }
+    loadTestQuery(index: number = 0) {
+        this.queryConfig = this.defaultQueries[index];
+        this.onSelectQuery();
+        this.query();
+    }
 
-    // async query() {
-    //     this.loading = true;
-    //     this.importError = undefined;
+    async query() {
+        this.loading = true;
+        this.importError = undefined;
 
-    //     try {
-    //         const result: SPARQLResultSet = await this.queryService.query(this.sparqlText);
-    //         this.geoObjects = this.queryService.convert(result);
+        try {
+            const result: SPARQLResultSet = await this.explorerService.query(this.sparqlText);
+            this.geoObjects = this.explorerService.convert(result);
 
-    //         if (this.geoObjects.length === 0) {
-    //             this.importError = 'The query did not return any results!';
-    //             return;
-    //         }
+            if (this.geoObjects.length === 0) {
+                this.importError = 'The query did not return any results!';
+                return;
+            }
 
-    //         this.render();
-    //     } catch (error: any) {
-    //         console.error(error);
-    //         this.importError = error.message;
-    //     } finally {
-    //         this.loading = false;
-    //     }
-    // }
+            this.render();
+        } catch (error: any) {
+            console.error(error);
+            this.importError = error.message;
+        } finally {
+            this.loading = false;
+        }
+    }
 
     render(): void {
         if (this.initialized) {
@@ -179,8 +179,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 }
             }
 
-            if (this.graphExplorer)
-                this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+            // if (this.graphExplorer)
+            //     this.graphExplorer.renderGeoObjects(this, this.geoObjects);
         }
     }
 
