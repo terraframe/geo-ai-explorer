@@ -26,13 +26,14 @@ public class Location
     this.properties = new HashMap<>();
   }
 
-  public Location(String type, String code, String label, Geometry geometry)
+  public Location(String uri, String type, String code, String label, Geometry geometry)
   {
     this();
 
-    this.id = type + "-" + code;
+    this.id = uri;
     this.geometry = geometry;
 
+    this.properties.put("uri", uri);
     this.properties.put("type", type);
     this.properties.put("code", code);
     this.properties.put("label", label);

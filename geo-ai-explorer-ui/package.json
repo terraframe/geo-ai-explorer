@@ -25,6 +25,7 @@
     "@ngrx/store": "^19.0.1",
     "@primeng/themes": "^19.0.9",
     "@swimlane/ngx-graph": "^8.4.0",
+    "@turf/turf": "^7.2.0",
     "@types/mapbox-gl": "1.11.1",
     "@types/n3": "^1.16.4",
     "@types/wellknown": "^0.5.8",

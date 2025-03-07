@@ -6,3 +6,7 @@ const selector = createFeatureSelector<ExplorerStateModel>('explorer');
 export const selectObjects = createSelector(selector, (s) => {
     return s.objects;
 });
+
+export const selectStyles = createSelector(selector, (s) => {
+    return s.styles;
+});

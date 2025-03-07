@@ -34,7 +34,7 @@ export class MockUtil {
   ];
 
   public static explorerInit: ExplorerInit = {
-    
+
   }
 
   public static locations: any[] = [
@@ -42,7 +42,8 @@ export class MockUtil {
       "properties": {
         "code": "220072002479",
         "label": "BELLE PLACE ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072002479"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220072002479",
@@ -60,7 +61,8 @@ export class MockUtil {
       "properties": {
         "code": "220159001222",
         "label": "CECILIA PRIMARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001222"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001222",
@@ -78,7 +80,8 @@ export class MockUtil {
       "properties": {
         "code": "228010002497",
         "label": "CENTRAL LOUISIANA SUPPORTS AND SERVICES CENTER",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010002497"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-228010002497",
@@ -96,7 +99,8 @@ export class MockUtil {
       "properties": {
         "code": "220072000519",
         "label": "JEANERETTE SENIOR HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072000519"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220072000519",
@@ -114,7 +118,8 @@ export class MockUtil {
       "properties": {
         "code": "220129001054",
         "label": "D.F. HUDDLE ELEMENTARY",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001054"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001054",
@@ -132,7 +137,8 @@ export class MockUtil {
       "properties": {
         "code": "220156001209",
         "label": "PORT BARRE ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001209"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001209",
@@ -150,7 +156,8 @@ export class MockUtil {
       "properties": {
         "code": "220156001989",
         "label": "NORTH CENTRAL HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001989"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001989",
@@ -168,7 +175,8 @@ export class MockUtil {
       "properties": {
         "code": "220129001053",
         "label": "HORSESHOE DRIVE ELEMENTARY NEW VISION ACADEMY",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001053"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001053",
@@ -186,7 +194,8 @@ export class MockUtil {
       "properties": {
         "code": "220129001072",
         "label": "POLAND JUNIOR HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001072"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001072",
@@ -204,7 +213,8 @@ export class MockUtil {
       "properties": {
         "code": "220159001220",
         "label": "CATAHOULA ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001220"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001220",
@@ -222,7 +232,8 @@ export class MockUtil {
       "properties": {
         "code": "228010001627",
         "label": "RAYMOND LABORDE CORRECTIONAL CENTER",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010001627"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-228010001627",
@@ -240,7 +251,8 @@ export class MockUtil {
       "properties": {
         "code": "220159001219",
         "label": "BREAUX BRIDGE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001219"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001219",
@@ -258,7 +270,8 @@ export class MockUtil {
       "properties": {
         "code": "220015000073",
         "label": "MARKSVILLE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220015000073"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220015000073",
@@ -276,7 +289,8 @@ export class MockUtil {
       "properties": {
         "code": "220129001038",
         "label": "ACADIAN ELEMENTARY",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001038"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001038",
@@ -294,7 +308,8 @@ export class MockUtil {
       "properties": {
         "code": "220159001218",
         "label": "BREAUX BRIDGE PRIMARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001218"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001218",
@@ -312,7 +327,8 @@ export class MockUtil {
       "properties": {
         "code": "220129001080",
         "label": "W.O. HALL 6TH GRADE ACADEMY",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001080"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001080",
@@ -330,7 +346,8 @@ export class MockUtil {
       "properties": {
         "code": "220004702462",
         "label": "CENTRAL SOUTHWEST ALTERNATIVE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
+        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220004702462"
       },
       "type": "Feature",
       "id": "https://localhost:4200/lpg/graph_801104/0#School-220004702462",
@@ -339,42 +356,6 @@ export class MockUtil {
           [
             -92.1665,
             30.9368
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "590014600046",
-        "label": "CHITIMACHA TRIBAL SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
-      },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-590014600046",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.5316,
-            29.885
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220015000072",
-        "label": "MARKSVILLE ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0#School"
-      },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220015000072",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.0731,
-            31.1277
           ]
         ],
         "type": "MultiPoint"

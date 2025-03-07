@@ -71,8 +71,6 @@ export class AichatComponent {
         this.loading = true;
 
         this.chatService.getLocations(history).then((response) => {
-          console.log('Locations', response)
-
           this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response }));
         }).finally(() => {
           this.loading = false;

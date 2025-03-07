@@ -58,16 +58,17 @@ public class JenaService {
 		try (RDFConnection conn = builder.build()) {
 			LinkedList<Location> results = new LinkedList<>();
 
-			conn.querySelect(statement, (qs) -> {
-				String type = qs.getResource("type").getURI();
-				String code = qs.getLiteral("code").getString();
-				String label = qs.getLiteral("label").getString();
-				String wkt = qs.getLiteral("wkt").getString();
+      conn.querySelect(statement, (qs) -> {
+        String uri = qs.getResource("uri").getURI();
+        String type = qs.getResource("type").getURI();
+        String code = qs.getLiteral("code").getString();
+        String label = qs.getLiteral("label").getString();
+        String wkt = qs.getLiteral("wkt").getString();
 
 				WKTReader reader = WKTReader.extract(wkt);
 				Geometry geometry = reader.getGeometry();
 
-				results.add(new Location(type, code, label, geometry));
+        results.add(new Location(uri, type, code, label, geometry));
 
 			});
 
