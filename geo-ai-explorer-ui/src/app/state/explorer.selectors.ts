@@ -10,3 +10,7 @@ export const selectObjects = createSelector(selector, (s) => {
 export const selectStyles = createSelector(selector, (s) => {
     return s.styles;
 });
+
+export const selectedObject = createSelector(selector, (s) => {
+    return s.selectedObject;
+});

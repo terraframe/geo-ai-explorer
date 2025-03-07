@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
@@ -8,6 +8,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
+import { ExplorerActions } from '../state/explorer.actions';
+import { Store } from '@ngrx/store';
 
 // export interface Relationship {
 //   oid: string,
@@ -75,6 +77,8 @@ export class GraphExplorerComponent {
 
   @ViewChild("graph") graph!: GraphComponent;
 
+  private store = inject(Store);
+
   private HASH_TAG_REPLACEMENT = "-!`~`!-";
 
   public DIMENSIONS = DIMENSIONS;
@@ -94,6 +98,8 @@ export class GraphExplorerComponent {
   public explorer?: ExplorerComponent;
 
   private extraColors: any = {};
+
+  private gprGraph?: GprGraph;
 
   constructor(private queryService: ExplorerService) {
   }
@@ -128,6 +134,7 @@ export class GraphExplorerComponent {
 
   public renderGraph(explorer: ExplorerComponent, graph: GprGraph) {
     this.explorer = explorer;
+    this.gprGraph = graph;
 
     let data: any = {
         edges: [],
@@ -275,7 +282,10 @@ export class GraphExplorerComponent {
   }
 
   public onClickNode(node: any) {
-    this.explorer?.selectObject(this.idToUri(node.id), true);
+    // this.explorer?.selectObject(this.idToUri(node.id), true);
+
+    let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
+    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject! }));
   }
 
   public zoomToUri(uri: string) {

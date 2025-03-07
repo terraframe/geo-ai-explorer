@@ -25,21 +25,34 @@ public class SparqlGraphConverter {
         while (rs.hasNext()) {
             QuerySolution qs = rs.next();
             String uri1 = qs.contains("f1") ? qs.getResource("f1").getURI() : null;
-            String uri2 = qs.contains("f2") ? qs.getResource("f2").getURI() : null;
-            String edgeType = qs.contains("e1") ? qs.getResource("e1").getURI() : null;
+            String outUri = qs.contains("f2") ? qs.getResource("f2").getURI() : null;
+            String inUri = qs.contains("f3") ? qs.getResource("f3").getURI() : null;
+            String outEdgeType = qs.contains("e1") ? qs.getResource("e1").getURI() : null;
+            String inEdgeType = qs.contains("e2") ? qs.getResource("e2").getURI() : null;
 
             boolean firstRow = !locationMap.containsKey(uri1);
             Location loc1 = locationMap.computeIfAbsent(uri1, u -> createLocation(qs, "f1", "ft1", "wkt1", "lbl1", "code1"));
             if (firstRow) graph.getNodes().add(loc1);
             
-            if (uri2 != null)
+            if (outUri != null)
             {
-            	Location loc2 = locationMap.computeIfAbsent(uri2, u -> createLocation(qs, "f2", "ft2", "wkt2", "lbl2", "code2"));
+            	Location loc2 = locationMap.computeIfAbsent(outUri, u -> createLocation(qs, "f2", "ft2", "wkt2", "lbl2", "code2"));
 
 	            graph.getNodes().add(loc2);
 	
 	            // Add Edge
-	            Edge edge = new Edge(loc1.getId(), loc2.getId(), edgeType);
+	            Edge edge = new Edge(loc1.getId(), loc2.getId(), outEdgeType);
+	            graph.getEdges().add(edge);
+            }
+            
+            if (inUri != null)
+            {
+            	Location loc3 = locationMap.computeIfAbsent(inUri, u -> createLocation(qs, "f3", "ft3", "wkt3", "lbl3", "code3"));
+
+	            graph.getNodes().add(loc3);
+	
+	            // Add Edge
+	            Edge edge = new Edge(loc3.getId(), loc1.getId(), inEdgeType);
 	            graph.getEdges().add(edge);
             }
         }

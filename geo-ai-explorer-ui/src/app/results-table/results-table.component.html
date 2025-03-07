@@ -9,7 +9,7 @@
                 </tr>
             </ng-template>
             <ng-template #body let-object>
-                <tr>
+                <tr class="clickable" (click)="onClick(object)">
                     <td>{{ object.properties.label }}</td>
                     <td>{{ object.properties.uri }}</td>
                 </tr>

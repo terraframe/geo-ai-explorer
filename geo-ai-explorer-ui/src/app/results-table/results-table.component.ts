@@ -5,7 +5,8 @@ import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { LetDirective } from '@ngrx/component';
 
-import { selectObjects } from '../state/explorer.selectors';
+import { selectObjects, selectedObject } from '../state/explorer.selectors';
+import { ExplorerActions } from '../state/explorer.actions';
 
 @Component({
     selector: 'results-table',
@@ -18,11 +19,17 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     objects$: Observable<GeoObject[]> = this.store.select(selectObjects);
 
+    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+
     ngOnInit(): void {
 
     }
 
     ngOnDestroy(): void {
 
+    }
+
+    onClick(obj: GeoObject) {
+        this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj }));
     }
 }

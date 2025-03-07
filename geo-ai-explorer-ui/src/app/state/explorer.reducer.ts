@@ -6,16 +6,19 @@ import { StyleConfig } from '../models/style.model';
 
 export interface ExplorerStateModel {
     objects: GeoObject[];
-    styles: StyleConfig
+    styles: StyleConfig;
+    selectedObject: GeoObject | null;
 }
 
 export const initialState: ExplorerStateModel = {
     objects: [],
-    styles: {}
+    styles: {},
+    selectedObject: null
 }
 
 export const explorerReducer = createReducer(
     initialState,
+
     // Add geo object
     on(ExplorerActions.addGeoObject, (state, wrapper) => {
         const objects = [...state.objects];
@@ -28,6 +31,12 @@ export const explorerReducer = createReducer(
 
         return { ...state, objects: wrapper.objects }
     }),
+
+    // Select geo object
+    on(ExplorerActions.selectGeoObject, (state, wrapper) => {
+        return { ...state, selectedObject: wrapper.object || null };
+    }),
+
     // Add style
     on(ExplorerActions.addStyle, (state, wrapper) => {
         const styles = {...state.styles};

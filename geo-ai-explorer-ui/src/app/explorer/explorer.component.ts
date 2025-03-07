@@ -17,7 +17,7 @@ import { StyleConfig } from '../models/style.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { selectObjects, selectStyles } from '../state/explorer.selectors';
+import { selectObjects, selectedObject, selectStyles } from '../state/explorer.selectors';
 import { StyleService } from '../service/style-service.service';
 import { ExplorerActions } from '../state/explorer.actions';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
@@ -61,6 +61,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     styles$: Observable<StyleConfig> = this.store.select(selectStyles);
 
     onStylesChange: Subscription;
+
+    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+
+    onSelectedObjectChange: Subscription;
 
     resolvedStyles: StyleConfig = {};
 
@@ -131,7 +135,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.resolvedStyles = styles;
 
             this.render();
-        })
+        });
+
+        this.onSelectedObjectChange = this.selectedObject$.subscribe(obj => {
+            this.selectObject(obj == null ? undefined : obj!.properties.uri, true);
+        });
     }
 
     ngOnInit(): void {

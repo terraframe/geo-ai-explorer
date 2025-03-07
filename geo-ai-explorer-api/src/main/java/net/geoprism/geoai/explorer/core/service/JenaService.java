@@ -80,13 +80,16 @@ public class JenaService {
 	
 	public static String NEIGHBOR_QUERY = PREFIXES + """
 			  SELECT
-			      ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Selected Object
-			      ?e1 ?ev1 # Edge
-			      ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Neighbor Vertex
+			      ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
+			      ?e1 ?ev1 # Outgoing Edge
+			      ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
+			      ?e2 ?ev2 # Incoming Edge
+			      ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
 		      WHERE {
 		        BIND(geo:Feature as ?gf1) .
 		        BIND(?uri as ?f1) .
 		        
+		        # Source Object
 		        GRAPH lpgv: {
 			        ?f1 a ?ft1 .
 			        ?f1 rdfs:label ?lbl1 .
@@ -101,6 +104,7 @@ public class JenaService {
 			       ?ft1 rdfs:subClassOf  lpgs:GeoObject . 
 		        }
 		
+				# Outgoing Relationship
 				OPTIONAL {
 					BIND(geo:Feature as ?gf2) .
 					BIND(?f2 as ?ev1) .
@@ -121,8 +125,30 @@ public class JenaService {
 			        	?ft2 rdfs:subClassOf  lpgs:GeoObject .
 			        }
 		        }
+		        
+		        # Incoming Relationship
+				OPTIONAL {
+					BIND(geo:Feature as ?gf3) .
+					BIND(?f3 as ?ev2) .
+				
+					GRAPH lpgv: {
+				        ?f3 ?e2 ?f1 .
+				        ?f3 a ?ft3 .
+				        ?f3 rdfs:label ?lbl3 .
+				        ?f3 lpgs:GeoObject-code ?code3 .
+				        
+				        OPTIONAL {
+				        	?f3 geo:hasGeometry ?g3 .
+				        	?g3 geo:asWKT ?wkt3 .
+				        }
+			        }
+			        
+			        GRAPH lpg: {
+			        	?ft3 rdfs:subClassOf  lpgs:GeoObject .
+			        }
+		        }
 		      }
-		      LIMIT 10
+		      LIMIT 50
 			""";
 
 	public Graph neighbors(String uri) {
