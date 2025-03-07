@@ -117,7 +117,7 @@ export class GraphExplorerComponent {
       let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
         this.renderGraph(explorer, graph);
 
-        setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+        // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
       });
     } catch (error: any) {
       console.error(error);
@@ -161,7 +161,7 @@ export class GraphExplorerComponent {
       this.resizeDimensions();
       // this.calculateTypeLegend(this.data.relatedTypes);
       // this.addLayers(this.data.relatedTypes);
-    }, 0);
+    }, 100);
 
     this.resizeDimensions();
 }

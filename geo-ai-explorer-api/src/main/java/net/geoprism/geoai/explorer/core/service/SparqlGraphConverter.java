@@ -29,12 +29,12 @@ public class SparqlGraphConverter {
             String edgeType = qs.contains("e1") ? qs.getResource("e1").getURI() : null;
 
             boolean firstRow = !locationMap.containsKey(uri1);
-            Location loc1 = locationMap.computeIfAbsent(uri1, u -> createLocation(qs, "f1", "ft1", "wkt1", "lbl1"));
+            Location loc1 = locationMap.computeIfAbsent(uri1, u -> createLocation(qs, "f1", "ft1", "wkt1", "lbl1", "code1"));
             if (firstRow) graph.getNodes().add(loc1);
             
             if (uri2 != null)
             {
-            	Location loc2 = locationMap.computeIfAbsent(uri2, u -> createLocation(qs, "f2", "ft2", "wkt2", "lbl2"));
+            	Location loc2 = locationMap.computeIfAbsent(uri2, u -> createLocation(qs, "f2", "ft2", "wkt2", "lbl2", "code2"));
 
 	            graph.getNodes().add(loc2);
 	
@@ -47,10 +47,11 @@ public class SparqlGraphConverter {
         return graph;
     }
 
-    private static Location createLocation(QuerySolution qs, String featureVar, String typeVar, String wktVar, String labelVar) {
-        String type = qs.contains(typeVar) ? qs.getResource(typeVar).getURI() : "Unknown";
-        String code = qs.contains(featureVar) ? qs.getResource(featureVar).getURI() : UUID.randomUUID().toString();
+    private static Location createLocation(QuerySolution qs, String uriVar, String typeVar, String wktVar, String labelVar, String codeVar) {
+    	String uri = qs.contains(uriVar) ? qs.getResource(uriVar).getURI() : UUID.randomUUID().toString();
+    	String type = qs.contains(typeVar) ? qs.getResource(typeVar).getURI() : "Unknown";
         String label = qs.contains(labelVar) ? qs.getLiteral(labelVar).getString() : "";
+        String code = qs.contains(codeVar) ? qs.getLiteral(codeVar).getString() : "";
         Geometry geometry = null;
 
         if (qs.contains(wktVar) && qs.get(wktVar).isLiteral()) {
@@ -65,6 +66,6 @@ public class SparqlGraphConverter {
             }
         }
 
-        return new Location(type, code, label, geometry);
+        return new Location(uri, type, code, label, geometry);
     }
 }

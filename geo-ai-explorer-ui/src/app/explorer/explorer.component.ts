@@ -665,8 +665,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
                 this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
 
-                if (uri)
-                    setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+                // if (uri)
+                //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
             }, 1);
         }
     }

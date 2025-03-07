@@ -41,6 +41,7 @@ public class JenaService {
 	
 	public static final String PREFIXES = """
 		PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+		PREFIX lpg: <https://localhost:4200/lpg#>
 		PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
 		PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
 		PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -79,27 +80,46 @@ public class JenaService {
 	
 	public static String NEIGHBOR_QUERY = PREFIXES + """
 			  SELECT
-		      ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 # Selected Object
-		      ?e1 ?ev1 # Edge
-		      ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 # Neighbor Vertex
-		      FROM lpgv: 
+			      ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Selected Object
+			      ?e1 ?ev1 # Edge
+			      ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Neighbor Vertex
 		      WHERE {
 		        BIND(geo:Feature as ?gf1) .
 		        BIND(?uri as ?f1) .
-		        ?f1 a ?ft1 .
-		        ?f1 geo:hasGeometry ?g1 .
-		        ?g1 geo:asWKT ?wkt1 .
-		        ?f1 rdfs:label ?lbl1 .
+		        
+		        GRAPH lpgv: {
+			        ?f1 a ?ft1 .
+			        ?f1 rdfs:label ?lbl1 .
+			        ?f1 lpgs:GeoObject-code ?code1 .
+			        
+			        OPTIONAL {
+			        	?f1 geo:hasGeometry ?g1 .
+			        	?g1 geo:asWKT ?wkt1 .
+			        }
+		        }
+		        GRAPH lpg: {
+			       ?ft1 rdfs:subClassOf  lpgs:GeoObject . 
+		        }
 		
 				OPTIONAL {
-			        ?f1 ?e1 ?f2 .
-			        BIND(?f2 as ?ev1) .
-			
-			        BIND(geo:Feature as ?gf2) 
-			        ?f2 a ?ft2 .
-			        ?f2 geo:hasGeometry ?g2 .
-			        ?g2 geo:asWKT ?wkt2 .
-			        ?f2 rdfs:label ?lbl2 .
+					BIND(geo:Feature as ?gf2) .
+					BIND(?f2 as ?ev1) .
+				
+					GRAPH lpgv: {
+				        ?f1 ?e1 ?f2 .
+				        ?f2 a ?ft2 .
+				        ?f2 rdfs:label ?lbl2 .
+				        ?f2 lpgs:GeoObject-code ?code2 .
+				        
+				        OPTIONAL {
+				        	?f2 geo:hasGeometry ?g2 .
+				        	?g2 geo:asWKT ?wkt2 .
+				        }
+			        }
+			        
+			        GRAPH lpg: {
+			        	?ft2 rdfs:subClassOf  lpgs:GeoObject .
+			        }
 		        }
 		      }
 		      LIMIT 10
