@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
@@ -8,6 +8,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
+import { ExplorerActions } from '../state/explorer.actions';
+import { Store } from '@ngrx/store';
 
 // export interface Relationship {
 //   oid: string,
@@ -34,6 +36,11 @@ import { GeoObject } from '../models/geoobject.model';
 //   label: string,
 //   objectType: "BUSINESS" | "GEOOBJECT"
 // }
+
+export interface GprGraph {
+  nodes: GeoObject[],
+  edges: { source: string, target: string, type: string }[]
+}
 
 export interface TreeData {
   edges: Edge[],
@@ -70,6 +77,8 @@ export class GraphExplorerComponent {
 
   @ViewChild("graph") graph!: GraphComponent;
 
+  private store = inject(Store);
+
   private HASH_TAG_REPLACEMENT = "-!`~`!-";
 
   public DIMENSIONS = DIMENSIONS;
@@ -81,7 +90,7 @@ export class GraphExplorerComponent {
   public svgHeight: number | null = null;
   public svgWidth: number | null = null;
 
-  public geoObjects?: GeoObject[];
+  // public geoObjects?: GeoObject[];
   public data?: TreeData;
 
   public relationship: any = { layout: "HORIZONTAL" }
@@ -90,6 +99,8 @@ export class GraphExplorerComponent {
 
   private extraColors: any = {};
 
+  private gprGraph?: GprGraph;
+
   constructor(private queryService: ExplorerService) {
   }
 
@@ -97,18 +108,23 @@ export class GraphExplorerComponent {
     try {
       this.loading = true;
 
-      let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
-      const result: SPARQLResultSet = await this.queryService.query(sparql);
-      this.geoObjects = this.queryService.convert(result);
+      // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
+      // const result: SPARQLResultSet = await this.queryService.query(sparql);
+      // this.geoObjects = this.queryService.convert(result);
 
-      if (this.geoObjects.length === 0) {
-        console.error('The query did not return any results!');
-        return;
-      }
+      // if (this.geoObjects.length === 0) {
+      //   console.error('The query did not return any results!');
+      //   return;
+      // }
 
-      this.renderGeoObjects(explorer, this.geoObjects);
+      // this.renderGeoObjects(explorer, this.geoObjects);
 
-      setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+      console.log(geoObject)
+      let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
+        this.renderGraph(explorer, graph);
+
+        // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+      });
     } catch (error: any) {
       console.error(error);
     } finally {
@@ -116,51 +132,93 @@ export class GraphExplorerComponent {
     }
   }
 
-  public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
+  public renderGraph(explorer: ExplorerComponent, graph: GprGraph) {
     this.explorer = explorer;
+    this.gprGraph = graph;
 
-    console.log(geoObjects);
-
-    this.geoObjects = geoObjects;
     let data: any = {
-      edges: [],
-      nodes: []
-    }
+        edges: [],
+        nodes: []
+    };
 
-    geoObjects.forEach(go => {
+    graph.nodes.forEach(go => {
+        let node = {
+            label: (go.properties.label != null && go.properties.label !== "") 
+                ? go.properties.label 
+                : go.properties.uri.substring(go.properties.uri.lastIndexOf("#") + 1),
+            id: this.uriToId(go.properties.uri),
+            relation: graph.edges.some(edge => edge.source === go.properties.uri) ? "PARENT" : "CHILD",
+            type: go.properties.type
+        };
+        data.nodes.push(node);
+    });
 
-      let node = {
-        label: (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1),
-        id: this.uriToId(go.properties.uri),
-        relation: Object.entries(go.properties.edges).length == 0 ? "CHILD" : "PARENT",
-        type: go.properties.type
-      };
-      data.nodes.push(node);
-
-      for (const [key, value] of Object.entries(go.properties.edges)) {
-        // if (value === go.properties.uri) { continue; }
-
-        value.forEach(v => {
-          let edge = {
+    graph.edges.forEach(edge => {
+        let formattedEdge = {
             id: this.uriToId(Math.random().toString(16).slice(2)),
-            source: this.uriToId(go.properties.uri),
-            target: this.uriToId(v),
-            label: ExplorerComponent.uriToLabel(key)
-          };
-          data.edges.push(edge);
-        });
-      }
+            source: this.uriToId(edge.source),
+            target: this.uriToId(edge.target),
+            label: ExplorerComponent.uriToLabel(edge.type)
+        };
+        data.edges.push(formattedEdge);
     });
 
     window.setTimeout(() => {
-        this.data = data;
-        this.resizeDimensions();
-        // this.calculateTypeLegend(this.data.relatedTypes);
-        // this.addLayers(this.data.relatedTypes);
-    }, 0);
+      this.data = data;
+      this.resizeDimensions();
+      // this.calculateTypeLegend(this.data.relatedTypes);
+      // this.addLayers(this.data.relatedTypes);
+    }, 100);
 
     this.resizeDimensions();
-  }
+}
+
+
+  // public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
+  //   this.explorer = explorer;
+
+  //   console.log(geoObjects);
+
+  //   this.geoObjects = geoObjects;
+  //   let data: any = {
+  //     edges: [],
+  //     nodes: []
+  //   }
+
+  //   geoObjects.forEach(go => {
+
+  //     let node = {
+  //       label: (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1),
+  //       id: this.uriToId(go.properties.uri),
+  //       relation: Object.entries(go.properties.edges).length == 0 ? "CHILD" : "PARENT",
+  //       type: go.properties.type
+  //     };
+  //     data.nodes.push(node);
+
+  //     for (const [key, value] of Object.entries(go.properties.edges)) {
+  //       // if (value === go.properties.uri) { continue; }
+
+  //       value.forEach(v => {
+  //         let edge = {
+  //           id: this.uriToId(Math.random().toString(16).slice(2)),
+  //           source: this.uriToId(go.properties.uri),
+  //           target: this.uriToId(v),
+  //           label: ExplorerComponent.uriToLabel(key)
+  //         };
+  //         data.edges.push(edge);
+  //       });
+  //     }
+  //   });
+
+  //   window.setTimeout(() => {
+  //       this.data = data;
+  //       this.resizeDimensions();
+  //       // this.calculateTypeLegend(this.data.relatedTypes);
+  //       // this.addLayers(this.data.relatedTypes);
+  //   }, 0);
+
+  //   this.resizeDimensions();
+  // }
 
   public getTypeLegend() {
     return this.explorer?.getTypeLegend();
@@ -224,7 +282,10 @@ export class GraphExplorerComponent {
   }
 
   public onClickNode(node: any) {
-    this.explorer?.selectObject(this.idToUri(node.id), true);
+    // this.explorer?.selectObject(this.idToUri(node.id), true);
+
+    let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
+    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject! }));
   }
 
   public zoomToUri(uri: string) {

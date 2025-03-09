@@ -364,71 +364,71 @@ export class MockUtil {
   ];
 
   public static styles: { [key: string]: Style } = {
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#RealProperty": {
+    "https://localhost:4200/lpg/graph_801104/0#RealProperty": {
       "color": "#79F294",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelReach": {
+    "https://localhost:4200/lpg/graph_801104/0#ChannelReach": {
       "color": "#79DAF2",
       "order": 4
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Reservoir": {
+    "https://localhost:4200/lpg/graph_801104/0#Reservoir": {
       "color": "#CAEEFB",
       "order": 5
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#RecreationArea": {
+    "https://localhost:4200/lpg/graph_801104/0#RecreationArea": {
       "color": "#F2E779",
       "order": 3
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#LeveedArea": {
+    "https://localhost:4200/lpg/graph_801104/0#LeveedArea": {
       "color": "#C379F2",
       "order": 4
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#SchoolZone": {
+    "https://localhost:4200/lpg/graph_801104/0#SchoolZone": {
       "color": "#FBE3D6",
       "order": 6
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Project": {
+    "https://localhost:4200/lpg/graph_801104/0#Project": {
       "color": "#C0F279",
       "order": 6
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#LeveeArea": {
+    "https://localhost:4200/lpg/graph_801104/0#LeveeArea": {
       "color": "#D1D1D1",
       "order": 4
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#School": {
+    "https://localhost:4200/lpg/graph_801104/0#School": {
       "color": "#F2A579",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Levee": {
+    "https://localhost:4200/lpg/graph_801104/0#Levee": {
       "color": "#F279E0",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Hospital": {
+    "https://localhost:4200/lpg/graph_801104/0#Hospital": {
       "color": "#F2799D",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Dam": {
+    "https://localhost:4200/lpg/graph_801104/0#Dam": {
       "color": "#D5F279",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#River": {
+    "https://localhost:4200/lpg/graph_801104/0#River": {
       "color": "#7999F2",
       "order": 2
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#Watershed": {
+    "https://localhost:4200/lpg/graph_801104/0#Watershed": {
       "color": "#79F2C9",
       "order": 4
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelArea": {
+    "https://localhost:4200/lpg/graph_801104/0#ChannelArea": {
       "color": "#156082",
       "order": 4
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#ChannelLine": {
+    "https://localhost:4200/lpg/graph_801104/0#ChannelLine": {
       "color": "#79F2A0",
       "order": 1
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#UsaceRecreationArea": {
+    "https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea": {
       "color": "#F2BE79",
       "order": 3
     },
@@ -436,7 +436,7 @@ export class MockUtil {
       "color": "#FF5733",
       "order": 0
     },
-    "https://localhost:4200/lpg/graph_801104/0/rdfs#WaterLock": {
+    "https://localhost:4200/lpg/graph_801104/0#WaterLock": {
       "color": "#79F2E2",
       "order": 0
     }

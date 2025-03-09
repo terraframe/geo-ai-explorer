@@ -3,6 +3,10 @@ import { ExplorerComponent, } from '../explorer/explorer.component';
 import { parse, GeoJSONGeometry } from 'wellknown';
 import { GeoObject } from '../models/geoobject.model';
 import { MockUtil } from '../mock-util';
+import { GprGraph } from '../graph-explorer/graph-explorer.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 export interface SPARQLResultSetBinding {
     type: string, value: string, datatype?: string
@@ -28,7 +32,7 @@ export class ExplorerService {
 
   public sparqlUrl: string = "http://staging-georegistry.geoprism.net:3030/usace/sparql";
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   init(): Promise<ExplorerInit> {
     return new Promise<ExplorerInit>((resolve) => {
@@ -36,6 +40,17 @@ export class ExplorerService {
             resolve(MockUtil.explorerInit);
         }, 3000); // Simulating 3-second network delay
     });
+  }
+
+  neighborQuery(uri: string): Promise<GprGraph> {
+    // return new Promise<GprGraph>((resolve) => {
+    //     setTimeout(() => {
+    //         resolve(MockUtil.explorerInit);
+    //     }, 3000); // Simulating 3-second network delay
+    // });
+
+    // Uncomment below to make a real HTTP request
+    return firstValueFrom(this.http.post<GprGraph>(environment.apiUrl + 'api/neighbors', { uri: uri }));
   }
 
   async query(sparqlText: string): Promise<SPARQLResultSet> {
