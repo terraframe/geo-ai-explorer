@@ -285,7 +285,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.map?.addSource(type, {
                 type: "geojson",
                 data: geojson,
-                promoteId: 'id' // A little surprised at mapbox here, but without this param it won't use the id property for the feature id
+                promoteId: 'uri' // A little surprised at mapbox here, but without this param it won't use the id property for the feature id
             });
 
             this.map?.addLayer(this.layerConfig(type, geoObjects[0].geometry.type.toUpperCase()),
