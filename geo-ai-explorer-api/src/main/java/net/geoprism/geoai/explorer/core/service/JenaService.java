@@ -52,57 +52,57 @@ public class JenaService
       	PREFIX geo: <http://www.opengis.net/ont/geosparql#>
       	PREFIX spatialF: <http://jena.apache.org/function/spatial#>
       """;
-
-  public static String        NEIGHBOR_QUERY = PREFIXES + """
-        SELECT
-            ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
-            ?e1 ?ev1 # Outgoing Edge
-            ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
-            ?e2 ?ev2 # Incoming Edge
-            ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
-           WHERE {
-             BIND(geo:Feature as ?gf1) .
-             BIND(?uri as ?f1) .
-
-             # Source Object
-             GRAPH lpgv: {
-              ?f1 a ?ft1 .
-              ?f1 rdfs:label ?lbl1 .
-              ?f1 lpgs:GeoObject-code ?code1 .
-
-              OPTIONAL {
+  
+  public static String NEIGHBOR_QUERY = PREFIXES + """
+      SELECT
+          ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
+          ?e1 ?ev1 # Outgoing Edge
+          ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
+          ?e2 ?ev2 # Incoming Edge
+          ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
+      WHERE {
+        BIND(geo:Feature as ?gf1) .
+        BIND(?uri as ?f1) .
+        
+        # Source Object
+        GRAPH lpgv: {
+            ?f1 a ?ft1 .
+            ?f1 rdfs:label ?lbl1 .
+            ?f1 lpgs:GeoObject-code ?code1 .
+            
+            OPTIONAL {
                 ?f1 geo:hasGeometry ?g1 .
                 ?g1 geo:asWKT ?wkt1 .
+            }
+        }
+        GRAPH lpg: {
+           ?ft1 rdfs:subClassOf  lpgs:GeoObject . 
+        }
+
+        {
+          # Outgoing Relationship
+          BIND(geo:Feature as ?gf2) .
+          BIND(?f2 as ?ev1) .
+
+          GRAPH lpgv: {
+              ?f1 ?e1 ?f2 .
+              ?f2 a ?ft2 .
+              ?f2 rdfs:label ?lbl2 .
+              ?f2 lpgs:GeoObject-code ?code2 .
+
+              OPTIONAL {
+                  ?f2 geo:hasGeometry ?g2 .
+                  ?g2 geo:asWKT ?wkt2 .
               }
-             }
-             GRAPH lpg: {
-             ?ft1 rdfs:subClassOf  lpgs:GeoObject .
-             }
+          }
 
-        # Outgoing Relationship
-        OPTIONAL {
-            BIND(geo:Feature as ?gf2) .
-            BIND(?f2 as ?ev1) .
-
-            GRAPH lpgv: {
-                ?f1 ?e1 ?f2 .
-                ?f2 a ?ft2 .
-                ?f2 rdfs:label ?lbl2 .
-                ?f2 lpgs:GeoObject-code ?code2 .
-
-                OPTIONAL {
-                    ?f2 geo:hasGeometry ?g2 .
-                    ?g2 geo:asWKT ?wkt2 .
-                }
-              }
-
-              GRAPH lpg: {
-                ?ft2 rdfs:subClassOf  lpgs:GeoObject .
-              }
-             }
-
-             # Incoming Relationship
-        OPTIONAL {
+          GRAPH lpg: {
+              ?ft2 rdfs:subClassOf  lpgs:GeoObject .
+          }
+        }
+        UNION
+        {
+            # Incoming Relationship
             BIND(geo:Feature as ?gf3) .
             BIND(?f3 as ?ev2) .
 
@@ -116,15 +116,16 @@ public class JenaService
                     ?f3 geo:hasGeometry ?g3 .
                     ?g3 geo:asWKT ?wkt3 .
                 }
-              }
+            }
 
-              GRAPH lpg: {
+            GRAPH lpg: {
                 ?ft3 rdfs:subClassOf  lpgs:GeoObject .
-              }
-             }
-           }
-           LIMIT 50
-      """;
+            }
+        }
+      }
+      LIMIT 50
+    """;
+
 
   @Autowired
   private AppProperties       properties;
@@ -154,9 +155,8 @@ public class JenaService
 
       return results;
     }
-
   }
-
+	
   public Location getAttributes(String uri)
   {
     if (uri.startsWith("<") && uri.endsWith(">"))
