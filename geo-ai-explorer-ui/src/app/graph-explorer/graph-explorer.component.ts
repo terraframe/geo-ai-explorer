@@ -105,7 +105,6 @@ export class GraphExplorerComponent {
   }
 
   public async renderGeoObjectAndNeighbors(explorer: ExplorerComponent, geoObject: GeoObject) {
-    try {
       this.loading = true;
 
       // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
@@ -119,19 +118,15 @@ export class GraphExplorerComponent {
 
       // this.renderGeoObjects(explorer, this.geoObjects);
 
-      console.log(geoObject)
       let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
-        this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject }));
-    
         this.renderGraph(explorer, graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+      }).catch((e) => {
+        console.error(e);
+      }).finally(() => {
+        this.loading = false;
       });
-    } catch (error: any) {
-      console.error(error);
-    } finally {
-      this.loading = false;
-    }
   }
 
   public renderGraph(explorer: ExplorerComponent, graph: GprGraph) {
