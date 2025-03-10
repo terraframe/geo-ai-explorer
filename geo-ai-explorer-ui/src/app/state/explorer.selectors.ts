@@ -12,5 +12,6 @@ export const selectStyles = createSelector(selector, (s) => {
 });
 
 export const selectedObject = createSelector(selector, (s) => {
-    return s.selectedObject;
+    return s.selectedObject ? { object: s.selectedObject, zoomMap: s.zoomMap } : null;
 });
+

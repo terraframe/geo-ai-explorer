@@ -19,7 +19,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     objects$: Observable<GeoObject[]> = this.store.select(selectObjects);
 
-    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+    selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
 
     ngOnInit(): void {
 
@@ -30,6 +30,6 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     }
 
     onClick(obj: GeoObject) {
-        this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj }));
+        this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj, zoomMap: true }));
     }
 }

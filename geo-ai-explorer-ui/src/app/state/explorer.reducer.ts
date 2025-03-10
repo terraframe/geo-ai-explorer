@@ -8,12 +8,14 @@ export interface ExplorerStateModel {
     objects: GeoObject[];
     styles: StyleConfig;
     selectedObject: GeoObject | null;
+    zoomMap: boolean;
 }
 
 export const initialState: ExplorerStateModel = {
     objects: [],
     styles: {},
-    selectedObject: null
+    selectedObject: null,
+    zoomMap: false
 }
 
 export const explorerReducer = createReducer(
@@ -33,9 +35,11 @@ export const explorerReducer = createReducer(
     }),
 
     // Select geo object
-    on(ExplorerActions.selectGeoObject, (state, wrapper) => {
-        return { ...state, selectedObject: wrapper.object || null };
-    }),
+    on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => ({
+        ...state,
+        selectedObject: object,
+        zoomMap: zoomMap
+    })),
 
     // Add style
     on(ExplorerActions.addStyle, (state, wrapper) => {

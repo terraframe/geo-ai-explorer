@@ -119,7 +119,6 @@ export class GraphExplorerComponent {
       // this.renderGeoObjects(explorer, this.geoObjects);
 
       let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
-        this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject }));
         this.renderGraph(explorer, graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
@@ -284,7 +283,7 @@ export class GraphExplorerComponent {
 
     let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
 
-    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject! }));
+    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: true }));
   }
 
   public zoomToUri(uri: string) {

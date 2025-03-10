@@ -62,7 +62,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onStylesChange: Subscription;
 
-    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+    selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
 
     onSelectedObjectChange: Subscription;
 
@@ -137,8 +137,12 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.render();
         });
 
-        this.onSelectedObjectChange = this.selectedObject$.subscribe(obj => {
-            this.selectObject(obj == null ? undefined : obj!.properties.uri, true);
+        this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
+            if (selection) {
+                this.selectObject(selection.object.properties.uri, selection.zoomMap);
+            } else {
+                this.selectObject(undefined, false);
+            }
         });
     }
 

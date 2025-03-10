@@ -22,19 +22,17 @@ export class AttributePanelComponent implements OnDestroy {
 
   private store = inject(Store);
 
-  selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+  selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
 
   onSelectedObjectChange: Subscription;
 
   geoObject: GeoObject | null = null;
 
   constructor(private explorerService: ExplorerService) {
-
-    this.onSelectedObjectChange = this.selectedObject$.subscribe(obj => {
-      if (obj != null) {
-        this.explorerService.getAttributes(obj?.properties.uri).then(geoObject => this.geoObject = geoObject);
-      }
-      else {
+    this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
+      if (selection) {
+        this.explorerService.getAttributes(selection.object.properties.uri).then(geoObject => this.geoObject = geoObject);
+      } else {
         this.geoObject = null;
       }
     });
