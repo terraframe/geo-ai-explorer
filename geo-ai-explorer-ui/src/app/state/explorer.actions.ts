@@ -7,7 +7,7 @@ export const ExplorerActions = createActionGroup({
     events: {
         'Add GeoObject': props<{ object: GeoObject }>(),
         'Set GeoObjects': props<{ objects: GeoObject[] }>(),
-        'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean }>(),
+        'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
         'Add Style': props<{ typeUri: string, style: Style }>(),
         'Set Styles': props<{ styles: StyleConfig }>(),
 

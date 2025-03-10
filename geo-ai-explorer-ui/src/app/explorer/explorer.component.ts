@@ -642,10 +642,13 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             if (feature.properties['uri'] != null) {
                 let uri = feature.properties['uri'];
-                this.selectObject(uri);
+
+                let selectedObject = this.geoObjects.find(n => n.properties.uri === uri);
+                this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
             }
         } else {
-            this.selectObject();
+            // this.selectObject();
+            this.store.dispatch(ExplorerActions.selectGeoObject(null));
         }
     }
 
