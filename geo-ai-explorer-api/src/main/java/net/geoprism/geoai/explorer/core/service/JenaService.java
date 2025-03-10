@@ -104,49 +104,49 @@ public class JenaService {
 			       ?ft1 rdfs:subClassOf  lpgs:GeoObject . 
 		        }
 		
-				# Outgoing Relationship
-				OPTIONAL {
-					BIND(geo:Feature as ?gf2) .
-					BIND(?f2 as ?ev1) .
-				
-					GRAPH lpgv: {
-				        ?f1 ?e1 ?f2 .
-				        ?f2 a ?ft2 .
-				        ?f2 rdfs:label ?lbl2 .
-				        ?f2 lpgs:GeoObject-code ?code2 .
-				        
-				        OPTIONAL {
-				        	?f2 geo:hasGeometry ?g2 .
-				        	?g2 geo:asWKT ?wkt2 .
-				        }
-			        }
-			        
-			        GRAPH lpg: {
-			        	?ft2 rdfs:subClassOf  lpgs:GeoObject .
-			        }
-		        }
-		        
-		        # Incoming Relationship
-				OPTIONAL {
-					BIND(geo:Feature as ?gf3) .
-					BIND(?f3 as ?ev2) .
-				
-					GRAPH lpgv: {
-				        ?f3 ?e2 ?f1 .
-				        ?f3 a ?ft3 .
-				        ?f3 rdfs:label ?lbl3 .
-				        ?f3 lpgs:GeoObject-code ?code3 .
-				        
-				        OPTIONAL {
-				        	?f3 geo:hasGeometry ?g3 .
-				        	?g3 geo:asWKT ?wkt3 .
-				        }
-			        }
-			        
-			        GRAPH lpg: {
-			        	?ft3 rdfs:subClassOf  lpgs:GeoObject .
-			        }
-		        }
+				{
+				  # Outgoing Relationship
+                  BIND(geo:Feature as ?gf2) .
+                  BIND(?f2 as ?ev1) .
+
+                  GRAPH lpgv: {
+                      ?f1 ?e1 ?f2 .
+                      ?f2 a ?ft2 .
+                      ?f2 rdfs:label ?lbl2 .
+                      ?f2 lpgs:GeoObject-code ?code2 .
+
+                      OPTIONAL {
+                          ?f2 geo:hasGeometry ?g2 .
+                          ?g2 geo:asWKT ?wkt2 .
+                      }
+                  }
+
+                  GRAPH lpg: {
+                      ?ft2 rdfs:subClassOf  lpgs:GeoObject .
+                  }
+				}
+				UNION
+				{
+  					# Incoming Relationship
+  					BIND(geo:Feature as ?gf3) .
+                    BIND(?f3 as ?ev2) .
+
+                    GRAPH lpgv: {
+                        ?f3 ?e2 ?f1 .
+                        ?f3 a ?ft3 .
+                        ?f3 rdfs:label ?lbl3 .
+                        ?f3 lpgs:GeoObject-code ?code3 .
+
+                        OPTIONAL {
+                            ?f3 geo:hasGeometry ?g3 .
+                            ?g3 geo:asWKT ?wkt3 .
+                        }
+                    }
+
+                    GRAPH lpg: {
+                        ?ft3 rdfs:subClassOf  lpgs:GeoObject .
+                    }
+				}
 		      }
 		      LIMIT 50
 			""";
