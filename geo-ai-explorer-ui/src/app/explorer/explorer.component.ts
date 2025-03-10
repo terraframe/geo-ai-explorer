@@ -143,6 +143,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             } else {
                 this.selectObject(undefined, false);
             }
+
+            // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
+            setTimeout(() => {
+                this.map?.resize();
+            },0);
         });
     }
 
