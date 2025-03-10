@@ -119,6 +119,7 @@ export class GraphExplorerComponent {
       // this.renderGeoObjects(explorer, this.geoObjects);
 
       let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
+        this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject }));
         this.renderGraph(explorer, graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
