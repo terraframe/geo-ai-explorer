@@ -1,21 +1,48 @@
-import { Component, Input } from '@angular/core';
-import { ExplorerComponent } from '../explorer/explorer.component';
+import { Component, inject, Input, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { Store } from '@ngrx/store';
+
 import { GeoObject } from '../models/geoobject.model';
+import { Observable, Subscription } from 'rxjs';
+import { selectedObject } from '../state/explorer.selectors';
+import { ExplorerService } from '../service/explorer.service';
+
 
 @Component({
-    selector: 'attribute-panel',
-    imports: [],
-    templateUrl: './attribute-panel.component.html',
-    styleUrl: './attribute-panel.component.scss'
+  selector: 'attribute-panel',
+  imports: [
+    CommonModule, TableModule
+  ],
+  templateUrl: './attribute-panel.component.html',
+  styleUrl: './attribute-panel.component.scss'
 })
-export class AttributePanelComponent {
-  @Input() public selectedObject!: GeoObject;
+export class AttributePanelComponent implements OnDestroy {
 
-  public getObjectUrl(go: GeoObject): string {
-    return ExplorerComponent.getObjectUrl(go);
+
+  private store = inject(Store);
+
+  selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+
+  onSelectedObjectChange: Subscription;
+
+  geoObject: GeoObject | null = null;
+
+  constructor(private explorerService: ExplorerService) {
+
+    this.onSelectedObjectChange = this.selectedObject$.subscribe(obj => {
+      if (obj != null) {
+        this.explorerService.getAttributes(obj?.properties.uri).then(geoObject => this.geoObject = geoObject);
+      }
+      else {
+        this.geoObject = null;
+      }
+    });
   }
 
-  public getUsaceUri(go: GeoObject): string {
-    return ExplorerComponent.getUsaceUri(go);
+  ngOnDestroy(): void {
+    this.onSelectedObjectChange.unsubscribe();
   }
+
+
 }

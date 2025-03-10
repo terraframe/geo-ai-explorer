@@ -6,8 +6,9 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class Graph {
-	private List<Location> nodes = new LinkedList<Location>();
-	
-	private List<Edge> edges = new LinkedList<Edge>();
+public class Graph
+{
+  private List<Location> nodes = new LinkedList<Location>();
+
+  private List<Edge>     edges = new LinkedList<Edge>();
 }

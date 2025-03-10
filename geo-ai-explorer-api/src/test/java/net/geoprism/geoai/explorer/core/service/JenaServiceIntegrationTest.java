@@ -59,4 +59,16 @@ public class JenaServiceIntegrationTest
 
     Assert.assertTrue(results.size() > 0);
   }
+
+  // write test cases here
+  @Test
+  @Ignore
+  public void testGetAttributes()
+  {
+    String uri = "https://localhost:4200/lpg/graph_801104/0#CensusTract-06001407101";
+
+    Location location = this.service.getAttributes(uri);
+
+    Assert.assertNotNull(location);
+  }
 }

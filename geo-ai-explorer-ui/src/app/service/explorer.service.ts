@@ -4,7 +4,7 @@ import { parse, GeoJSONGeometry } from 'wellknown';
 import { GeoObject } from '../models/geoobject.model';
 import { MockUtil } from '../mock-util';
 import { GprGraph } from '../graph-explorer/graph-explorer.component';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
@@ -139,4 +139,13 @@ export class ExplorerService {
     return geojson as GeoJSONGeometry;
   }
   
+
+  getAttributes(uri: string): Promise<GeoObject> {
+
+    // Uncomment below to make a real HTTP request
+    let params = new HttpParams();
+    params = params.append("uri", uri);
+
+    return firstValueFrom(this.http.get<GeoObject>(environment.apiUrl + 'api/get-attributes', { params }));
+  }
 }

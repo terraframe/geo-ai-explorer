@@ -10,7 +10,7 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: MockUtil.messages,
+    messages: [],
     sessionId: uuidv4()
 }
 

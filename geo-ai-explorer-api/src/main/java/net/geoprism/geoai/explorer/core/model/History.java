@@ -6,24 +6,12 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.Data;
+
+@Data
 public class History
 {
-  private List<HistoryMessage> messages;
-
-  public History()
-  {
-    this.messages = new LinkedList<>();
-  }
-
-  public List<HistoryMessage> getMessages()
-  {
-    return messages;
-  }
-
-  public void setMessages(List<HistoryMessage> messages)
-  {
-    this.messages = messages;
-  }
+  private List<HistoryMessage> messages = new LinkedList<>();
 
   public void addMessage(HistoryMessage message)
   {

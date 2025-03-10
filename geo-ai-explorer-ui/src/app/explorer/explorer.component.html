@@ -1,7 +1,7 @@
 <div>
 	<div id="panel-columns" class="horizontal-layout">
 		<!-- Attribute Panel -->
-		<!-- <attribute-panel *ngIf="selectedObject" [selectedObject]="selectedObject"></attribute-panel> -->
+		<attribute-panel *ngIf="selectedObject"></attribute-panel>
 
 		<div id="aichat-column" class="vertical-layout">
 			<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
@@ -31,22 +31,23 @@
 		</div>
 	</p-panel>
 
-	<div *ngIf="selectedObject" class="inspector">
-		<h2 class="inspector-title">{{selectedObject.properties.label}}</h2>
+	<!--
+		<div *ngIf="selectedObject" class="inspector">
+			<h2 class="inspector-title">{{selectedObject.properties.label}}</h2>
 
-		<div class="inspector-content">
-			<label for="type">Type:</label>
-			<!-- <a id="type" [href]="selectedObject.properties.uri">{{selectedObject.properties.type}}</a> -->
-			<span>{{selectedObject.properties.type}}</span>
-
-			<label for="uri">URI:</label>
-			<span
+			<div class="inspector-content">
+				<label for="type">Type:</label>
+				<span>{{selectedObject.properties.type}}</span>
+				
+				<label for="uri">URI:</label>
+				<span
 				*ngIf="getObjectUrl(selectedObject).indexOf('georegistry') !== -1">{{selectedObject.properties.uri}}</span>
-			<a *ngIf="getObjectUrl(selectedObject).indexOf('georegistry') === -1" id="uri"
+				<a *ngIf="getObjectUrl(selectedObject).indexOf('georegistry') === -1" id="uri"
 				[href]="getObjectUrl(selectedObject)">{{getUsaceUri(selectedObject)}}</a>
+			</div>
 		</div>
-	</div>
-
+		-->
+		
 	<div>
 
 	</div>
