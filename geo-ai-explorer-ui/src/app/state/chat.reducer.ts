@@ -10,7 +10,7 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: [],
+    messages: MockUtil.messages,
     sessionId: uuidv4()
 }
 
@@ -22,4 +22,8 @@ export const chatReducer = createReducer(
 
         return { ...state, messages }
     }),
+    on(ChatActions.setMessageAndSession, (state, wrapper) => {
+        return { ...state, messages: wrapper.messages, sessionId: wrapper.sessionId }
+    }),
+
 );

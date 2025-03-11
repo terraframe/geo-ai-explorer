@@ -19,50 +19,50 @@ export class ChatService {
 
   sendMessage(sessionId: string, message: ChatMessage): Promise<ChatMessage> {
 
-    // return new Promise<ChatMessage>((resolve) => {
-    //   setTimeout(() => {
-    //     // Simulated server response
-    //     const response: ChatMessage = {
-    //       id: uuidv4(),
-    //       sender: 'system',
-    //       text: MockUtil.getRandomLoremIpsum(),
-    //       mappable: false,
-    //     };
+    return new Promise<ChatMessage>((resolve) => {
+      setTimeout(() => {
+        // Simulated server response
+        const response: ChatMessage = {
+          id: uuidv4(),
+          sender: 'system',
+          text: MockUtil.getRandomLoremIpsum(),
+          mappable: false,
+        };
 
-    //     resolve(response);
-    //   }, 3000); // Simulating 3-second network delay
-    // });
+        resolve(response);
+      }, 3000); // Simulating 3-second network delay
+    });
 
     // Uncomment below to make a real HTTP request
-    let params = new HttpParams();
-    params = params.append("sessionId", sessionId);
-    params = params.append("prompt", message.text);
+    // let params = new HttpParams();
+    // params = params.append("sessionId", sessionId);
+    // params = params.append("prompt", message.text);
 
-    return firstValueFrom(this.http.get<ServerChatResponse>(environment.apiUrl + 'api/chat/prompt', { params })).then(response => {
-      const chatMessage: ChatMessage = {
-        id: uuidv4(),
-        sender: 'system',
-        text: response.content,
-        mappable: response.mappable,
-      };
-      return chatMessage;
-    });
+    // return firstValueFrom(this.http.get<ServerChatResponse>(environment.apiUrl + 'api/chat/prompt', { params })).then(response => {
+    //   const chatMessage: ChatMessage = {
+    //     id: uuidv4(),
+    //     sender: 'system',
+    //     text: response.content,
+    //     mappable: response.mappable,
+    //   };
+    //   return chatMessage;
+    // });
   }
 
   getLocations(messages: ChatMessage[]): Promise<GeoObject[]> {
-    // return new Promise<GeoObject[]>((resolve) => {
-    //   setTimeout(() => {
-    //     resolve(MockUtil.locations);
-    //   }, 3000); // Simulating 3-second network delay
-    // });
+    return new Promise<GeoObject[]>((resolve) => {
+      setTimeout(() => {
+        resolve(MockUtil.locations);
+      }, 3000); // Simulating 3-second network delay
+    });
 
     // // Uncomment below to make a real HTTP request
-    const data = messages.map(message => ({
-      type: message.sender === 'user' ? 'USER' : 'AI',
-      content: message.text
-    }))
+    // const data = messages.map(message => ({
+    //   type: message.sender === 'user' ? 'USER' : 'AI',
+    //   content: message.text
+    // }))
 
-    return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data }));
+    // return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data }));
   }
 
 }

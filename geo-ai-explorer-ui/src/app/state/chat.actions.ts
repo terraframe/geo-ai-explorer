@@ -5,5 +5,6 @@ export const ChatActions = createActionGroup({
     source: 'chat',
     events: {
         'Add Message': props<ChatMessage>(),
+        'setMessageAndSession': props<{ messages: ChatMessage[], sessionId: string }>(),
     },
 });
