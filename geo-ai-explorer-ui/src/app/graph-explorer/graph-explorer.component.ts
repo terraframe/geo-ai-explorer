@@ -1,15 +1,17 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, inject, Input, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
-import { defaultQueries, SELECTED_COLOR } from '../explorer/defaultQueries';
-import { ExplorerService, SPARQLResultSet } from '../service/explorer.service';
+import { SELECTED_COLOR } from '../explorer/defaultQueries';
+import { ExplorerService } from '../service/explorer.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions } from '../state/explorer.state';
+import { ExplorerActions, selectedObject } from '../state/explorer.state';
+import { Observable, Subscription } from 'rxjs';
+
 
 // export interface Relationship {
 //   oid: string,
@@ -75,6 +77,8 @@ export const DIMENSIONS = {
 })
 export class GraphExplorerComponent {
 
+  @Input() explorer!: ExplorerComponent;
+
   @ViewChild("graph") graph!: GraphComponent;
 
   private store = inject(Store);
@@ -95,22 +99,35 @@ export class GraphExplorerComponent {
 
   public relationship: any = { layout: "HORIZONTAL" }
 
-  public explorer?: ExplorerComponent;
-
   private extraColors: any = {};
 
   private gprGraph?: GprGraph;
 
-  private currentObject: GeoObject | null = null;
+  selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
+  
+  onSelectedObjectChange: Subscription;
+
+  private selectedObject: GeoObject | null = null;
 
   constructor(private queryService: ExplorerService) {
+    this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
+      if (selection && selection.object) {
+          this.renderGeoObjectAndNeighbors(selection.object);
+      }
+  });
   }
 
-  public async renderGeoObjectAndNeighbors(explorer: ExplorerComponent, geoObject: GeoObject) {
-      if (this.currentObject != null && this.currentObject.properties.uri === geoObject.properties.uri) return;
+  public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
+      if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
 
       this.loading = true;
-      this.currentObject = geoObject;
+
+      if (this.selectedObject != null)
+        console.log(this.selectedObject.properties.uri, geoObject.properties.uri);
+      else
+        console.log("Selected object is null");
+
+      this.selectedObject = geoObject;
 
       // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
       // const result: SPARQLResultSet = await this.queryService.query(sparql);
@@ -124,7 +141,7 @@ export class GraphExplorerComponent {
       // this.renderGeoObjects(explorer, this.geoObjects);
 
       let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
-        this.renderGraph(explorer, graph);
+        this.renderGraph(graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
       }).catch((e) => {
@@ -134,8 +151,7 @@ export class GraphExplorerComponent {
       });
   }
 
-  public renderGraph(explorer: ExplorerComponent, graph: GprGraph) {
-    this.explorer = explorer;
+  public renderGraph(graph: GprGraph) {
     this.gprGraph = graph;
 
     let data: any = {
@@ -240,9 +256,9 @@ export class GraphExplorerComponent {
   }
 
   public getSelectedId() {
-    if (this.explorer?.selectedObject == null) return null;
+    if (this.selectedObject == null) return null;
 
-    return this.uriToId(this.explorer!.selectedObject.properties.uri);
+    return this.uriToId(this.selectedObject.properties.uri);
   }
 
   uriToId(uri: string): string {

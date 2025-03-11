@@ -1,17 +1,15 @@
 <div id="attr-panel">
     <ng-container *ngIf="geoObject != null">
-        <h2 class="inspector-title">{{geoObject!.properties.label}}</h2>
-
         <div class="inspector-content">
 
             <ng-container *ngIf="(geoObject!.properties | keyvalue) as items">
-                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" >
-                    <ng-template #header>
+                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" [size]="'small'" stripedRows showGridlines>
+                    <!-- <ng-template #header>
                         <tr>
-                            <th>Attribute</th>
-                            <th>Value</th>
+                            <th></th>
+                            <th></th>
                         </tr>
-                    </ng-template>
+                    </ng-template> -->
                     <ng-template #body let-item>
                         <tr>
                             <td>{{ item.key }}</td>

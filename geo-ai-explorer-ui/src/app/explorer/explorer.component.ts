@@ -11,7 +11,6 @@ import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { v4 as uuidv4 } from 'uuid';
 
 import { GeoObject } from '../models/geoobject.model';
 import { StyleConfig } from '../models/style.model';
@@ -26,6 +25,9 @@ import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
 import { ExplorerActions, highlightedObject, selectedObject, selectObjects, selectStyles } from '../state/explorer.state';
+import { TabsModule } from 'primeng/tabs';
+import { debounce } from 'lodash';
+
 
 @Component({
     selector: 'app-explorer',
@@ -39,7 +41,8 @@ import { ExplorerActions, highlightedObject, selectedObject, selectObjects, sele
         ResultsTableComponent,
         ProgressSpinnerModule,
         PanelModule,
-        ToastModule
+        ToastModule,
+        TabsModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
@@ -74,7 +77,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     resolvedStyles: StyleConfig = {};
 
-    @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
+    public inspectorTab = 0;
 
     map?: Map;
 
@@ -642,7 +645,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.initialized = true;
         });
 
-        this.map.on('mousemove', (e) => {
+        this.map.on('mousemove', debounce((e: any) => {
             const features = this.map!.queryRenderedFeatures(e.point);
 
             if (features != null && features.length > 0) {
@@ -657,16 +660,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     }
                 }
             } else if (this.highlightObject != null) {
-                this.store.dispatch(ExplorerActions.highlightGeoObject(null));
-                // this.highlightObject();
+                this.store.dispatch(ExplorerActions.highlightGeoObject(null))
+                this.map!.getCanvas().style.cursor = '';
             }
-        });
-
-        // Reset the feature state when the mouse leaves the layer.
-        // this.map.on('mouseleave', () => {
-        //     this.highlightObject();
-        //     this.map!.getCanvas().style.cursor = '';
-        // });
+        }, 10));
     }
 
     initMap(): void {
@@ -702,7 +699,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if (highlightedObject != null)
             this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
-        if (this.highlightedObject != null && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri))
+        if (this.highlightedObject != null
+            && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri)
+            && (this.selectedObject == null || this.highlightedObject.properties.uri !== this.selectedObject?.properties.uri))
             this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
 
         this.highlightedObject = highlightedObject;
@@ -733,14 +732,14 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
         }
 
-        if (this.selectedObject != null) {
-            setTimeout(() => {
-                // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
-                this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
+        // if (this.selectedObject != null) {
+        //     setTimeout(() => {
+        //         // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+        //         this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
 
-                // if (uri)
-                //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
-            }, 1);
-        }
+        //         // if (uri)
+        //         //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+        //     }, 1);
+        // }
     }
 }

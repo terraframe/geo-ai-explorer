@@ -1,16 +1,32 @@
 
+h2 {
+    color: rgb(51, 65, 85);
+}
+
 #attr-panel {
-    padding: 20px;
 }
 
 .inspector-content .row {
     padding: 20px;
 }
 
+td {
+    text-wrap: wrap;
+    overflow-wrap: break-word;
+}
+
+
+
+/**
+ * Hacking into the ng-prime table styles, unfortunately
+ */
+
 ::ng-deep .p-datatable-table-container {
     overflow: initial !important;
 }
-
-td {
-    text-wrap: wrap;
+::ng-deep table.p-datatable-table {
+    table-layout: fixed !important;
+}
+::ng-deep table.p-datatable-table > tbody > tr > td:nth-child(1) {
+    width: 7rem;
 }
