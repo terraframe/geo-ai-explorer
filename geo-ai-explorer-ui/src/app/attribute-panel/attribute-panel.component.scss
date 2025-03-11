@@ -7,10 +7,20 @@
     padding: 20px;
 }
 
+td {
+    text-wrap: wrap;
+    overflow-wrap: break-word;
+}
+
+
+
+/**
+ * Hacking into the np-prime table styles, unfortunately
+ */
+
 ::ng-deep .p-datatable-table-container {
     overflow: initial !important;
 }
-
-td {
-    text-wrap: wrap;
+::ng-deep table.p-datatable-table {
+    table-layout: fixed !important;
 }
