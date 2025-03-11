@@ -8,6 +8,7 @@ export const ExplorerActions = createActionGroup({
         'Add GeoObject': props<{ object: GeoObject }>(),
         'Set GeoObjects': props<{ objects: GeoObject[] }>(),
         'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
+        'Highlight GeoObject': props<{ object: GeoObject } | null>(),
         'Add Style': props<{ typeUri: string, style: Style }>(),
         'Set Styles': props<{ styles: StyleConfig }>(),
 

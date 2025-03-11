@@ -17,7 +17,7 @@ import { StyleConfig } from '../models/style.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { selectObjects, selectedObject, selectStyles } from '../state/explorer.selectors';
+import { selectObjects, selectedObject, selectStyles, highlightedObject } from '../state/explorer.selectors';
 import { StyleService } from '../service/style-service.service';
 import { ExplorerActions } from '../state/explorer.actions';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
@@ -66,6 +66,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onSelectedObjectChange: Subscription;
 
+    highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
+
+    onHighlightedObjectChange: Subscription;
+
     resolvedStyles: StyleConfig = {};
 
     @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
@@ -83,6 +87,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     public typeLegend: { [key: string]: { label: string, color: string } } = {};
 
     public selectedObject?: GeoObject;
+
+    public highlightedObject: GeoObject | null | undefined;
 
     baseLayers: any[] = [
         {
@@ -148,6 +154,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             setTimeout(() => {
                 this.map?.resize();
             },0);
+        });
+
+        this.onHighlightedObjectChange = this.highlightedObject$.subscribe(selection => {
+            this.highlightObject(selection == null ? undefined : selection.object.properties.uri);
         });
     }
 
@@ -655,6 +665,17 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             // this.selectObject();
             this.store.dispatch(ExplorerActions.selectGeoObject(null));
         }
+    }
+    
+    highlightObject(uri?: string) {
+        var highlightedObject = (uri == null) ? null : this.geoObjects.find(go => go.properties.uri === uri);
+
+        if (highlightedObject != null)
+            this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
+        if (this.highlightedObject != null)
+            this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
+
+        this.highlightedObject = highlightedObject;
     }
 
     selectObject(uri?: string, zoomTo = false) {

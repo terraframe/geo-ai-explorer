@@ -1,7 +1,7 @@
 <div>
     <ng-container *ngrxLet="objects$ as objects">
         <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
-            [scrollable]="true" scrollHeight="50vh" [size]="'small'">
+            [scrollable]="true" scrollHeight="50vh" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
             <ng-template #header>
                 <tr>
                     <th>Label</th>
@@ -9,7 +9,11 @@
                 </tr>
             </ng-template>
             <ng-template #body let-object>
-                <tr class="clickable" (click)="onClick(object)">
+                <tr
+                    class="clickable"
+                    [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
+                    (click)="onClick(object)"
+                    (mouseenter)="onRowHover(object)">
                     <td>{{ object.properties.label }}</td>
                     <td>{{ object.properties.uri }}</td>
                 </tr>

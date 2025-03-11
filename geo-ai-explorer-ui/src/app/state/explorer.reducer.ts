@@ -8,6 +8,7 @@ export interface ExplorerStateModel {
     objects: GeoObject[];
     styles: StyleConfig;
     selectedObject: GeoObject | null;
+    highlightedObject: GeoObject | null;
     zoomMap: boolean;
 }
 
@@ -15,7 +16,8 @@ export const initialState: ExplorerStateModel = {
     objects: [],
     styles: {},
     selectedObject: null,
-    zoomMap: false
+    zoomMap: false,
+    highlightedObject: null,
 }
 
 export const explorerReducer = createReducer(
@@ -39,6 +41,12 @@ export const explorerReducer = createReducer(
         ...state,
         selectedObject: object,
         zoomMap: zoomMap
+    })),
+
+    // Highlight geo object
+    on(ExplorerActions.highlightGeoObject, (state, { object }) => ({
+        ...state,
+        highlightedObject: object
     })),
 
     // Add style

@@ -15,3 +15,7 @@ export const selectedObject = createSelector(selector, (s) => {
     return s.selectedObject ? { object: s.selectedObject, zoomMap: s.zoomMap } : null;
 });
 
+export const highlightedObject = createSelector(selector, (s) => {
+    return s.highlightedObject ? { object: s.highlightedObject } : null;
+});
+
