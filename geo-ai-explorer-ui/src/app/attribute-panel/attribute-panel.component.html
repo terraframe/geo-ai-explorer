@@ -3,13 +3,13 @@
         <div class="inspector-content">
 
             <ng-container *ngIf="(geoObject!.properties | keyvalue) as items">
-                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" [size]="'small'" stripedRows>
-                    <ng-template #header>
+                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" [size]="'small'" stripedRows showGridlines>
+                    <!-- <ng-template #header>
                         <tr>
-                            <th>Attribute</th>
-                            <th>Value</th>
+                            <th></th>
+                            <th></th>
                         </tr>
-                    </ng-template>
+                    </ng-template> -->
                     <ng-template #body let-item>
                         <tr>
                             <td>{{ item.key }}</td>
