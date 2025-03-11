@@ -651,16 +651,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     }
                 }
             } else if (this.highlightObject != null) {
-                this.store.dispatch(ExplorerActions.highlightGeoObject(null));
-                // this.highlightObject();
+                this.store.dispatch(ExplorerActions.highlightGeoObject(null))
+                this.map!.getCanvas().style.cursor = '';
             }
         });
-    
-        // Reset the feature state when the mouse leaves the layer.
-        // this.map.on('mouseleave', () => {
-        //     this.highlightObject();
-        //     this.map!.getCanvas().style.cursor = '';
-        // });
     }
 
     initMap(): void {
@@ -696,7 +690,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if (highlightedObject != null)
             this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
-        if (this.highlightedObject != null && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri))
+        if (this.highlightedObject != null
+            && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri)
+            && (this.selectedObject == null || this.highlightedObject.properties.uri !== this.selectedObject?.properties.uri))
             this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
 
         this.highlightedObject = highlightedObject;
