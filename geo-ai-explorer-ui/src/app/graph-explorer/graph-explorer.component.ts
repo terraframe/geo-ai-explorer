@@ -101,11 +101,16 @@ export class GraphExplorerComponent {
 
   private gprGraph?: GprGraph;
 
+  private currentObject: GeoObject | null = null;
+
   constructor(private queryService: ExplorerService) {
   }
 
   public async renderGeoObjectAndNeighbors(explorer: ExplorerComponent, geoObject: GeoObject) {
+      if (this.currentObject != null && this.currentObject.properties.uri === geoObject.properties.uri) return;
+
       this.loading = true;
+      this.currentObject = geoObject;
 
       // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
       // const result: SPARQLResultSet = await this.queryService.query(sparql);

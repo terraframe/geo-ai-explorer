@@ -238,8 +238,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     public static uriToLabel(uri: string): string {
-        console.log(uri)
-
         let i = uri.lastIndexOf("#");
         if (i == -1) return uri;
 
@@ -637,6 +635,32 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.initialized = true;
         });
+
+        this.map.on('mousemove', (e) => {
+            const features = this.map!.queryRenderedFeatures(e.point);
+
+            if (features != null && features.length > 0) {
+                for (let i = 0; i < features.length; ++i) {
+                    const feature = features[i];
+
+                    if (feature.properties['uri'] != null) {
+                        let uri = feature!.properties!['uri'];
+                        var highlightedObject = this.geoObjects.find(go => go.properties.uri === uri);
+                        this.store.dispatch(ExplorerActions.highlightGeoObject({ object: highlightedObject! }));
+                        this.map!.getCanvas().style.cursor = 'pointer';
+                    }
+                }
+            } else if (this.highlightObject != null) {
+                this.store.dispatch(ExplorerActions.highlightGeoObject(null));
+                // this.highlightObject();
+            }
+        });
+    
+        // Reset the feature state when the mouse leaves the layer.
+        // this.map.on('mouseleave', () => {
+        //     this.highlightObject();
+        //     this.map!.getCanvas().style.cursor = '';
+        // });
     }
 
     initMap(): void {
@@ -672,13 +696,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if (highlightedObject != null)
             this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
-        if (this.highlightedObject != null)
+        if (this.highlightedObject != null && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri))
             this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
 
         this.highlightedObject = highlightedObject;
     }
 
     selectObject(uri?: string, zoomTo = false) {
+        if (this.selectedObject != null && this.selectedObject.properties.uri === uri) return;
+
         let previousSelected = this.selectedObject;
 
         if (uri != undefined) {
