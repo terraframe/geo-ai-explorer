@@ -23,6 +23,6 @@ td {
 ::ng-deep table.p-datatable-table {
     table-layout: fixed !important;
 }
-::ng-deep table.p-datatable-table > thead > tr > th:nth-child(1) {
-    width: 7em;
+::ng-deep table.p-datatable-table > tbody > tr > td:nth-child(1) {
+    width: 7rem;
 }
