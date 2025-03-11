@@ -1,8 +1,5 @@
 <div>
 	<div id="panel-columns" class="horizontal-layout">
-		<!-- Attribute Panel -->
-		<attribute-panel *ngIf="selectedObject"></attribute-panel>
-
 		<div id="aichat-column" class="vertical-layout">
 			<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 
@@ -13,6 +10,9 @@
 				<graph-explorer #graphExplorer></graph-explorer>
 			</div>
 		</div>
+
+		<!-- Attribute Panel -->
+		<attribute-panel *ngIf="selectedObject"></attribute-panel>
 
 		<!-- Map -->
 		<div id="map"></div>

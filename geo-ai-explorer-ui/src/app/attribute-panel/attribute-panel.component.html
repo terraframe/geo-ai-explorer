@@ -5,7 +5,7 @@
         <div class="inspector-content">
 
             <ng-container *ngIf="(geoObject!.properties | keyvalue) as items">
-                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" >
+                <p-table [value]="items" [scrollable]="false" [tableStyle]="{ 'overflow': 'default' }" [size]="'small'" stripedRows>
                     <ng-template #header>
                         <tr>
                             <th>Attribute</th>

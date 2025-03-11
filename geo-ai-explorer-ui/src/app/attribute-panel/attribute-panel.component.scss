@@ -15,7 +15,7 @@ td {
 
 
 /**
- * Hacking into the np-prime table styles, unfortunately
+ * Hacking into the ng-prime table styles, unfortunately
  */
 
 ::ng-deep .p-datatable-table-container {
@@ -23,4 +23,7 @@ td {
 }
 ::ng-deep table.p-datatable-table {
     table-layout: fixed !important;
+}
+::ng-deep table.p-datatable-table > thead > tr > th:nth-child(1) {
+    width: 7em;
 }
