@@ -1,7 +1,5 @@
 <div id="attr-panel">
     <ng-container *ngIf="geoObject != null">
-        <h2 class="inspector-title" style="padding-top:0;margin-top:0;">{{geoObject!.properties.label}}</h2>
-
         <div class="inspector-content">
 
             <ng-container *ngIf="(geoObject!.properties | keyvalue) as items">

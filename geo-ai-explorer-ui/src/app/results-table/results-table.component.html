@@ -1,23 +1,27 @@
 <div>
-    <ng-container  *ngrxLet="objects$ as objects">
-        <p-table *ngIf="objects && objects.length > 0" [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
-            [scrollable]="true" scrollHeight="50vh" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
-            <ng-template #header>
-                <tr>
-                    <th>Label</th>
-                    <th>Uri</th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-object>
-                <tr
-                    class="clickable"
-                    [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
-                    (click)="onClick(object)"
-                    (mouseenter)="onRowHover(object)">
-                    <td>{{ object.properties.label }}</td>
-                    <td>{{ object.properties.uri }}</td>
-                </tr>
-            </ng-template>
-        </p-table>
+    <ng-container *ngrxLet="objects$ as objects">
+        <ng-container *ngIf="objects && objects.length > 0">
+            <h2 style="margin: 10px;">Results</h2>
+
+            <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
+                [scrollable]="true" scrollHeight="50vh" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
+                <ng-template #header>
+                    <tr>
+                        <th>Label</th>
+                        <th>Uri</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-object>
+                    <tr
+                        class="clickable"
+                        [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
+                        (click)="onClick(object)"
+                        (mouseenter)="onRowHover(object)">
+                        <td>{{ object.properties.label }}</td>
+                        <td>{{ object.properties.uri }}</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </ng-container>
     </ng-container>
 </div>
