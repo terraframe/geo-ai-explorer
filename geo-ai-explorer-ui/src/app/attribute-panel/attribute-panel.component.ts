@@ -30,12 +30,17 @@ export class AttributePanelComponent implements OnDestroy {
 
   constructor(private explorerService: ExplorerService) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-      if (selection) {
-        this.explorerService.getAttributes(selection.object.properties.uri).then(geoObject => this.geoObject = geoObject);
-      } else {
-        this.geoObject = null;
-      }
+      this.selectObject(selection == null ? null : selection.object);
     });
+  }
+
+  selectObject(object: GeoObject | null) {
+    if (this.geoObject != null && object != null && this.geoObject.properties.uri === object.properties.uri) return;
+
+    if (object != null)
+      this.explorerService.getAttributes(object.properties.uri).then(geoObject => this.geoObject = geoObject);
+
+    this.geoObject = object;
   }
 
   ngOnDestroy(): void {
