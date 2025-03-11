@@ -25,6 +25,7 @@ import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { TabsModule } from 'primeng/tabs';
+import { debounce } from 'lodash';
 
 
 @Component({
@@ -638,7 +639,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.initialized = true;
         });
 
-        this.map.on('mousemove', (e) => {
+        this.map.on('mousemove', debounce((e) => {
             const features = this.map!.queryRenderedFeatures(e.point);
 
             if (features != null && features.length > 0) {
@@ -656,7 +657,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.store.dispatch(ExplorerActions.highlightGeoObject(null))
                 this.map!.getCanvas().style.cursor = '';
             }
-        });
+        }, 10));
     }
 
     initMap(): void {
