@@ -45,7 +45,7 @@ public class BedrockService
   @Autowired
   private AppProperties       properties;
 
-  public Message prompt(String sessionId, String inputText)
+  public Message prompt(String sessionId, String inputText) throws InterruptedException, ExecutionException, TimeoutException
   {
     final StringBuilder content = new StringBuilder();
 
@@ -79,20 +79,11 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      try
-      {
-        future.get(30, TimeUnit.SECONDS);
-      }
-      catch (InterruptedException | ExecutionException | TimeoutException e)
-      {
-        log.error("Error invoking Bedrock agent: ", e);
-      }
-
+      future.get(30, TimeUnit.SECONDS);
     }
-    
+
     String value = content.toString();
     boolean mappable = value.contains("#mapit");
-    
 
     Message message = new Message();
     message.setContent(value.replace("#mapit", ""));
@@ -102,7 +93,7 @@ public class BedrockService
     return message;
   }
 
-  public String getLocationSparql(History history)
+  public String getLocationSparql(History history) throws InterruptedException, ExecutionException, TimeoutException
   {
     final StringBuilder content = new StringBuilder();
 
@@ -136,15 +127,7 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      try
-      {
-        future.get(30, TimeUnit.SECONDS);
-      }
-      catch (InterruptedException | ExecutionException | TimeoutException e)
-      {
-        log.error("Error invoking Bedrock agent: ", e);
-      }
-
+      future.get(30, TimeUnit.SECONDS);
     }
 
     return content.toString();

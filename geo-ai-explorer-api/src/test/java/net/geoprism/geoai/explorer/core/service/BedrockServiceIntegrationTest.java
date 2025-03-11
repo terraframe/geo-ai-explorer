@@ -1,6 +1,8 @@
 package net.geoprism.geoai.explorer.core.service;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -34,7 +36,7 @@ public class BedrockServiceIntegrationTest
 
   @Test
   @Ignore
-  public void testPrompt()
+  public void testPrompt() throws InterruptedException, ExecutionException, TimeoutException
   {
     String sessionId = UUID.randomUUID().toString();
 
@@ -57,7 +59,7 @@ public class BedrockServiceIntegrationTest
 
   @Test
   @Ignore
-  public void testGetLocations()
+  public void testGetLocations() throws InterruptedException, ExecutionException, TimeoutException
   {
     History history = new History();
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "what is the total population impacted if channel reach_25 floods?"));
@@ -68,7 +70,7 @@ public class BedrockServiceIntegrationTest
     String sparql = service.getLocationSparql(history);
 
     System.out.println(sparql);
-    
+
     Assert.assertTrue(sparql.contains("?type"));
     Assert.assertTrue(sparql.contains("?code"));
     Assert.assertTrue(sparql.contains("?label"));

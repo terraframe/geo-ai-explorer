@@ -1,8 +1,20 @@
-import { v4 as uuidv4 } from 'uuid';
-import { createReducer, on } from '@ngrx/store';
-import { ExplorerActions } from './explorer.actions';
+import { createActionGroup, props, createReducer, on, createFeatureSelector, createSelector } from "@ngrx/store";
+
 import { GeoObject } from '../models/geoobject.model';
-import { StyleConfig } from '../models/style.model';
+import { Style, StyleConfig } from '../models/style.model';
+
+export const ExplorerActions = createActionGroup({
+    source: 'explorer',
+    events: {
+        'Add GeoObject': props<{ object: GeoObject }>(),
+        'Set GeoObjects': props<{ objects: GeoObject[] }>(),
+        'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
+        'Highlight GeoObject': props<{ object: GeoObject } | null>(),
+        'Add Style': props<{ typeUri: string, style: Style }>(),
+        'Set Styles': props<{ styles: StyleConfig }>(),
+
+    },
+});
 
 export interface ExplorerStateModel {
     objects: GeoObject[];
@@ -51,7 +63,7 @@ export const explorerReducer = createReducer(
 
     // Add style
     on(ExplorerActions.addStyle, (state, wrapper) => {
-        const styles = {...state.styles};
+        const styles = { ...state.styles };
         styles[wrapper.typeUri] = wrapper.style;
 
         return { ...state, styles }
@@ -63,3 +75,24 @@ export const explorerReducer = createReducer(
     }),
 
 );
+
+
+const selector = createFeatureSelector<ExplorerStateModel>('explorer');
+
+export const selectObjects = createSelector(selector, (s) => {
+    return s.objects;
+});
+
+export const selectStyles = createSelector(selector, (s) => {
+    return s.styles;
+});
+
+export const selectedObject = createSelector(selector, (s) => {
+    return s.selectedObject ? { object: s.selectedObject, zoomMap: s.zoomMap } : null;
+});
+
+export const highlightedObject = createSelector(selector, (s) => {
+    return s.highlightedObject ? { object: s.highlightedObject } : null;
+});
+
+

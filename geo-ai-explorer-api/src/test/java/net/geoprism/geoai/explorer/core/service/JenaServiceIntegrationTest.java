@@ -1,7 +1,6 @@
 package net.geoprism.geoai.explorer.core.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -14,8 +13,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import net.geoprism.geoai.explorer.core.config.TestConfiguration;
 import net.geoprism.geoai.explorer.core.model.Location;
-import net.geoprism.geoai.explorer.core.model.Message;
-import net.geoprism.geoai.explorer.core.service.BedrockService;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = TestConfiguration.class)

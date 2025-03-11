@@ -1,8 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
-import { createReducer, on } from '@ngrx/store';
+import { createReducer, on, createActionGroup, props, createFeatureSelector, createSelector } from '@ngrx/store';
 import { ChatMessage } from '../models/chat.model';
-import { ChatActions } from './chat.actions';
 import { MockUtil } from '../mock-util';
+
+export const ChatActions = createActionGroup({
+    source: 'chat',
+    events: {
+        'Add Message': props<ChatMessage>(),
+        'setMessageAndSession': props<{ messages: ChatMessage[], sessionId: string }>(),
+    },
+});
 
 export interface ChatStateModel {
     sessionId: string;
@@ -25,5 +32,14 @@ export const chatReducer = createReducer(
     on(ChatActions.setMessageAndSession, (state, wrapper) => {
         return { ...state, messages: wrapper.messages, sessionId: wrapper.sessionId }
     }),
-
 );
+
+const selector = createFeatureSelector<ChatStateModel>('chat');
+
+export const getMessages = createSelector(selector, (s) => {
+    return s.messages;
+});
+
+export const getSessionId = createSelector(selector, (s) => {
+    return s.sessionId;
+});

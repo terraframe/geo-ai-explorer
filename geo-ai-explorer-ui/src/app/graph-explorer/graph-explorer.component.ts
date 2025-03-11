@@ -8,8 +8,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
-import { ExplorerActions } from '../state/explorer.actions';
 import { Store } from '@ngrx/store';
+import { ExplorerActions } from '../state/explorer.state';
 
 // export interface Relationship {
 //   oid: string,

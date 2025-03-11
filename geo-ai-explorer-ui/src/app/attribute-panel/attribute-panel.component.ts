@@ -5,8 +5,8 @@ import { Store } from '@ngrx/store';
 
 import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription } from 'rxjs';
-import { selectedObject } from '../state/explorer.selectors';
 import { ExplorerService } from '../service/explorer.service';
+import { selectedObject } from '../state/explorer.state';
 
 
 @Component({
