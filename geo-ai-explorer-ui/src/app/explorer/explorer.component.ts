@@ -24,6 +24,7 @@ import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.compone
 import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
+import { TabsModule } from 'primeng/tabs';
 
 
 @Component({
@@ -37,7 +38,8 @@ import { ExplorerService } from '../service/explorer.service';
         DragDropModule,
         ResultsTableComponent,
         ProgressSpinnerModule,
-        PanelModule
+        PanelModule,
+        TabsModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
@@ -72,7 +74,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     resolvedStyles: StyleConfig = {};
 
-    @ViewChild("graphExplorer") graphExplorer!: GraphExplorerComponent;
+    public inspectorTab = 0;
 
     map?: Map;
 
@@ -723,15 +725,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
         }
 
-        if (this.selectedObject != null) {
-            setTimeout(() => {
-                // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
-                this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
+        // if (this.selectedObject != null) {
+        //     setTimeout(() => {
+        //         // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+        //         this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
 
-                // if (uri)
-                //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
-            }, 1);
-        }
+        //         // if (uri)
+        //         //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
+        //     }, 1);
+        // }
     }
 
 }

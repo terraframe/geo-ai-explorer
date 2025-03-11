@@ -6,13 +6,24 @@
 			<aichat></aichat>
 
 			<results-table *ngIf="selectedObject == null"></results-table>
+			
 			<div *ngIf="selectedObject" id="graphExplorerContainer">
-				<graph-explorer #graphExplorer></graph-explorer>
+				<p-tabs value="0">
+					<p-tablist>
+						<p-tab value="0">Attributes</p-tab>
+						<p-tab value="1">Relationships</p-tab>
+					</p-tablist>
+					<p-tabpanels>
+						<p-tabpanel value="0">
+							<attribute-panel *ngIf="selectedObject"></attribute-panel>
+						</p-tabpanel>
+						<p-tabpanel value="1">
+							<graph-explorer #graphExplorer [explorer]="this"></graph-explorer>
+						</p-tabpanel>
+					</p-tabpanels>
+				</p-tabs>
 			</div>
 		</div>
-
-		<!-- Attribute Panel -->
-		<attribute-panel *ngIf="selectedObject"></attribute-panel>
 
 		<!-- Map -->
 		<div id="map"></div>

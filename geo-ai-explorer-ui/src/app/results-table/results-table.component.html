@@ -1,6 +1,6 @@
 <div>
-    <ng-container *ngrxLet="objects$ as objects">
-        <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
+    <ng-container  *ngrxLet="objects$ as objects">
+        <p-table *ngIf="objects && objects.length > 0" [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
             [scrollable]="true" scrollHeight="50vh" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
             <ng-template #header>
                 <tr>
