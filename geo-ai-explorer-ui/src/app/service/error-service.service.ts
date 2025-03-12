@@ -14,7 +14,7 @@ export class ErrorService {
     if (error.status === 0) {
       this.messageService.add({
         key: 'explorer',
-        severity: "danger",
+        severity: 'error',
         summary: 'Error',
         detail: 'Unable to communicate with the server',
         sticky: true
@@ -26,7 +26,7 @@ export class ErrorService {
 
       this.messageService.add({
         key: 'explorer',
-        severity: "danger",
+        severity: 'error',
         summary: 'Error',
         detail: message,
         sticky: true
