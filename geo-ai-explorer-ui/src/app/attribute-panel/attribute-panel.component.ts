@@ -7,6 +7,7 @@ import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription } from 'rxjs';
 import { ExplorerService } from '../service/explorer.service';
 import { selectedObject } from '../state/explorer.state';
+import { ErrorService } from '../service/error-service.service';
 
 
 @Component({
@@ -28,7 +29,10 @@ export class AttributePanelComponent implements OnDestroy {
 
   geoObject: GeoObject | null = null;
 
-  constructor(private explorerService: ExplorerService) {
+  constructor(
+    private explorerService: ExplorerService,
+    private errorService: ErrorService
+  ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
       this.selectObject(selection == null ? null : selection.object);
     });
@@ -37,8 +41,11 @@ export class AttributePanelComponent implements OnDestroy {
   selectObject(object: GeoObject | null) {
     if (this.geoObject != null && object != null && this.geoObject.properties.uri === object.properties.uri) return;
 
-    if (object != null)
-      this.explorerService.getAttributes(object.properties.uri).then(geoObject => this.geoObject = geoObject);
+    if (object != null) {
+      this.explorerService.getAttributes(object.properties.uri)
+        .then(geoObject => this.geoObject = geoObject)
+        .catch(error => this.errorService.handleError(error))
+    }
 
     this.geoObject = object;
   }

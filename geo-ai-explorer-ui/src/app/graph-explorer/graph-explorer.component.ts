@@ -11,6 +11,7 @@ import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
 import { ExplorerActions, selectedObject } from '../state/explorer.state';
 import { Observable, Subscription } from 'rxjs';
+import { ErrorService } from '../service/error-service.service';
 
 
 // export interface Relationship {
@@ -109,7 +110,10 @@ export class GraphExplorerComponent {
 
   private selectedObject: GeoObject | null = null;
 
-  constructor(private queryService: ExplorerService) {
+  constructor(
+    private queryService: ExplorerService,         
+    private errorService: ErrorService
+  ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
       if (selection && selection.object) {
           this.renderGeoObjectAndNeighbors(selection.object);
@@ -144,9 +148,8 @@ export class GraphExplorerComponent {
         this.renderGraph(graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
-      }).catch((e) => {
-        console.error(e);
-      }).finally(() => {
+      }).catch(error => this.errorService.handleError(error))
+      .finally(() => {
         this.loading = false;
       });
   }

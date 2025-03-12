@@ -112,7 +112,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     constructor(
         private styleService: StyleService,
-        private explorerService: ExplorerService,
         private errorService: ErrorService
     ) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
