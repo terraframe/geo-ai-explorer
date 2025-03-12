@@ -657,7 +657,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.store.dispatch(ExplorerActions.highlightGeoObject(null))
                 this.map!.getCanvas().style.cursor = '';
             }
-        }, 10));
+        }, 5));
     }
 
     initMap(): void {

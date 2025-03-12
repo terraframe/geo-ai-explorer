@@ -4,7 +4,7 @@
             <h2 style="margin: 10px;">Results</h2>
 
             <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
-                [scrollable]="true" scrollHeight="50vh" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
+                [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
                 <ng-template #header>
                     <tr>
                         <th>Label</th>

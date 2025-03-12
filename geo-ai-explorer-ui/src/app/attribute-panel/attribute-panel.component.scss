@@ -21,9 +21,9 @@ td {
  * Hacking into the ng-prime table styles, unfortunately
  */
 
-::ng-deep .p-datatable-table-container {
-    overflow: initial !important;
-}
+// ::ng-deep .p-datatable-table-container {
+//     overflow: initial !important;
+// }
 ::ng-deep table.p-datatable-table {
     table-layout: fixed !important;
 }
