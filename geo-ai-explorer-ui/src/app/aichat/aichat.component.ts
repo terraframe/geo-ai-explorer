@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Store } from '@ngrx/store';
-import { Observable, take } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
@@ -30,12 +30,19 @@ export class AichatComponent {
 
   messages$: Observable<ChatMessage[]> = this.store.select(getMessages);
   sessionId$: Observable<string> = this.store.select(getSessionId);
+    
+  onMessagesChange: Subscription;
 
   public loading: boolean = false;
+
+  public renderedMessages: ChatMessage[] = [];
 
   constructor(
     private chatService: ChatService,
     private errorService: ErrorService) {
+      this.onMessagesChange = this.messages$.subscribe(messages => {
+        this.renderedMessages = [...messages].reverse();
+      });
   }
 
   sendMessage() {

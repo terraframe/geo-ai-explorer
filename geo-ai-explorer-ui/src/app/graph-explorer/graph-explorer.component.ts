@@ -115,10 +115,10 @@ export class GraphExplorerComponent {
     private errorService: ErrorService
   ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-      if (selection && selection.object) {
-          this.renderGeoObjectAndNeighbors(selection.object);
-      }
-  });
+        if (selection && selection.object) {
+            this.renderGeoObjectAndNeighbors(selection.object);
+        }
+    });
   }
 
   public renderGeoObjectAndNeighbors(geoObject: GeoObject) {

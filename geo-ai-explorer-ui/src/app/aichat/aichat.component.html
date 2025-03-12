@@ -3,7 +3,7 @@
   <div>
   </div>
   <div class="messages">
-    <div *ngFor="let msg of (messages$ | async)" class="message">
+    <div *ngFor="let msg of renderedMessages" class="message">
       <strong>{{ msg.sender }}:</strong>
       <label>
         {{ msg.text }}
