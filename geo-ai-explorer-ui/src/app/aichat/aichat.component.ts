@@ -8,7 +8,7 @@ import { Store } from '@ngrx/store';
 import { Observable, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faBroom } from '@fortawesome/free-solid-svg-icons';
+import { faEraser } from '@fortawesome/free-solid-svg-icons';
 
 import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
@@ -23,7 +23,7 @@ import { ExplorerActions } from '../state/explorer.state';
   styleUrl: './aichat.component.scss'
 })
 export class AichatComponent {
-  faBroom = faBroom;
+  icon = faEraser;
   private store = inject(Store);
 
   message: string = '';
@@ -53,9 +53,8 @@ export class AichatComponent {
 
         this.loading = true;
 
-        this.store.dispatch(ChatActions.addMessage(message));
-
         this.chatService.sendMessage(sessionId, message).then((response) => {
+          this.store.dispatch(ChatActions.addMessage(message));
           this.store.dispatch(ChatActions.addMessage(response));
         }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.loading = false;
