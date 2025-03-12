@@ -27,8 +27,6 @@ import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
 import org.locationtech.jts.geom.Geometry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +37,6 @@ import net.geoprism.geoai.explorer.core.model.Location;
 @Service
 public class JenaService
 {
-  private static final Logger log            = LoggerFactory.getLogger(JenaService.class);
-
   public static final String  GRAPH          = "https://localhost:4200/lpg/graph_801104/0#>";
 
   public static final String  PREFIXES       = """

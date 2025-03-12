@@ -1,12 +1,6 @@
 <div class="chat-container">
   <div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
   <div>
-
-    <span style="float:right">
-      <p-button severity="secondary" size="small" pTooltip="Erase conversation" (click)="clear()">
-        <fa-icon [icon]="faBroom"></fa-icon>
-      </p-button>
-    </span>
   </div>
   <div class="messages">
     <div *ngFor="let msg of (messages$ | async)" class="message">
@@ -21,6 +15,9 @@
     </div>
   </div>
   <div class="input-container">
+    <p-button severity="secondary" pTooltip="Erase conversation" (click)="clear()">
+      <fa-icon [icon]="icon"></fa-icon>
+    </p-button>
     <input type="text" [(ngModel)]="message" placeholder="Type a message..." />
     <p-button class="btn btn-primary" (click)="sendMessage()">Send</p-button>
   </div>

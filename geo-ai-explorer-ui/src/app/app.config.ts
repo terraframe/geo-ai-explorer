@@ -8,8 +8,9 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
-import { explorerReducer } from './state/explorer.reducer';
-import { chatReducer } from './state/chat.reducer';
+import { chatReducer } from './state/chat.state';
+import { MessageService } from 'primeng/api';
+import { explorerReducer } from './state/explorer.state';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
         provideStore({
             chat: chatReducer,
             explorer: explorerReducer
-        })
+        }),
+        MessageService
     ]
 };

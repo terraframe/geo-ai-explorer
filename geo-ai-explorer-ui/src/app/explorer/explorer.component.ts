@@ -8,6 +8,7 @@ import JSON5 from 'json5'
 import ColorGen from "color-generator";
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
+import { ToastModule } from 'primeng/toast';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
 
@@ -17,13 +18,13 @@ import { StyleConfig } from '../models/style.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { selectObjects, selectedObject, selectStyles, highlightedObject } from '../state/explorer.selectors';
 import { StyleService } from '../service/style-service.service';
-import { ExplorerActions } from '../state/explorer.actions';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
+import { ErrorService } from '../service/error-service.service';
+import { ExplorerActions, highlightedObject, selectedObject, selectObjects, selectStyles } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 
@@ -40,6 +41,7 @@ import { debounce } from 'lodash';
         ResultsTableComponent,
         ProgressSpinnerModule,
         PanelModule,
+        ToastModule,
         TabsModule
     ],
     templateUrl: './explorer.component.html',
@@ -108,7 +110,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
-    constructor(private styleService: StyleService, private explorerService: ExplorerService) {
+    constructor(
+        private styleService: StyleService,
+        private errorService: ErrorService
+    ) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
             this.geoObjects = geoObjects;
 
@@ -156,7 +161,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
             setTimeout(() => {
                 this.map?.resize();
-            },0);
+            }, 0);
         });
 
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(selection => {
@@ -168,7 +173,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         // TODO : Invoke explorerService.init instead
         this.styleService.getStyles().then(styles => {
             this.store.dispatch(ExplorerActions.setStyles({ styles }));
-        })
+        }).catch(error => this.errorService.handleError(error));
     }
 
     ngOnDestroy(): void {
@@ -639,7 +644,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.initialized = true;
         });
 
-        this.map.on('mousemove', debounce((e) => {
+        this.map.on('mousemove', debounce((e: any) => {
             const features = this.map!.queryRenderedFeatures(e.point);
 
             if (features != null && features.length > 0) {
@@ -687,7 +692,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.store.dispatch(ExplorerActions.selectGeoObject(null));
         }
     }
-    
+
     highlightObject(uri?: string) {
         var highlightedObject = (uri == null) ? null : this.geoObjects.find(go => go.properties.uri === uri);
 
@@ -736,5 +741,4 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         //     }, 1);
         // }
     }
-
 }

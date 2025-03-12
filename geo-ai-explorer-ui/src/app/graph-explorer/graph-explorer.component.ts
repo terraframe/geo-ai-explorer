@@ -2,16 +2,16 @@ import { Component, inject, Input, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
-import { defaultQueries, SELECTED_COLOR } from '../explorer/defaultQueries';
-import { ExplorerService, SPARQLResultSet } from '../service/explorer.service';
+import { SELECTED_COLOR } from '../explorer/defaultQueries';
+import { ExplorerService } from '../service/explorer.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 // @ts-ignore
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
-import { ExplorerActions } from '../state/explorer.actions';
 import { Store } from '@ngrx/store';
+import { ExplorerActions, selectedObject } from '../state/explorer.state';
 import { Observable, Subscription } from 'rxjs';
-import { selectedObject } from '../state/explorer.selectors';
+import { ErrorService } from '../service/error-service.service';
 
 
 // export interface Relationship {
@@ -110,7 +110,10 @@ export class GraphExplorerComponent {
 
   private selectedObject: GeoObject | null = null;
 
-  constructor(private queryService: ExplorerService) {
+  constructor(
+    private queryService: ExplorerService,         
+    private errorService: ErrorService
+  ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
       if (selection && selection.object) {
           this.renderGeoObjectAndNeighbors(selection.object);
@@ -145,9 +148,8 @@ export class GraphExplorerComponent {
         this.renderGraph(graph);
 
         // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
-      }).catch((e) => {
-        console.error(e);
-      }).finally(() => {
+      }).catch(error => this.errorService.handleError(error))
+      .finally(() => {
         this.loading = false;
       });
   }

@@ -5,9 +5,8 @@ import { Observable, Subscription } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { LetDirective } from '@ngrx/component';
 
-import { highlightedObject, selectObjects, selectedObject } from '../state/explorer.selectors';
-import { ExplorerActions } from '../state/explorer.actions';
 import { CommonModule } from '@angular/common';
+import { ExplorerActions, highlightedObject, selectedObject, selectObjects } from '../state/explorer.state';
 
 @Component({
     selector: 'results-table',

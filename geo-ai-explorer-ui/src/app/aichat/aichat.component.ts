@@ -8,13 +8,13 @@ import { Store } from '@ngrx/store';
 import { Observable, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faBroom } from '@fortawesome/free-solid-svg-icons';
+import { faEraser } from '@fortawesome/free-solid-svg-icons';
 
 import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
-import { selectMessages, selectSessionId } from '../state/chat.selectors';
-import { ChatActions } from '../state/chat.actions';
-import { ExplorerActions } from '../state/explorer.actions';
+import { ChatActions, getMessages, getSessionId } from '../state/chat.state';
+import { ErrorService } from '../service/error-service.service';
+import { ExplorerActions } from '../state/explorer.state';
 
 @Component({
   selector: 'aichat',
@@ -23,17 +23,19 @@ import { ExplorerActions } from '../state/explorer.actions';
   styleUrl: './aichat.component.scss'
 })
 export class AichatComponent {
-  faBroom = faBroom;
+  icon = faEraser;
   private store = inject(Store);
 
   message: string = '';
 
-  messages$: Observable<ChatMessage[]> = this.store.select(selectMessages);
-  sessionId$: Observable<string> = this.store.select(selectSessionId);
+  messages$: Observable<ChatMessage[]> = this.store.select(getMessages);
+  sessionId$: Observable<string> = this.store.select(getSessionId);
 
   public loading: boolean = false;
 
-  constructor(private chatService: ChatService) {
+  constructor(
+    private chatService: ChatService,
+    private errorService: ErrorService) {
   }
 
   sendMessage() {
@@ -51,11 +53,10 @@ export class AichatComponent {
 
         this.loading = true;
 
-        this.store.dispatch(ChatActions.addMessage(message));
-
         this.chatService.sendMessage(sessionId, message).then((response) => {
+          this.store.dispatch(ChatActions.addMessage(message));
           this.store.dispatch(ChatActions.addMessage(response));
-        }).finally(() => {
+        }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.loading = false;
         })
       });
@@ -75,7 +76,7 @@ export class AichatComponent {
 
         this.chatService.getLocations(history).then((response) => {
           this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response }));
-        }).finally(() => {
+        }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.loading = false;
         })
       }
@@ -84,7 +85,6 @@ export class AichatComponent {
 
   clear(): void {
     this.store.dispatch(ChatActions.setMessageAndSession({ messages: [], sessionId: uuidv4() }));
-
   }
 
   @HostListener('document:keydown.enter', ['$event'])

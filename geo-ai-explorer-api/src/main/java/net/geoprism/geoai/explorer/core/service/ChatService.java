@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.Location;
 import net.geoprism.geoai.explorer.core.model.Message;
@@ -39,13 +40,31 @@ public class ChatService
 
   public Message prompt(String sessionId, String inputText)
   {
-    return this.bedrock.prompt(sessionId, inputText);
+    try
+    {
+      return this.bedrock.prompt(sessionId, inputText);
+    }
+    catch (Exception e)
+    {
+      log.error("Error invoking a remote service: ", e);
+
+      throw new GenericRestException("The chat agent was unable to generate a response", e);
+    }
   }
 
   public List<Location> getLocations(History history)
   {
-    String statement = this.bedrock.getLocationSparql(history);
+    try
+    {
+      String statement = this.bedrock.getLocationSparql(history);
 
-    return this.jena.query(statement);
+      return this.jena.query(statement);
+    }
+    catch (Exception e)
+    {
+      log.error("Error invoking a remote service: ", e);
+
+      throw new GenericRestException("Unable to map the locations. An error occurred while generating the response", e);
+    }
   }
 }
