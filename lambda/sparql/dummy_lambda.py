@@ -14,9 +14,13 @@ def execute(statement: str) -> str:
 
         print(json)
         keys = json.get('head').get('vars')
+        
+        i = 0
     
-        for r in json.get('results').get('bindings'):
-            results = results + (",".join([str(r.get(key, {}).get('value', '')) for key in keys]) + "\n")
+        for r in json.get('results').get('bindings'):   
+            if i < 100:         
+                results = results + (",".join([str(r.get(key, {}).get('value', '')) for key in keys]) + "\n")
+            i = i + 1
 
         return results    
     except Exception as e:

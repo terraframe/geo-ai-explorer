@@ -233,11 +233,7 @@ public class JenaService
       pss.setCommandText(NEIGHBOR_QUERY);
 
       // Inject the URI properly
-      System.out.println("Iri set as : " + uri);
       pss.setIri("uri", uri);
-
-      System.out.println("Executing sparql:");
-      System.out.println(pss.asQuery());
 
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {

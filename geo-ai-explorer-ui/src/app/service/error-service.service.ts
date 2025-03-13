@@ -1,3 +1,4 @@
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
@@ -10,8 +11,8 @@ export class ErrorService {
   }
 
 
-  handleError(error: any) {
-    if (error.status === 0) {
+  handleError(response: HttpErrorResponse) {
+    if (response.status === 0) {
       this.messageService.add({
         key: 'explorer',
         severity: 'error',
@@ -20,9 +21,16 @@ export class ErrorService {
         sticky: true
       })
     }
-    else if (error.status === 400) {
+    else if (response.status === 400 || response.status === 500) {
 
-      const message = error.error != null ? error.error : 'Your request failed to complete'
+      let message = 'Your request failed to complete';
+
+      if (typeof response.error === 'string' && response.error !== null) {
+        message = response.error;
+      }
+      else if (typeof response.error === 'object' && response.error !== null) {
+        message = response.error.error;
+      }
 
       this.messageService.add({
         key: 'explorer',

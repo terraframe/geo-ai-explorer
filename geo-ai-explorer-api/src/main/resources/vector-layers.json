@@ -1,0 +1,13 @@
+[
+  {
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22ff1a83a2-860f-490e-ad1f-6a3d72000630%22%7D",
+    "label":"Census Tract",
+    "color": "#79F294",
+    "order": 0,
+    "labelProperty":"label",
+    "codeProperty":"ascode",
+    "prefix":"https://localhost:4200/lpg/graph_801104/0#CensusTract-",
+    "enabled":false,
+    "sourceLayer":"context"
+  }
+]

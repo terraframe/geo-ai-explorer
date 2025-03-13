@@ -2,6 +2,8 @@ import { createActionGroup, props, createReducer, on, createFeatureSelector, cre
 
 import { GeoObject } from '../models/geoobject.model';
 import { Style, StyleConfig } from '../models/style.model';
+import { VectorLayer } from "../models/vector-layer.model";
+import { Configuration } from "../models/configuration.model";
 
 export const ExplorerActions = createActionGroup({
     source: 'explorer',
@@ -12,7 +14,8 @@ export const ExplorerActions = createActionGroup({
         'Highlight GeoObject': props<{ object: GeoObject } | null>(),
         'Add Style': props<{ typeUri: string, style: Style }>(),
         'Set Styles': props<{ styles: StyleConfig }>(),
-
+        'Set Vector Layer': props<{ layer: VectorLayer }>(),
+        'Set Configuration': props<Configuration>(),
     },
 });
 
@@ -22,6 +25,7 @@ export interface ExplorerStateModel {
     selectedObject: GeoObject | null;
     highlightedObject: GeoObject | null;
     zoomMap: boolean;
+    vectorLayers: VectorLayer[];
 }
 
 export const initialState: ExplorerStateModel = {
@@ -30,18 +34,12 @@ export const initialState: ExplorerStateModel = {
     selectedObject: null,
     zoomMap: false,
     highlightedObject: null,
+    vectorLayers: []
 }
 
 export const explorerReducer = createReducer(
     initialState,
 
-    // Add geo object
-    on(ExplorerActions.addGeoObject, (state, wrapper) => {
-        const objects = [...state.objects];
-        objects.push(wrapper.object);
-
-        return { ...state, objects }
-    }),
     // Set all geo objects
     on(ExplorerActions.setGeoObjects, (state, wrapper) => {
 
@@ -68,11 +66,32 @@ export const explorerReducer = createReducer(
 
         return { ...state, styles }
     }),
-    // Set style config
+    // Set styles
     on(ExplorerActions.setStyles, (state, wrapper) => {
-
         return { ...state, styles: wrapper.styles }
     }),
+    // Set the vector layers & styles
+    on(ExplorerActions.setConfiguration, (state, configuration) => {
+
+        return { ...state, vectorLayers: configuration.layers, styles: configuration.styles }
+    }),
+
+    // Set the vector layer
+    on(ExplorerActions.setVectorLayer, (state, wrapper) => {
+
+        const vectorLayers = [...state.vectorLayers];
+        const index = vectorLayers.findIndex(v => v.id === wrapper.layer.id)
+
+        if (index !== -1) {
+            vectorLayers[index] = wrapper.layer
+        }
+        else {
+            vectorLayers.push(wrapper.layer)
+        }
+
+        return { ...state, vectorLayers }
+    }),
+
 
 );
 
@@ -93,6 +112,10 @@ export const selectedObject = createSelector(selector, (s) => {
 
 export const highlightedObject = createSelector(selector, (s) => {
     return s.highlightedObject ? { object: s.highlightedObject } : null;
+});
+
+export const getVectorLayers = createSelector(selector, (s) => {
+    return s.vectorLayers
 });
 
 

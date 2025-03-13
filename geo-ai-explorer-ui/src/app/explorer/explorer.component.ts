@@ -9,6 +9,7 @@ import ColorGen from "color-generator";
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
+import { CheckboxModule } from 'primeng/checkbox';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
 
@@ -18,15 +19,16 @@ import { StyleConfig } from '../models/style.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { StyleService } from '../service/style-service.service';
+import { StyleService } from '../service/configuration-service.service';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, highlightedObject, selectedObject, selectObjects, selectStyles } from '../state/explorer.state';
+import { ExplorerActions, getVectorLayers, highlightedObject, selectedObject, selectObjects, selectStyles } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
+import { VectorLayer } from '../models/vector-layer.model';
 
 
 @Component({
@@ -42,7 +44,8 @@ import { debounce } from 'lodash';
         ProgressSpinnerModule,
         PanelModule,
         ToastModule,
-        TabsModule
+        TabsModule,
+        CheckboxModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
@@ -110,8 +113,14 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
+    vectorLayers$: Observable<VectorLayer[]> = this.store.select(getVectorLayers);
+
+    onVectorLayersChange: Subscription;
+
+
     constructor(
         private styleService: StyleService,
+        private explorerService: ExplorerService,
         private errorService: ErrorService
     ) {
         this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
@@ -141,13 +150,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     this.render();
                 }
             })
-
-
         })
 
         this.onStylesChange = this.styles$.subscribe(styles => {
             this.resolvedStyles = styles;
 
+            this.render();
+        });
+
+        this.onVectorLayersChange = this.vectorLayers$.subscribe(() => {
             this.render();
         });
 
@@ -170,15 +181,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnInit(): void {
-        // TODO : Invoke explorerService.init instead
-        this.styleService.getStyles().then(styles => {
-            this.store.dispatch(ExplorerActions.setStyles({ styles }));
+        this.styleService.get().then(configuration => {
+            this.store.dispatch(ExplorerActions.setConfiguration(configuration));
         }).catch(error => this.errorService.handleError(error));
     }
 
     ngOnDestroy(): void {
         this.onGeoObjectsChange.unsubscribe();
         this.onStylesChange.unsubscribe();
+        this.onVectorLayersChange.unsubscribe();
     }
 
     ngAfterViewInit() {
@@ -187,6 +198,13 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     render(): void {
         if (this.initialized) {
+            // Clear the map
+            this.clearAllMapData();
+
+            // Handle the vector layers
+            this.mapVectorLayers();
+
+            // Handle the geo objects
             const types = Object.keys(this.geoObjectsByType());
 
             // Order the types by the order defined in their style config
@@ -208,16 +226,17 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     return bboxPolygon(bbox(data))
                 })
 
-                if (layerBounds.length > 1) {
-                    const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
-                        return union(a, b) as any
-                    }, layerBounds[0])) as LngLatBoundsLike
+                // if (layerBounds.length > 1) {
 
-                    this.map?.fitBounds(allBounds, { padding: 50 })
-                }
-                else {
-                    this.map?.fitBounds(bbox(layerBounds[0]) as LngLatBoundsLike, { padding: 50 })
-                }
+                const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
+                    return union(a.geometry, b.geometry) as any
+                }, layerBounds[0])) as LngLatBoundsLike
+
+                this.map?.fitBounds(allBounds, { padding: 50 })
+                // }
+                // else {
+                //     this.map?.fitBounds(bbox(layerBounds[0]) as LngLatBoundsLike, { padding: 50 })
+                // }
 
             }
 
@@ -270,9 +289,61 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         });
     }
 
-    mapGeoObjects() {
-        this.clearAllMapData();
+    mapVectorLayers() {
+        this.vectorLayers$.pipe(take(1)).subscribe(layers => {
+            layers.filter(l => l.enabled).forEach(layer => {
 
+                this.map!.addSource(layer.id, {
+                    type: "vector",
+                    tiles: [
+                        layer.url
+                    ],
+                    promoteId: layer.codeProperty
+                });
+
+                // Add the hierarchy polygon layer
+                this.map!.addLayer({
+                    "id": layer.id + "-polygon",
+                    "source": layer.id,
+                    "type": "fill",
+                    "paint": {
+                        'fill-color': [
+                            "case",
+                            ["boolean", ["feature-state", "selected"], false],
+                            SELECTED_COLOR,
+                            layer.color
+                        ],
+                        "fill-opacity": 0.8,
+                        "fill-outline-color": "black"
+                    },
+                    "source-layer": layer.sourceLayer,
+                });
+
+                // Add the hierarchy label layer
+                this.map!.addLayer({
+                    "id": layer.id + "-label",
+                    "source": layer.id,
+                    "type": "symbol",
+                    "paint": {
+                        "text-color": "black",
+                        "text-halo-color": "#fff",
+                        "text-halo-width": 2
+                    },
+                    "layout": {
+                        "text-field": ["get", layer.labelProperty],
+                        "text-font": ["NotoSansRegular"],
+                        "text-offset": [0, 0.6],
+                        "text-anchor": "top",
+                        "text-size": 12,
+                    },
+                    "source-layer": layer.sourceLayer
+                });
+            });
+        });
+
+    }
+
+    mapGeoObjects() {
         // setTimeout(() => {
         // Find the index of the first symbol layer in the map style
         const layers = this.map?.getStyle().layers;
@@ -638,13 +709,13 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.map = new Map(mapConfig);
 
-        this.map.on("load", () => {
+        this.map!.on("load", () => {
             this.initMap();
 
             this.initialized = true;
         });
 
-        this.map.on('mousemove', debounce((e: any) => {
+        this.map!.on('mousemove', debounce((e: any) => {
             const features = this.map!.queryRenderedFeatures(e.point);
 
             if (features != null && features.length > 0) {
@@ -681,11 +752,38 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         if (features != null && features.length > 0) {
             const feature = features[0];
 
-            if (feature.properties['uri'] != null) {
-                let uri = feature.properties['uri'];
+            const source = this.map!.getSource(feature.source);
 
-                let selectedObject = this.geoObjects.find(n => n.properties.uri === uri);
-                this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
+            // Get the layer definition
+            if (source?.type === 'vector') {
+                this.vectorLayers$.pipe(take(1)).subscribe(layers => {
+                    layers.forEach(layer => {
+                        this.map!.removeFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer });
+                    })
+
+                    const layer = layers.find(l => l.id === feature.source);
+
+                    if (layer != null) {
+                        const uri = layer.prefix + feature.properties[layer.codeProperty];
+
+                        this.explorerService.getAttributes(uri)
+                            .then(geoObject => {
+                                this.map!.setFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer, id: feature.properties[layer.codeProperty] }, { selected: true });
+
+                                this.selectedObject = geoObject;
+                                this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: false }));
+                            })
+                            .catch(error => this.errorService.handleError(error))
+                    }
+                })
+            }
+            else {
+                if (feature.properties['uri'] != null) {
+                    const uri = feature.properties['uri'];
+
+                    const selectedObject = this.geoObjects.find(n => n.properties.uri === uri);
+                    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
+                }
             }
         } else {
             // this.selectObject();
@@ -731,6 +829,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
         }
 
+
         // if (this.selectedObject != null) {
         //     setTimeout(() => {
         //         // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
@@ -740,5 +839,12 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         //         //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
         //     }, 1);
         // }
+    }
+
+    toggleVectorLayer(layer: VectorLayer): void {
+        const newLayer = { ...layer };
+        newLayer.enabled = !newLayer.enabled
+
+        this.store.dispatch(ExplorerActions.setVectorLayer({ layer: newLayer }));
     }
 }
