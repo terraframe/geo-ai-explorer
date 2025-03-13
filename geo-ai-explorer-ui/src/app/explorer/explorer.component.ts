@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, TemplateRef, ViewChild, inject, OnInit, OnDestroy } from '@angular/core';
-import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat, GeoJSONSource, LngLatBoundsLike } from "maplibre-gl";
+import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat, GeoJSONSource, LngLatBoundsLike, MapGeoJSONFeature } from "maplibre-gl";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -120,6 +120,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private zoomMap: boolean = false;
 
+    public activeTab: string = '0';
+
     constructor(
         private styleService: StyleService,
         private errorService: ErrorService
@@ -144,9 +146,12 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.render();
         });
 
-        this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-            if (selection) {
-                this.selectObject(selection.object.properties.uri, selection.zoomMap);
+        this.onSelectedObjectChange = this.selectedObject$.subscribe(event => {
+            if (event) {
+                this.selectObject(event.object.properties.uri, event.zoomMap);
+
+                if (event.zoomMap)
+                    this.zoomTo(event.object.properties.uri);
             } else {
                 this.selectObject(undefined, false);
             }
@@ -171,8 +176,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnDestroy(): void {
         this.onGeoObjectsChange.unsubscribe();
+        this.onNeighborsChange.unsubscribe();
         this.onStylesChange.unsubscribe();
+        this.onSelectedObjectChange.unsubscribe();
+        this.onHighlightedObjectChange.unsubscribe();
     }
+
+    onTabChange(event: any) {
+        this.activeTab = event;
+      }
 
     ngAfterViewInit() {
         this.initializeMap();
@@ -221,6 +233,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             if (this.zoomMap) {
                 this.zoomToAll();
             }
+
+            this.renderHighlights();
 
             this.renderedObjects = this.allGeoObjects().map(obj => obj.properties.uri);
         }
@@ -393,7 +407,14 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     allGeoObjects(): GeoObject[] {
-        return this.geoObjects.concat(this.neighbors);
+        let all = this.geoObjects.concat(this.neighbors);
+
+        if (this.selectedObject)
+            all.push(this.selectedObject);
+
+        // Enforce each GeoObject only occurs once
+        const seen = new Set<string>();
+        return all.filter(obj => seen.has(obj.properties.uri) ? false : seen.add(obj.properties.uri));
     }
 
     isDirty(): boolean {
@@ -687,25 +708,50 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.initialized = true;
         });
 
-        this.map.on('mousemove', debounce((e: any) => {
-            const features = this.map!.queryRenderedFeatures(e.point);
+        this.map.on('mousemove', this.highlightSelectedLayerOnMouseMove);
+    }
 
-            if (features != null && features.length > 0) {
-                for (let i = 0; i < features.length; ++i) {
-                    const feature = features[i];
+    highlightSelectedLayerOnMouseMove = debounce((e: any) => {
+        let layer = this.getLayerUnderCursor(e);
 
-                    if (feature.properties['uri'] != null) {
-                        let uri = feature!.properties!['uri'];
-                        var highlightedObject = this.allGeoObjects().find(go => go.properties.uri === uri);
-                        this.store.dispatch(ExplorerActions.highlightGeoObject({ object: highlightedObject! }));
-                        this.map!.getCanvas().style.cursor = 'pointer';
-                    }
-                }
-            } else if (this.highlightObject != null) {
-                this.store.dispatch(ExplorerActions.highlightGeoObject(null))
+        if (layer) {
+            const uri = layer.properties['uri'];
+            const highlightedObject = this.allGeoObjects().find(go => go.properties.uri === uri);
+            this.store.dispatch(ExplorerActions.highlightGeoObject({ object: highlightedObject! }));
+            this.map!.getCanvas().style.cursor = 'pointer';
+        } else {
+            // Reset if no valid feature is found
+            if (this.highlightedObject) {
+                this.store.dispatch(ExplorerActions.highlightGeoObject(null));
                 this.map!.getCanvas().style.cursor = '';
             }
-        }, 5));
+        }
+    }, 5);
+
+    getLayerUnderCursor(e: any): MapGeoJSONFeature | null | undefined {
+        const features = this.map!.queryRenderedFeatures(e.point);
+    
+        if (features && features.length > 0) {
+            // Get the map's layer order
+            const layerOrder = this.map!.getStyle().layers!.map(layer => layer.id);
+    
+            // Sort features based on layer order, but push label layers to the bottom
+            features.sort((a, b) => {
+                const aIsLabel = a.layer.id.endsWith('-LABEL');
+                const bIsLabel = b.layer.id.endsWith('-LABEL');
+    
+                if (aIsLabel && !bIsLabel) return 1;  // Move labels down
+                if (!aIsLabel && bIsLabel) return -1; // Move non-labels up
+    
+                // Otherwise, sort by layer order (higher index = top-most)
+                return layerOrder.indexOf(b.layer.id) - layerOrder.indexOf(a.layer.id);
+            });
+    
+            // Take the highest non-label feature
+            return features.find(f => f.properties['uri'] != null);
+        }
+
+        return null;
     }
 
     initMap(): void {
@@ -719,20 +765,21 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     handleMapClickEvent(e: any): void {
-        const features = this.map!.queryRenderedFeatures(e.point);
+        let layer = this.getLayerUnderCursor(e);
 
-        if (features != null && features.length > 0) {
-            const feature = features[0];
+        if (layer) {
+            let uri = layer.properties['uri'];
 
-            if (feature.properties['uri'] != null) {
-                let uri = feature.properties['uri'];
-
-                let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
-                this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
-            }
+            let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
+            this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
         } else {
-            // this.selectObject();
             this.store.dispatch(ExplorerActions.selectGeoObject(null));
+        }
+    }
+
+    renderHighlights() {
+        if (this.selectedObject != null) {
+            this.map!.setFeatureState({ source: this.selectedObject.properties.type, id: this.selectedObject.id }, { selected: true });
         }
     }
 
@@ -766,9 +813,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.selectedObject = undefined;
         }
 
-        if (this.selectedObject != null) {
-            this.map!.setFeatureState({ source: this.selectedObject.properties.type, id: this.selectedObject.id }, { selected: true });
-        }
+        this.renderHighlights();
 
         if (previousSelected != null && previousSelected != this.selectedObject) {
             this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });

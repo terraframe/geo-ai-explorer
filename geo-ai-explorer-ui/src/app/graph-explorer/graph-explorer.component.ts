@@ -1,4 +1,4 @@
-import { Component, inject, Input, ViewChild } from '@angular/core';
+import { Component, inject, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
@@ -76,7 +76,7 @@ export const DIMENSIONS = {
     templateUrl: './graph-explorer.component.html',
     styleUrl: './graph-explorer.component.scss'
 })
-export class GraphExplorerComponent {
+export class GraphExplorerComponent implements OnDestroy {
 
   @Input() explorer!: ExplorerComponent;
 
@@ -121,11 +121,11 @@ export class GraphExplorerComponent {
     private errorService: ErrorService
   ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-        if (selection && selection.object) {
-          this.renderGeoObjectAndNeighbors(selection.object);
-        } else {
-          this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
-        }
+      if (selection && selection.object) {
+        this.renderGeoObjectAndNeighbors(selection.object);
+      } else {
+        this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+      }
     });
     this.onHighlightedObjectChange = this.selectedObject$.subscribe(selection => {
       if (selection && selection.object) {
@@ -134,15 +134,16 @@ export class GraphExplorerComponent {
     });
   }
 
+  ngOnDestroy(): void {
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+    this.onSelectedObjectChange.unsubscribe();
+    this.onHighlightedObjectChange.unsubscribe();
+  }
+
   public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
       if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
 
       this.loading = true;
-
-      if (this.selectedObject != null)
-        console.log(this.selectedObject.properties.uri, geoObject.properties.uri);
-      else
-        console.log("Selected object is null");
 
       this.selectedObject = geoObject;
 
@@ -320,7 +321,7 @@ export class GraphExplorerComponent {
   }
 
   public onClickNode(node: any) {
-    // this.explorer?.selectObject(this.idToUri(node.id), true);
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
 
     let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
 

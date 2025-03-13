@@ -15,7 +15,7 @@
 			<div *ngIf="selectedObject" id="graphExplorerContainer">
 				<h2 class="inspector-title" style="margin: 10px; text-align: left;">{{selectedObject!.properties.label}}</h2>
 
-				<p-tabs value="0">
+				<p-tabs [(value)]="activeTab">
 					<p-tablist>
 						<p-tab value="0">Attributes</p-tab>
 						<p-tab value="1">Relationships</p-tab>
@@ -25,7 +25,7 @@
 							<attribute-panel *ngIf="selectedObject"></attribute-panel>
 						</p-tabpanel>
 						<p-tabpanel value="1">
-							<graph-explorer #graphExplorer [explorer]="this"></graph-explorer>
+							<graph-explorer *ngIf="activeTab === '1'" #graphExplorer [explorer]="this"></graph-explorer>
 						</p-tabpanel>
 					</p-tabpanels>
 				</p-tabs>
