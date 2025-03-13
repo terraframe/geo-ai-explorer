@@ -24,7 +24,7 @@ import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, highlightedObject, selectedObject, selectObjects, selectStyles } from '../state/explorer.state';
+import { ExplorerActions, highlightedObject, selectedObject, selectNeighbors, selectObjects, selectStyles } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 
@@ -57,11 +57,19 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private store = inject(Store);
 
-    geoObjects$: Observable<GeoObject[]> = this.store.select(selectObjects);
+    geoObjects$: Observable<{ objects: GeoObject[], zoomMap: boolean }> = this.store.select(selectObjects);
 
     geoObjects: GeoObject[] = [];
 
+    renderedObjects: string[] = [];
+
     onGeoObjectsChange: Subscription;
+
+    neighbors$: Observable<{ neighbors: GeoObject[], zoomMap: boolean }> = this.store.select(selectNeighbors);
+
+    neighbors: GeoObject[] = [];
+
+    onNeighborsChange: Subscription;
 
     styles$: Observable<StyleConfig> = this.store.select(selectStyles);
 
@@ -110,40 +118,25 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     initialized: boolean = false;
 
+    private zoomMap: boolean = false;
+
     constructor(
         private styleService: StyleService,
         private errorService: ErrorService
     ) {
-        this.onGeoObjectsChange = this.geoObjects$.subscribe(geoObjects => {
-            this.geoObjects = geoObjects;
+        this.onGeoObjectsChange = this.geoObjects$.subscribe(event => {
+            this.geoObjects = event.objects;
+            this.zoomMap = event.zoomMap;
 
-            const types = Object.keys(this.geoObjectsByType());
-
-            // Resolve the style of all of the types
-            this.styles$.pipe(take(1)).subscribe(styles => {
-                const missingStyles = types.filter(type => styles[type] == null);
-
-                if (missingStyles.length > 0) {
-                    const newStyles = { ...styles };
-
-                    types.forEach(type => {
-                        if (newStyles[type] == null) {
-                            newStyles[type] = {
-                                order: 0,
-                                color: ColorGen().hexString()
-                            }
-                        }
-                    })
-
-                    this.store.dispatch(ExplorerActions.setStyles({ styles: newStyles }));
-                }
-                else {
-                    this.render();
-                }
-            })
-
-
+            this.resolveStyles();
         })
+
+        this.onNeighborsChange = this.neighbors$.subscribe(event => {
+            this.neighbors = event.neighbors;
+            this.zoomMap = event.zoomMap;
+
+            this.resolveStyles();
+        });
 
         this.onStylesChange = this.styles$.subscribe(styles => {
             this.resolvedStyles = styles;
@@ -185,8 +178,35 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.initializeMap();
     }
 
+    resolveStyles(): void {
+        const types = Object.keys(this.geoObjectsByType());
+
+        // Resolve the style of all of the types
+        this.styles$.pipe(take(1)).subscribe(styles => {
+            const missingStyles = types.filter(type => styles[type] == null);
+
+            if (missingStyles.length > 0) {
+                const newStyles = { ...styles };
+
+                types.forEach(type => {
+                    if (newStyles[type] == null) {
+                        newStyles[type] = {
+                            order: 0,
+                            color: ColorGen().hexString()
+                        }
+                    }
+                })
+
+                this.store.dispatch(ExplorerActions.setStyles({ styles: newStyles }));
+            }
+            else {
+                this.render();
+            }
+        })
+    }
+
     render(): void {
-        if (this.initialized) {
+        if (this.initialized && this.isDirty()) {
             const types = Object.keys(this.geoObjectsByType());
 
             // Order the types by the order defined in their style config
@@ -198,31 +218,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.mapGeoObjects();
 
-            // Fit the map to the bounds of all of the layers
-            if (this.geoObjects.length > 0) {
-
-                const layerBounds = this.orderedTypes.map(type => {
-                    // TODO: Is there a better way to get the layer data from the map?
-                    const data = ((this.map?.getSource(type) as GeoJSONSource)._data) as AllGeoJSON;
-
-                    return bboxPolygon(bbox(data))
-                })
-
-                if (layerBounds.length > 1) {
-                    const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
-                        return union(a, b) as any
-                    }, layerBounds[0])) as LngLatBoundsLike
-
-                    this.map?.fitBounds(allBounds, { padding: 50 })
-                }
-                else {
-                    this.map?.fitBounds(bbox(layerBounds[0]) as LngLatBoundsLike, { padding: 50 })
-                }
-
+            if (this.zoomMap) {
+                this.zoomToAll();
             }
 
-            // if (this.graphExplorer)
-            //     this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+            this.renderedObjects = this.allGeoObjects().map(obj => obj.properties.uri);
         }
     }
 
@@ -287,6 +287,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         // The layers are organized by the type, so we have to group geoObjects by type and create a layer for each type
         let gosByType = this.geoObjectsByType();
 
+        let allGeoObjects = this.allGeoObjects();
         for (let i = this.orderedTypes.length - 1; i >= 0; --i) {
             let type = this.orderedTypes[i];
             let geoObjects = gosByType[type];
@@ -299,10 +300,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 features: []
             }
 
-            for (let i = 0; i < this.geoObjects.length; ++i) {
-                if (this.geoObjects[i].properties.type !== type) continue;
+            for (let i = 0; i < allGeoObjects.length; ++i) {
+                if (allGeoObjects[i].properties.type !== type) continue;
 
-                let geoObject = this.geoObjects[i];
+                let geoObject = allGeoObjects[i];
 
                 geojson.features.push(geoObject);
             }
@@ -391,11 +392,22 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         return layerConfig;
     }
 
+    allGeoObjects(): GeoObject[] {
+        return this.geoObjects.concat(this.neighbors);
+    }
+
+    isDirty(): boolean {
+        let all = this.allGeoObjects();
+        return all.some(obj => !this.renderedObjects.includes(obj.properties.uri))
+            || this.renderedObjects.some(uri => !all.find(geo => geo.properties.uri === uri));
+    }
+
     geoObjectsByType(): { [key: string]: GeoObject[] } {
         let gos: { [key: string]: GeoObject[] } = {};
+        var allGeoObjects = this.allGeoObjects();
 
-        for (let i = 0; i < this.geoObjects.length; ++i) {
-            let geoObject = this.geoObjects[i];
+        for (let i = 0; i < allGeoObjects.length; ++i) {
+            let geoObject = allGeoObjects[i];
 
             if (gos[geoObject.properties.type] === undefined) {
                 gos[geoObject.properties.type] = [];
@@ -461,8 +473,39 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
+    /*
+     * Fit the map to the bounds of all of the layers
+     */
+    zoomToAll() {
+        if (this.allGeoObjects().length > 0) {
+
+            const layerBounds = this.orderedTypes.map(type => {
+                // TODO: Is there a better way to get the layer data from the map?
+                const data = ((this.map?.getSource(type) as GeoJSONSource)._data) as AllGeoJSON;
+
+                return bboxPolygon(bbox(data))
+            })
+
+            // TODO : union throws 'Must have at least 2 geometries'
+            // if (layerBounds.length > 1) {
+            //     const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
+            //         return union(a, b) as any
+            //     }, layerBounds[0])) as LngLatBoundsLike
+
+            //     this.map?.fitBounds(allBounds, { padding: 50 })
+            // }
+            // else {
+                this.map?.fitBounds(bbox(layerBounds[0]) as LngLatBoundsLike, { padding: 50 })
+            // }
+
+        }
+    }
+
+    /*
+     * Zooms to a specific GeoObject
+     */
     zoomTo(uri: string) {
-        let geoObject = this.geoObjects.find(go => go.properties.uri === uri);
+        let geoObject = this.allGeoObjects().find(go => go.properties.uri === uri);
         if (geoObject == null) return;
 
         let geojson = geoObject.geometry as any;
@@ -653,7 +696,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
                     if (feature.properties['uri'] != null) {
                         let uri = feature!.properties!['uri'];
-                        var highlightedObject = this.geoObjects.find(go => go.properties.uri === uri);
+                        var highlightedObject = this.allGeoObjects().find(go => go.properties.uri === uri);
                         this.store.dispatch(ExplorerActions.highlightGeoObject({ object: highlightedObject! }));
                         this.map!.getCanvas().style.cursor = 'pointer';
                     }
@@ -684,7 +727,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             if (feature.properties['uri'] != null) {
                 let uri = feature.properties['uri'];
 
-                let selectedObject = this.geoObjects.find(n => n.properties.uri === uri);
+                let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
                 this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
             }
         } else {
@@ -694,7 +737,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     highlightObject(uri?: string) {
-        var highlightedObject = (uri == null) ? null : this.geoObjects.find(go => go.properties.uri === uri);
+        var highlightedObject = (uri == null) ? null : this.allGeoObjects().find(go => go.properties.uri === uri);
 
         if (highlightedObject != null)
             this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
@@ -712,7 +755,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         let previousSelected = this.selectedObject;
 
         if (uri != undefined) {
-            let go = this.geoObjects.find(go => go.properties.uri === uri);
+            let go = this.allGeoObjects().find(go => go.properties.uri === uri);
             if (go == null) return;
 
             this.selectedObject = go;
@@ -733,7 +776,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         // if (this.selectedObject != null) {
         //     setTimeout(() => {
-        //         // this.graphExplorer.renderGeoObjects(this, this.geoObjects);
+        //         // this.graphExplorer.renderGeoObjects(this, this.allGeoObjects());
         //         this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
 
         //         // if (uri)

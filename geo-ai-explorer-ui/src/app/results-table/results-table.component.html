@@ -1,9 +1,9 @@
 <div>
-    <ng-container *ngrxLet="objects$ as objects">
-        <ng-container *ngIf="objects && objects.length > 0">
+    <ng-container *ngrxLet="objects$ as event">
+        <ng-container *ngIf="event && event.objects.length > 0">
             <h2 style="margin: 10px;">Results</h2>
 
-            <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
+            <p-table [value]="event.objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
                 [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
                 <ng-template #header>
                     <tr>

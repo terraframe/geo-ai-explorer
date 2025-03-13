@@ -82,7 +82,7 @@ export class AichatComponent {
         this.loading = true;
 
         this.chatService.getLocations(history).then((response) => {
-          this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response }));
+          this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response, zoomMap: true }));
         }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.loading = false;
         })

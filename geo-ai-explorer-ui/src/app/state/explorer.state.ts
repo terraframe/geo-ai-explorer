@@ -7,17 +7,19 @@ export const ExplorerActions = createActionGroup({
     source: 'explorer',
     events: {
         'Add GeoObject': props<{ object: GeoObject }>(),
-        'Set GeoObjects': props<{ objects: GeoObject[] }>(),
+        'Set GeoObjects': props<{ objects: GeoObject[], zoomMap: boolean }>(),
+        'Add Neighbor': props<{ object: GeoObject }>(),
+        'Set Neighbors': props<{ objects: GeoObject[], zoomMap: boolean }>(),
         'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
         'Highlight GeoObject': props<{ object: GeoObject } | null>(),
         'Add Style': props<{ typeUri: string, style: Style }>(),
         'Set Styles': props<{ styles: StyleConfig }>(),
-
     },
 });
 
 export interface ExplorerStateModel {
     objects: GeoObject[];
+    neighbors: GeoObject[];
     styles: StyleConfig;
     selectedObject: GeoObject | null;
     highlightedObject: GeoObject | null;
@@ -26,6 +28,7 @@ export interface ExplorerStateModel {
 
 export const initialState: ExplorerStateModel = {
     objects: [],
+    neighbors: [],
     styles: {},
     selectedObject: null,
     zoomMap: false,
@@ -35,18 +38,19 @@ export const initialState: ExplorerStateModel = {
 export const explorerReducer = createReducer(
     initialState,
 
-    // Add geo object
-    on(ExplorerActions.addGeoObject, (state, wrapper) => {
-        const objects = [...state.objects];
-        objects.push(wrapper.object);
+    // Set all neighbors
+    on(ExplorerActions.setNeighbors, (state, { objects, zoomMap }) => ({
+        ...state,
+        neighbors: objects,
+        zoomMap: zoomMap,
+    })),
 
-        return { ...state, objects }
-    }),
     // Set all geo objects
-    on(ExplorerActions.setGeoObjects, (state, wrapper) => {
-
-        return { ...state, objects: wrapper.objects }
-    }),
+    on(ExplorerActions.setGeoObjects, (state, { objects, zoomMap }) => ({
+        ...state,
+        objects: objects,
+        zoomMap: zoomMap,
+    })),
 
     // Select geo object
     on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => ({
@@ -61,27 +65,43 @@ export const explorerReducer = createReducer(
         highlightedObject: object
     })),
 
+    // Add Neighbor
+    on(ExplorerActions.addNeighbor, (state, { object }) => ({
+        ...state,
+        neighbors: [...state.neighbors, object]
+    })),
+
+    // Add geo object
+    on(ExplorerActions.addGeoObject, (state, { object }) => ({
+        ...state,
+        objects: [...state.objects, object]
+    })),
+
     // Add style
-    on(ExplorerActions.addStyle, (state, wrapper) => {
-        const styles = { ...state.styles };
-        styles[wrapper.typeUri] = wrapper.style;
+    on(ExplorerActions.addStyle, (state, { typeUri, style }) => ({
+        ...state,
+        styles: { ...state.styles, [typeUri]: style }
+    })),
 
-        return { ...state, styles }
-    }),
-    // Set style config
-    on(ExplorerActions.setStyles, (state, wrapper) => {
-
-        return { ...state, styles: wrapper.styles }
-    }),
-
+    // Set styles
+    on(ExplorerActions.setStyles, (state, { styles }) => ({
+        ...state,
+        styles: styles
+    })),
 );
 
 
 const selector = createFeatureSelector<ExplorerStateModel>('explorer');
 
-export const selectObjects = createSelector(selector, (s) => {
-    return s.objects;
-});
+export const selectObjects = createSelector(selector, (s) => ({
+    objects: s.objects,
+    zoomMap: s.zoomMap,
+}));
+
+export const selectNeighbors = createSelector(selector, (s) => ({
+    neighbors: s.neighbors,
+    zoomMap: s.zoomMap,
+}));
 
 export const selectStyles = createSelector(selector, (s) => {
     return s.styles;

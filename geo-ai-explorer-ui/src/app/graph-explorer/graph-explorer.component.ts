@@ -9,7 +9,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, selectedObject } from '../state/explorer.state';
+import { ExplorerActions, highlightedObject, selectedObject } from '../state/explorer.state';
 import { Observable, Subscription } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
 
@@ -104,11 +104,17 @@ export class GraphExplorerComponent {
 
   private gprGraph?: GprGraph;
 
+  highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
+  
+  onHighlightedObjectChange: Subscription;
+
   selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
   
   onSelectedObjectChange: Subscription;
 
   private selectedObject: GeoObject | null = null;
+
+  private highlightedObject: GeoObject | null = null;
 
   constructor(
     private queryService: ExplorerService,         
@@ -116,8 +122,15 @@ export class GraphExplorerComponent {
   ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
         if (selection && selection.object) {
-            this.renderGeoObjectAndNeighbors(selection.object);
+          this.renderGeoObjectAndNeighbors(selection.object);
+        } else {
+          this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
         }
+    });
+    this.onHighlightedObjectChange = this.selectedObject$.subscribe(selection => {
+      if (selection && selection.object) {
+          this.highlightedObject = selection.object;
+      }
     });
   }
 
@@ -156,6 +169,7 @@ export class GraphExplorerComponent {
 
   public renderGraph(graph: GprGraph) {
     this.gprGraph = graph;
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
 
     let data: any = {
         edges: [],
@@ -242,11 +256,14 @@ export class GraphExplorerComponent {
   // }
 
   public getTypeLegend() {
-    return this.explorer?.getTypeLegend();
+    return this.explorer!.getTypeLegend();
   }
 
-  public getColor(node: any) {
-    var legend = this.getTypeLegend()!;
+  public getColor(node: Node) {
+    if (this.highlightedObject != null && this.highlightedObject.properties.uri === this.idToUri(node.id))
+      return SELECTED_COLOR;
+
+    let legend = this.getTypeLegend();
 
     if (legend[node.type] != null)
       return legend[node.type].color;

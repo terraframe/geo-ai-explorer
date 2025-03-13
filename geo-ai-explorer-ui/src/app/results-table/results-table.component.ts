@@ -17,7 +17,7 @@ import { ExplorerActions, highlightedObject, selectedObject, selectObjects } fro
 export class ResultsTableComponent implements OnInit, OnDestroy {
     private store = inject(Store);
 
-    objects$: Observable<GeoObject[]> = this.store.select(selectObjects);
+    objects$: Observable<{ objects: GeoObject[], zoomMap: boolean }> = this.store.select(selectObjects);
 
     selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
 
