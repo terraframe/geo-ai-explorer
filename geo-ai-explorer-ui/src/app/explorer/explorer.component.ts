@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, TemplateRef, ViewChild, inject, OnInit, OnDestroy } from '@angular/core';
-import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat, GeoJSONSource, LngLatBoundsLike, MapGeoJSONFeature } from "maplibre-gl";
+import { Map, NavigationControl, AttributionControl, LngLatBounds, LngLat, GeoJSONSource, LngLatBoundsLike, MapGeoJSONFeature, Source } from "maplibre-gl";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -10,7 +10,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
 import { CheckboxModule } from 'primeng/checkbox';
-import { Observable, Subscription, take } from 'rxjs';
+import { combineLatestAll, distinctUntilChanged, Observable, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { GeoObject } from '../models/geoobject.model';
@@ -25,7 +25,7 @@ import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getVectorLayers, highlightedObject, selectedObject, selectNeighbors, selectObjects, selectStyles } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -60,7 +60,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private store = inject(Store);
 
-    geoObjects$: Observable<{ objects: GeoObject[], zoomMap: boolean }> = this.store.select(selectObjects);
+    zoomMap$: Observable<boolean> = this.store.select(getZoomMap);
+
+    geoObjects$: Observable<GeoObject[]> = this.store.select(getObjects);
 
     geoObjects: GeoObject[] = [];
 
@@ -68,21 +70,21 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onGeoObjectsChange: Subscription;
 
-    neighbors$: Observable<{ neighbors: GeoObject[], zoomMap: boolean }> = this.store.select(selectNeighbors);
+    neighbors$: Observable<GeoObject[]> = this.store.select(getNeighbors);
 
     neighbors: GeoObject[] = [];
 
     onNeighborsChange: Subscription;
 
-    styles$: Observable<StyleConfig> = this.store.select(selectStyles);
+    styles$: Observable<StyleConfig> = this.store.select(getStyles);
 
     onStylesChange: Subscription;
 
-    selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
+    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
     onSelectedObjectChange: Subscription;
 
-    highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
+    highlightedObject$: Observable<GeoObject | null> = this.store.select(highlightedObject);
 
     onHighlightedObjectChange: Subscription;
 
@@ -134,21 +136,22 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         private explorerService: ExplorerService,
         private errorService: ErrorService
     ) {
-        this.onGeoObjectsChange = this.geoObjects$.subscribe(event => {
-            this.geoObjects = event.objects;
-            this.zoomMap = event.zoomMap;
+        this.onGeoObjectsChange = this.geoObjects$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([geoObjects, zoomMap]) => {
+            this.geoObjects = geoObjects
+            this.zoomMap = zoomMap
 
             this.resolveStyles();
         })
 
-        this.onNeighborsChange = this.neighbors$.subscribe(event => {
-            this.neighbors = event.neighbors;
-            this.zoomMap = event.zoomMap;
+
+        this.onNeighborsChange = this.neighbors$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([neighbors, zoomMap]) => {
+            this.neighbors = neighbors
+            this.zoomMap = zoomMap;
 
             this.resolveStyles();
         });
 
-        this.onStylesChange = this.styles$.subscribe(styles => {
+        this.onStylesChange = this.styles$.pipe(distinctUntilChanged()).subscribe(styles => {
             this.resolvedStyles = styles;
 
             this.render();
@@ -158,12 +161,14 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.render();
         });
 
-        this.onSelectedObjectChange = this.selectedObject$.subscribe(event => {
-            if (event) {
-                this.selectObject(event.object.properties.uri, event.zoomMap);
+        this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([object, zoomMap]) => {
+            if (object) {
+                this.selectObject(object.properties.uri, zoomMap);
 
-                if (event.zoomMap)
-                    this.zoomTo(event.object.properties.uri);
+                if (zoomMap) {
+
+                    this.zoomTo(object.properties.uri);
+                }
             } else {
                 this.selectObject(undefined, false);
             }
@@ -174,8 +179,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             }, 0);
         });
 
-        this.onHighlightedObjectChange = this.highlightedObject$.subscribe(selection => {
-            this.highlightObject(selection == null ? undefined : selection.object.properties.uri);
+        this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
+            this.highlightObject(object == null ? undefined : object.properties.uri);
         });
     }
 
@@ -230,7 +235,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     render(): void {
-        if (this.initialized && this.isDirty()) {
+        if (this.initialized) {
             // Clear the map
             this.clearAllMapData();
 
@@ -488,13 +493,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         return all.filter(obj => seen.has(obj.properties.uri) ? false : seen.add(obj.properties.uri));
     }
 
-    isDirty(): boolean {
-        return true;
-        // let all = this.allGeoObjects();
-        // return all.some(obj => !this.renderedObjects.includes(obj.properties.uri))
-        //     || this.renderedObjects.some(uri => !all.find(geo => geo.properties.uri === uri));
-    }
-
     geoObjectsByType(): { [key: string]: GeoObject[] } {
         let gos: { [key: string]: GeoObject[] } = {};
         var allGeoObjects = this.allGeoObjects();
@@ -574,14 +572,27 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             const layerBounds = this.orderedTypes.map(type => {
                 // TODO: Is there a better way to get the layer data from the map?
-                const data = ((this.map?.getSource(type) as GeoJSONSource)._data) as AllGeoJSON;
+                const source = this.map?.getSource(type);
 
-                return bboxPolygon(bbox(data))
-            })
+                if (source instanceof GeoJSONSource) {
+                    const data = ((source as GeoJSONSource)._data) as AllGeoJSON;
+                    return bboxPolygon(bbox(data))
+                }
+
+                return null;
+            }).filter(a => a != null)
 
             const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
+                if (a == null) {
+                    return b;
+                }
+
+                if (b == null) {
+                    return a;
+                }
+
                 return union(a.geometry, b.geometry) as any
-            }, layerBounds[0].geometry)) as LngLatBoundsLike
+            }, null)) as LngLatBoundsLike
 
             this.map?.fitBounds(allBounds, { padding: 50 })
         }
@@ -777,10 +788,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     highlightSelectedLayerOnMouseMove = debounce((e: any) => {
-        let layer = this.getLayerUnderCursor(e);
+        const features = this.getSortedFeature(e);
+        const feature = features.find(f => f.properties['uri'] != null);
 
-        if (layer) {
-            const uri = layer.properties['uri'];
+        if (feature) {
+            const uri = feature.properties['uri'];
             const highlightedObject = this.allGeoObjects().find(go => go.properties.uri === uri);
             this.store.dispatch(ExplorerActions.highlightGeoObject({ object: highlightedObject! }));
             this.map!.getCanvas().style.cursor = 'pointer';
@@ -793,31 +805,28 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }, 5);
 
-    getLayerUnderCursor(e: any): MapGeoJSONFeature | null | undefined {
+    getSortedFeature(e: any): MapGeoJSONFeature[] {
         const features = this.map!.queryRenderedFeatures(e.point);
 
-        if (features && features.length > 0) {
-            // Get the map's layer order
-            const layerOrder = this.map!.getStyle().layers!.map(layer => layer.id);
+        // Get the map's layer order
+        const layerOrder = this.map!.getStyle().layers!.map(layer => layer.id);
 
-            // Sort features based on layer order, but push label layers to the bottom
-            features.sort((a, b) => {
-                const aIsLabel = a.layer.id.endsWith('-LABEL');
-                const bIsLabel = b.layer.id.endsWith('-LABEL');
+        // Sort features based on layer order, but push label layers to the bottom
+        features.sort((a, b) => {
+            const aIsLabel = a.layer.id.endsWith('-LABEL');
+            const bIsLabel = b.layer.id.endsWith('-LABEL');
 
-                if (aIsLabel && !bIsLabel) return 1;  // Move labels down
-                if (!aIsLabel && bIsLabel) return -1; // Move non-labels up
+            if (aIsLabel && !bIsLabel) return 1;  // Move labels down
+            if (!aIsLabel && bIsLabel) return -1; // Move non-labels up
 
-                // Otherwise, sort by layer order (higher index = top-most)
-                return layerOrder.indexOf(b.layer.id) - layerOrder.indexOf(a.layer.id);
-            });
+            // Otherwise, sort by layer order (higher index = top-most)
+            return layerOrder.indexOf(b.layer.id) - layerOrder.indexOf(a.layer.id);
+        });
 
-            // Take the highest non-label feature
-            return features.find(f => f.properties['uri'] != null);
-        }
-
-        return null;
+        return features;
     }
+
+
 
     initMap(): void {
         // Add zoom and rotation controls to the map.
@@ -830,43 +839,50 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     handleMapClickEvent(e: any): void {
-        let layer = this.getLayerUnderCursor(e);
+        this.vectorLayers$.pipe(take(1)).subscribe(vectorLayers => {
 
-        if (layer) {
-            let uri = layer.properties['uri'];
+            // Clear the feature state of all vector layers
+            vectorLayers.forEach(layer => {
+                this.map!.removeFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer });
+            })
 
-            // const source = this.map!.getSource(feature.source);
+            const features = this.getSortedFeature(e);
 
-            // // Get the layer definition
-            // if (source?.type === 'vector') {
-            //     this.vectorLayers$.pipe(take(1)).subscribe(layers => {
-            //         layers.forEach(layer => {
-            //             this.map!.removeFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer });
-            //         })
+            if (features.length > 0) {
+                const feature = features[0];
 
-            //         const layer = layers.find(l => l.id === feature.source);
+                const source = this.map!.getSource(feature.source);
 
-            //         if (layer != null) {
-            //             const uri = layer.prefix + feature.properties[layer.codeProperty];
+                // Get the layer definition
+                if (source?.type === 'vector') {
 
-            //             this.explorerService.getAttributes(uri)
-            //                 .then(geoObject => {
-            //                     this.map!.setFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer, id: feature.properties[layer.codeProperty] }, { selected: true });
+                    const layer = vectorLayers.find(l => l.id === feature.source);
 
-            //                     this.selectedObject = geoObject;
-            //                     this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: false }));
-            //                 })
-            //                 .catch(error => this.errorService.handleError(error))
-            //         }
-            //     })
-            // }
-            // else {
-                let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
-                this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
-            // }
-        } else {
-            this.store.dispatch(ExplorerActions.selectGeoObject(null));
-        }
+                    if (layer != null) {
+                        const uri = layer.prefix + feature.properties[layer.codeProperty];
+
+                        this.explorerService.getAttributes(uri)
+                            .then(geoObject => {
+                                this.map!.setFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer, id: feature.properties[layer.codeProperty] }, { selected: true });
+
+                                this.selectedObject = geoObject;
+                                this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: false }));
+                            })
+                            .catch(error => this.errorService.handleError(error))
+                    }
+                }
+                else {
+                    // Take the highest non-label feature
+                    const feature = features.find(f => f.properties['uri'] != null);
+                    const uri = feature?.properties["uri"];
+
+                    let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
+                    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
+                }
+            } else {
+                this.store.dispatch(ExplorerActions.selectGeoObject(null));
+            }
+        })
     }
 
     renderHighlights() {
@@ -878,12 +894,15 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     highlightObject(uri?: string) {
         var highlightedObject = (uri == null) ? null : this.allGeoObjects().find(go => go.properties.uri === uri);
 
-        if (highlightedObject != null)
+        if (highlightedObject != null) {
             this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
+        }
+
         if (this.highlightedObject != null
             && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri)
-            && (this.selectedObject == null || this.highlightedObject.properties.uri !== this.selectedObject?.properties.uri))
+            && (this.selectedObject == null || this.highlightedObject.properties.uri !== this.selectedObject?.properties.uri)) {
             this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
+        }
 
         this.highlightedObject = highlightedObject;
     }

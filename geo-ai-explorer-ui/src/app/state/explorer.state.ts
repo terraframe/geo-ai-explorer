@@ -121,26 +121,28 @@ export const explorerReducer = createReducer(
 
 const selector = createFeatureSelector<ExplorerStateModel>('explorer');
 
-export const selectObjects = createSelector(selector, (s) => ({
-    objects: s.objects,
-    zoomMap: s.zoomMap,
-}));
+export const getObjects = createSelector(selector, (s) => {
+    return s.objects;
+});
 
-export const selectNeighbors = createSelector(selector, (s) => ({
-    neighbors: s.neighbors,
-    zoomMap: s.zoomMap,
-}));
+export const getNeighbors = createSelector(selector, (s) => {
+    return s.neighbors;
+});
 
-export const selectStyles = createSelector(selector, (s) => {
+export const getZoomMap = createSelector(selector, (s) => {
+    return s.zoomMap;
+});
+
+export const getStyles = createSelector(selector, (s) => {
     return s.styles;
 });
 
 export const selectedObject = createSelector(selector, (s) => {
-    return s.selectedObject ? { object: s.selectedObject, zoomMap: s.zoomMap } : null;
+    return s.selectedObject;
 });
 
 export const highlightedObject = createSelector(selector, (s) => {
-    return s.highlightedObject ? { object: s.highlightedObject } : null;
+    return s.highlightedObject;
 });
 
 export const getVectorLayers = createSelector(selector, (s) => {

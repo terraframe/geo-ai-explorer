@@ -6,7 +6,7 @@ import { Store } from '@ngrx/store';
 import { LetDirective } from '@ngrx/component';
 
 import { CommonModule } from '@angular/common';
-import { ExplorerActions, highlightedObject, selectedObject, selectObjects } from '../state/explorer.state';
+import { ExplorerActions, getObjects, highlightedObject, selectedObject } from '../state/explorer.state';
 
 @Component({
     selector: 'results-table',
@@ -17,19 +17,19 @@ import { ExplorerActions, highlightedObject, selectedObject, selectObjects } fro
 export class ResultsTableComponent implements OnInit, OnDestroy {
     private store = inject(Store);
 
-    objects$: Observable<{ objects: GeoObject[], zoomMap: boolean }> = this.store.select(selectObjects);
+    objects$: Observable<GeoObject[]> = this.store.select(getObjects);
 
-    selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
+    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
-    highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
-    
+    highlightedObject$: Observable<GeoObject | null> = this.store.select(highlightedObject);
+
     onHighlightedObjectChange: Subscription;
 
     public highlightedObjectUri: string | null | undefined;
 
     constructor() {
-        this.onHighlightedObjectChange = this.highlightedObject$.subscribe(selection => {
-            this.highlightObject(selection == null ? undefined : selection.object.properties.uri);
+        this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
+            this.highlightObject(object == null ? undefined : object.properties.uri);
         });
     }
 

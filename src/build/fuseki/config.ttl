@@ -1,0 +1,82 @@
+@prefix :        <http://localhost/jena_example/#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix tdb:     <http://jena.hpl.hp.com/2008/tdb#> .
+@prefix ja:      <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix text:    <http://jena.apache.org/text#> .
+@prefix fuseki:  <http://jena.apache.org/fuseki#> .
+
+## Example of a TDB dataset and text index
+## Initialize TDB
+[] ja:loadClass "com.hp.hpl.jena.tdb.TDB" .
+tdb:DatasetTDB  rdfs:subClassOf  ja:RDFDataset .
+tdb:GraphTDB    rdfs:subClassOf  ja:Model .
+
+## Initialize text query
+[] ja:loadClass       "org.apache.jena.query.text.TextQuery" .
+# A TextDataset is a regular dataset with a text index.
+text:TextDataset      rdfs:subClassOf   ja:RDFDataset .
+# Lucene index
+text:TextIndexLucene  rdfs:subClassOf   text:TextIndex .
+# Solr index
+text:TextIndexSolr    rdfs:subClassOf   text:TextIndex .
+
+## ---------------------------------------------------------------
+## This URI must be fixed - it's used to assemble the text dataset.
+
+:text_dataset rdf:type     text:TextDataset ;
+    text:dataset   <#dataset> ;
+    text:index     <#indexLucene> ;
+    .
+
+# A TDB datset used for RDF storage
+<#dataset> rdf:type      tdb:DatasetTDB ;
+    tdb:location "data/tdb" ;
+    tdb:unionDefaultGraph false ; # Optional
+    .
+
+# Text index description
+<#indexLucene> a text:TextIndexLucene ;
+    text:directory <file:data/index> ;
+    ##text:directory "mem" ;
+    text:entityMap <#entMap> ;
+    .
+
+# Mapping in the index
+# URI stored in field "uri"
+# rdfs:label is mapped to field "text"
+<#entMap> a text:EntityMap ;
+    text:entityField      "uri" ;
+    text:defaultField     "text" ;
+    text:map (
+         [ text:field "text" ; text:predicate rdfs:label ]
+         ) .
+
+[] rdf:type fuseki:Server ;
+   # Server-wide context parameters can be given here.
+   # For example, to set query timeouts: on a server-wide basis:
+   # Format 1: "1000" -- 1 second timeout
+   # Format 2: "10000,60000" -- 10s timeout to first result, then 60s timeout to for rest of query.
+   # See java doc for ARQ.queryTimeout
+   # ja:context [ ja:cxtName "arq:queryTimeout" ;  ja:cxtValue "10000" ] ;
+
+   # Load custom code (rarely needed)
+   # ja:loadClass "your.code.Class" ;
+
+   # Services available.  Only explicitly listed services are configured.
+   #  If there is a service description not linked from this list, it is ignored.
+   fuseki:services (
+     <#service>
+     #<#service_text_tdb>
+   ) .
+
+<#service>  rdf:type fuseki:Service ;
+    fuseki:name              "flood" ;       # http://host:port/tdb
+    fuseki:serviceQuery               "query" ;    # SPARQL query service
+    fuseki:serviceQuery               "sparql" ;   # SPARQL query service
+    fuseki:serviceUpdate              "update" ;   # SPARQL query service
+    fuseki:serviceUpload              "upload" ;   # Non-SPARQL upload service
+    fuseki:serviceReadWriteGraphStore "data" ;     # SPARQL Graph store protocol (read and write)
+    #fuseki:dataset           <#dataset> ;
+    fuseki:dataset                  :text_dataset ;
+.

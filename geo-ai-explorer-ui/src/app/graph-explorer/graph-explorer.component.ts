@@ -9,8 +9,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, highlightedObject, selectedObject } from '../state/explorer.state';
-import { Observable, Subscription } from 'rxjs';
+import { ExplorerActions, getZoomMap, highlightedObject, selectedObject } from '../state/explorer.state';
+import { Observable, Subscription, withLatestFrom } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
 
 
@@ -60,21 +60,21 @@ export const GRAPH_LINE_COLOR: string = "#999";
 export const COLLAPSE_ANIMATION_TIME: number = 500; // in ms
 
 export const DIMENSIONS = {
-    NODE: { WIDTH: 30, HEIGHT: 30 },
-    LABEL: { WIDTH: 100, HEIGHT: 60, FONTSIZE: 14 },
-    PADDING: {
-        BETWEEN_NODES: 0,
-        NODE_LABEL: 5,
-        NODE_EDGE: 5
-    }
+  NODE: { WIDTH: 30, HEIGHT: 30 },
+  LABEL: { WIDTH: 100, HEIGHT: 60, FONTSIZE: 14 },
+  PADDING: {
+    BETWEEN_NODES: 0,
+    NODE_LABEL: 5,
+    NODE_EDGE: 5
+  }
 };
 
 @Component({
-    selector: 'graph-explorer',
-    imports: [CommonModule, GraphModule, ProgressSpinnerModule],
-    providers: [],
-    templateUrl: './graph-explorer.component.html',
-    styleUrl: './graph-explorer.component.scss'
+  selector: 'graph-explorer',
+  imports: [CommonModule, GraphModule, ProgressSpinnerModule],
+  providers: [],
+  templateUrl: './graph-explorer.component.html',
+  styleUrl: './graph-explorer.component.scss'
 })
 export class GraphExplorerComponent implements OnDestroy {
 
@@ -90,7 +90,7 @@ export class GraphExplorerComponent implements OnDestroy {
 
   public SELECTED_NODE_COLOR = SELECTED_COLOR;
 
-  public loading:boolean = false;
+  public loading: boolean = false;
 
   public svgHeight: number | null = null;
   public svgWidth: number | null = null;
@@ -104,12 +104,14 @@ export class GraphExplorerComponent implements OnDestroy {
 
   private gprGraph?: GprGraph;
 
-  highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
-  
+  zoomMap$: Observable<boolean> = this.store.select(getZoomMap);
+
+  highlightedObject$: Observable<GeoObject | null> = this.store.select(highlightedObject);
+
   onHighlightedObjectChange: Subscription;
 
-  selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
-  
+  selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
+
   onSelectedObjectChange: Subscription;
 
   private selectedObject: GeoObject | null = null;
@@ -117,52 +119,55 @@ export class GraphExplorerComponent implements OnDestroy {
   private highlightedObject: GeoObject | null = null;
 
   constructor(
-    private queryService: ExplorerService,         
+    private queryService: ExplorerService,
     private errorService: ErrorService
   ) {
-    this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-      if (selection && selection.object) {
-        this.renderGeoObjectAndNeighbors(selection.object);
+
+    this.onSelectedObjectChange = this.selectedObject$.subscribe(object => {
+      if (object) {
+        this.renderGeoObjectAndNeighbors(object);
       } else {
         this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
       }
     });
-    this.onHighlightedObjectChange = this.selectedObject$.subscribe(selection => {
-      if (selection && selection.object) {
-          this.highlightedObject = selection.object;
+
+    this.onHighlightedObjectChange = this.selectedObject$.subscribe(object => {
+      if (object) {
+        this.highlightedObject = object;
       }
     });
   }
 
   ngOnDestroy(): void {
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+
     this.onSelectedObjectChange.unsubscribe();
     this.onHighlightedObjectChange.unsubscribe();
   }
 
   public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
-      if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
+    if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
 
-      this.loading = true;
+    this.loading = true;
 
-      this.selectedObject = geoObject;
+    this.selectedObject = geoObject;
 
-      // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
-      // const result: SPARQLResultSet = await this.queryService.query(sparql);
-      // this.geoObjects = this.queryService.convert(result);
+    // let sparql = defaultQueries[2].sparql.replace("{{uri}}", geoObject.properties.uri);
+    // const result: SPARQLResultSet = await this.queryService.query(sparql);
+    // this.geoObjects = this.queryService.convert(result);
 
-      // if (this.geoObjects.length === 0) {
-      //   console.error('The query did not return any results!');
-      //   return;
-      // }
+    // if (this.geoObjects.length === 0) {
+    //   console.error('The query did not return any results!');
+    //   return;
+    // }
 
-      // this.renderGeoObjects(explorer, this.geoObjects);
+    // this.renderGeoObjects(explorer, this.geoObjects);
 
-      let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
-        this.renderGraph(graph);
+    let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
+      this.renderGraph(graph);
 
-        // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
-      }).catch(error => this.errorService.handleError(error))
+      // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
+    }).catch(error => this.errorService.handleError(error))
       .finally(() => {
         this.loading = false;
       });
@@ -173,30 +178,30 @@ export class GraphExplorerComponent implements OnDestroy {
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
 
     let data: any = {
-        edges: [],
-        nodes: []
+      edges: [],
+      nodes: []
     };
 
     graph.nodes.forEach(go => {
-        let node = {
-            label: (go.properties.label != null && go.properties.label !== "") 
-                ? go.properties.label 
-                : go.properties.uri.substring(go.properties.uri.lastIndexOf("#") + 1),
-            id: this.uriToId(go.properties.uri),
-            relation: graph.edges.some(edge => edge.source === go.properties.uri) ? "PARENT" : "CHILD",
-            type: go.properties.type
-        };
-        data.nodes.push(node);
+      let node = {
+        label: (go.properties.label != null && go.properties.label !== "")
+          ? go.properties.label
+          : go.properties.uri.substring(go.properties.uri.lastIndexOf("#") + 1),
+        id: this.uriToId(go.properties.uri),
+        relation: graph.edges.some(edge => edge.source === go.properties.uri) ? "PARENT" : "CHILD",
+        type: go.properties.type
+      };
+      data.nodes.push(node);
     });
 
     graph.edges.forEach(edge => {
-        let formattedEdge = {
-            id: this.uriToId(Math.random().toString(16).slice(2)),
-            source: this.uriToId(edge.source),
-            target: this.uriToId(edge.target),
-            label: ExplorerComponent.uriToLabel(edge.type)
-        };
-        data.edges.push(formattedEdge);
+      let formattedEdge = {
+        id: this.uriToId(Math.random().toString(16).slice(2)),
+        source: this.uriToId(edge.source),
+        target: this.uriToId(edge.target),
+        label: ExplorerComponent.uriToLabel(edge.type)
+      };
+      data.edges.push(formattedEdge);
     });
 
     window.setTimeout(() => {
@@ -207,7 +212,7 @@ export class GraphExplorerComponent implements OnDestroy {
     }, 100);
 
     this.resizeDimensions();
-}
+  }
 
 
   // public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
@@ -260,7 +265,7 @@ export class GraphExplorerComponent implements OnDestroy {
     return this.explorer!.getTypeLegend();
   }
 
-  public getColor(node: Node) {
+  public getColor(node: any) {
     if (this.highlightedObject != null && this.highlightedObject.properties.uri === this.idToUri(node.id))
       return SELECTED_COLOR;
 
@@ -294,30 +299,30 @@ export class GraphExplorerComponent implements OnDestroy {
     let graphContainer = document.getElementById("graph-container");
 
     if (graphContainer) {
-        this.svgHeight = graphContainer.clientHeight - 50;
-        this.svgWidth = graphContainer.clientWidth;
+      this.svgHeight = graphContainer.clientHeight - 50;
+      this.svgWidth = graphContainer.clientWidth;
     }
   }
 
   // Thanks to https://stackoverflow.com/questions/52172067/create-svg-hexagon-points-with-only-only-a-length
   public getHexagonPoints(node: { dimension: { width: number, height: number }, relation: string }): string {
-      let y = (this.DIMENSIONS.LABEL.HEIGHT / 2) - this.DIMENSIONS.NODE.HEIGHT / 2;
-      let x = (this.relationship.layout === "VERTICAL")
-          ? (node.relation === "CHILD" ? (this.DIMENSIONS.LABEL.WIDTH / 2) - this.DIMENSIONS.NODE.WIDTH / 2 : (this.DIMENSIONS.LABEL.WIDTH + DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.NODE.WIDTH) / 2 - this.DIMENSIONS.NODE.WIDTH / 2)
-          : node.relation === "PARENT" ? (this.DIMENSIONS.LABEL.WIDTH + this.DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.PADDING.NODE_EDGE) : 0;
+    let y = (this.DIMENSIONS.LABEL.HEIGHT / 2) - this.DIMENSIONS.NODE.HEIGHT / 2;
+    let x = (this.relationship.layout === "VERTICAL")
+      ? (node.relation === "CHILD" ? (this.DIMENSIONS.LABEL.WIDTH / 2) - this.DIMENSIONS.NODE.WIDTH / 2 : (this.DIMENSIONS.LABEL.WIDTH + DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.NODE.WIDTH) / 2 - this.DIMENSIONS.NODE.WIDTH / 2)
+      : node.relation === "PARENT" ? (this.DIMENSIONS.LABEL.WIDTH + this.DIMENSIONS.PADDING.NODE_LABEL + this.DIMENSIONS.PADDING.NODE_EDGE) : 0;
 
-      let radius = this.DIMENSIONS.NODE.WIDTH / 2;
-      let height = this.DIMENSIONS.NODE.HEIGHT;
-      let width = this.DIMENSIONS.NODE.WIDTH;
+    let radius = this.DIMENSIONS.NODE.WIDTH / 2;
+    let height = this.DIMENSIONS.NODE.HEIGHT;
+    let width = this.DIMENSIONS.NODE.WIDTH;
 
-      let points = [0, 1, 2, 3, 4, 5, 6].map((n, i) => {
-          let angleDeg = 60 * i - 30;
-          let angleRad = Math.PI / 180 * angleDeg;
-          return [(width / 2 + radius * Math.cos(angleRad)) + x, (height / 2 + radius * Math.sin(angleRad)) + y];
-      }).map((p) => p.join(","))
-          .join(" ");
+    let points = [0, 1, 2, 3, 4, 5, 6].map((n, i) => {
+      let angleDeg = 60 * i - 30;
+      let angleRad = Math.PI / 180 * angleDeg;
+      return [(width / 2 + radius * Math.cos(angleRad)) + x, (height / 2 + radius * Math.sin(angleRad)) + y];
+    }).map((p) => p.join(","))
+      .join(" ");
 
-      return points;
+    return points;
   }
 
   public onClickNode(node: any) {

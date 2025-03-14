@@ -23,7 +23,7 @@ export class AttributePanelComponent implements OnDestroy {
 
   private store = inject(Store);
 
-  selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
+  selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
   onSelectedObjectChange: Subscription;
 
@@ -33,8 +33,8 @@ export class AttributePanelComponent implements OnDestroy {
     private explorerService: ExplorerService,
     private errorService: ErrorService
   ) {
-    this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
-      this.selectObject(selection == null ? null : selection.object);
+    this.onSelectedObjectChange = this.selectedObject$.subscribe(object => {
+      this.selectObject(object);
     });
   }
 
