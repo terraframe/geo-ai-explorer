@@ -1,4 +1,4 @@
-import { Component, inject, Input, ViewChild } from '@angular/core';
+import { Component, inject, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
@@ -9,7 +9,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, selectedObject } from '../state/explorer.state';
+import { ExplorerActions, highlightedObject, selectedObject } from '../state/explorer.state';
 import { Observable, Subscription } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
 
@@ -76,7 +76,7 @@ export const DIMENSIONS = {
     templateUrl: './graph-explorer.component.html',
     styleUrl: './graph-explorer.component.scss'
 })
-export class GraphExplorerComponent {
+export class GraphExplorerComponent implements OnDestroy {
 
   @Input() explorer!: ExplorerComponent;
 
@@ -104,11 +104,17 @@ export class GraphExplorerComponent {
 
   private gprGraph?: GprGraph;
 
+  highlightedObject$: Observable<{ object: GeoObject } | null> = this.store.select(highlightedObject);
+  
+  onHighlightedObjectChange: Subscription;
+
   selectedObject$: Observable<{ object: GeoObject, zoomMap: boolean } | null> = this.store.select(selectedObject);
   
   onSelectedObjectChange: Subscription;
 
   private selectedObject: GeoObject | null = null;
+
+  private highlightedObject: GeoObject | null = null;
 
   constructor(
     private queryService: ExplorerService,         
@@ -116,20 +122,28 @@ export class GraphExplorerComponent {
   ) {
     this.onSelectedObjectChange = this.selectedObject$.subscribe(selection => {
       if (selection && selection.object) {
-          this.renderGeoObjectAndNeighbors(selection.object);
+        this.renderGeoObjectAndNeighbors(selection.object);
+      } else {
+        this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
       }
-  });
+    });
+    this.onHighlightedObjectChange = this.selectedObject$.subscribe(selection => {
+      if (selection && selection.object) {
+          this.highlightedObject = selection.object;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+    this.onSelectedObjectChange.unsubscribe();
+    this.onHighlightedObjectChange.unsubscribe();
   }
 
   public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
       if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
 
       this.loading = true;
-
-      if (this.selectedObject != null)
-        console.log(this.selectedObject.properties.uri, geoObject.properties.uri);
-      else
-        console.log("Selected object is null");
 
       this.selectedObject = geoObject;
 
@@ -156,6 +170,7 @@ export class GraphExplorerComponent {
 
   public renderGraph(graph: GprGraph) {
     this.gprGraph = graph;
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
 
     let data: any = {
         edges: [],
@@ -242,11 +257,14 @@ export class GraphExplorerComponent {
   // }
 
   public getTypeLegend() {
-    return this.explorer?.getTypeLegend();
+    return this.explorer!.getTypeLegend();
   }
 
-  public getColor(node: any) {
-    var legend = this.getTypeLegend()!;
+  public getColor(node: Node) {
+    if (this.highlightedObject != null && this.highlightedObject.properties.uri === this.idToUri(node.id))
+      return SELECTED_COLOR;
+
+    let legend = this.getTypeLegend();
 
     if (legend[node.type] != null)
       return legend[node.type].color;
@@ -303,7 +321,7 @@ export class GraphExplorerComponent {
   }
 
   public onClickNode(node: any) {
-    // this.explorer?.selectObject(this.idToUri(node.id), true);
+    this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
 
     let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
 
