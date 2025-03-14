@@ -15,6 +15,7 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,9 +38,9 @@ import net.geoprism.geoai.explorer.core.model.Location;
 @Service
 public class JenaService
 {
-  public static final String  GRAPH          = "https://localhost:4200/lpg/graph_801104/0#>";
+  public static final String GRAPH                          = "https://localhost:4200/lpg/graph_801104/0#>";
 
-  public static final String  PREFIXES       = """
+  public static final String PREFIXES                       = """
       	PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
       	PREFIX lpg: <https://localhost:4200/lpg#>
       	PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
@@ -48,83 +49,113 @@ public class JenaService
       	PREFIX geo: <http://www.opengis.net/ont/geosparql#>
       	PREFIX spatialF: <http://jena.apache.org/function/spatial#>
       """;
-  
-  public static String NEIGHBOR_QUERY = PREFIXES + """
-      SELECT
-          ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
-          ?e1 ?ev1 # Outgoing Edge
-          ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
-          ?e2 ?ev2 # Incoming Edge
-          ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
+
+  public static String       ATTRIBUTES_QUERY               = PREFIXES + """
+      SELECT ?s ?p ?o
+      FROM <https://localhost:4200/lpg/graph_801104/0#>
       WHERE {
-        BIND(geo:Feature as ?gf1) .
-        BIND(?uri as ?f1) .
-        
-        # Source Object
-        GRAPH lpgv: {
-            ?f1 a ?ft1 .
-            ?f1 rdfs:label ?lbl1 .
-            ?f1 lpgs:GeoObject-code ?code1 .
-            
-            OPTIONAL {
-                ?f1 geo:hasGeometry ?g1 .
-                ?g1 geo:asWKT ?wkt1 .
-            }
-        }
-        GRAPH lpg: {
-           ?ft1 rdfs:subClassOf  lpgs:GeoObject . 
-        }
+        BIND(?uri as ?s) .
+        ?s ?p ?o .
+      }""";
 
+  public static String       ATTRIBUTES_WITH_GEOMETRY_QUERY = PREFIXES + """
+      SELECT *
+      FROM <https://localhost:4200/lpg/graph_801104/0#>
+      WHERE {
         {
-          # Outgoing Relationship
-          BIND(geo:Feature as ?gf2) .
-          BIND(?f2 as ?ev1) .
-
-          GRAPH lpgv: {
-              ?f1 ?e1 ?f2 .
-              ?f2 a ?ft2 .
-              ?f2 rdfs:label ?lbl2 .
-              ?f2 lpgs:GeoObject-code ?code2 .
-
-              OPTIONAL {
-                  ?f2 geo:hasGeometry ?g2 .
-                  ?g2 geo:asWKT ?wkt2 .
-              }
-          }
-
-          GRAPH lpg: {
-              ?ft2 rdfs:subClassOf  lpgs:GeoObject .
+          SELECT ?s ?p ?o WHERE {
+            BIND(?uri as ?s) .
+            ?s ?p ?o .
           }
         }
         UNION
         {
-            # Incoming Relationship
-            BIND(geo:Feature as ?gf3) .
-            BIND(?f3 as ?ev2) .
+          SELECT ?s ?p ?o WHERE {
+            BIND(?uri as ?s) .
+            BIND(geo:asWKT as ?p) .
+
+            ?s geo:hasGeometry ?geom .
+            ?geom ?p ?o
+          }
+        }
+      }
+      """;
+
+  public static String       NEIGHBOR_QUERY                 = PREFIXES + """
+        SELECT
+            ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
+            ?e1 ?ev1 # Outgoing Edge
+            ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
+            ?e2 ?ev2 # Incoming Edge
+            ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
+        WHERE {
+          BIND(geo:Feature as ?gf1) .
+          BIND(?uri as ?f1) .
+
+          # Source Object
+          GRAPH lpgv: {
+              ?f1 a ?ft1 .
+              ?f1 rdfs:label ?lbl1 .
+              ?f1 lpgs:GeoObject-code ?code1 .
+
+              OPTIONAL {
+                  ?f1 geo:hasGeometry ?g1 .
+                  ?g1 geo:asWKT ?wkt1 .
+              }
+          }
+          GRAPH lpg: {
+             ?ft1 rdfs:subClassOf  lpgs:GeoObject .
+          }
+
+          {
+            # Outgoing Relationship
+            BIND(geo:Feature as ?gf2) .
+            BIND(?f2 as ?ev1) .
 
             GRAPH lpgv: {
-                ?f3 ?e2 ?f1 .
-                ?f3 a ?ft3 .
-                ?f3 rdfs:label ?lbl3 .
-                ?f3 lpgs:GeoObject-code ?code3 .
+                ?f1 ?e1 ?f2 .
+                ?f2 a ?ft2 .
+                ?f2 rdfs:label ?lbl2 .
+                ?f2 lpgs:GeoObject-code ?code2 .
 
                 OPTIONAL {
-                    ?f3 geo:hasGeometry ?g3 .
-                    ?g3 geo:asWKT ?wkt3 .
+                    ?f2 geo:hasGeometry ?g2 .
+                    ?g2 geo:asWKT ?wkt2 .
                 }
             }
 
             GRAPH lpg: {
-                ?ft3 rdfs:subClassOf  lpgs:GeoObject .
+                ?ft2 rdfs:subClassOf  lpgs:GeoObject .
             }
-        }
-      }
-      LIMIT 50
-    """;
+          }
+          UNION
+          {
+              # Incoming Relationship
+              BIND(geo:Feature as ?gf3) .
+              BIND(?f3 as ?ev2) .
 
+              GRAPH lpgv: {
+                  ?f3 ?e2 ?f1 .
+                  ?f3 a ?ft3 .
+                  ?f3 rdfs:label ?lbl3 .
+                  ?f3 lpgs:GeoObject-code ?code3 .
+
+                  OPTIONAL {
+                      ?f3 geo:hasGeometry ?g3 .
+                      ?g3 geo:asWKT ?wkt3 .
+                  }
+              }
+
+              GRAPH lpg: {
+                  ?ft3 rdfs:subClassOf  lpgs:GeoObject .
+              }
+          }
+        }
+        LIMIT 50
+      """;
 
   @Autowired
-  private AppProperties       properties;
+  private AppProperties      properties;
 
   public List<Location> query(String statement)
   {
@@ -152,8 +183,8 @@ public class JenaService
       return results;
     }
   }
-	
-  public Location getAttributes(String uri)
+
+  public Location getAttributes(String uri, boolean includeGeometry)
   {
     if (uri.startsWith("<") && uri.endsWith(">"))
     {
@@ -165,13 +196,7 @@ public class JenaService
 
     try (RDFConnection conn = builder.build())
     {
-      String statement = PREFIXES + """
-          SELECT ?s ?p ?o
-          FROM <https://localhost:4200/lpg/graph_801104/0#>
-          WHERE {
-            BIND(?uri as ?s) .
-            ?s ?p ?o .
-          }""";
+      String statement = includeGeometry ? ATTRIBUTES_WITH_GEOMETRY_QUERY : ATTRIBUTES_QUERY;
 
       // Use ParameterizedSparqlString to inject the URI safely
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -187,7 +212,14 @@ public class JenaService
 
         RDFNode object = qs.get("o");
 
-        if (object.isLiteral())
+        if (attribute.equalsIgnoreCase("asWKT"))
+        {
+          WKTReader reader = WKTReader.extract(object.asLiteral().getString());
+          Geometry geometry = reader.getGeometry();
+
+          location.setGeometry(geometry);
+        }
+        else if (object.isLiteral())
         {
           // TODO: Use metadata if we have it for attribute names
           // For now assume the attribute is in the style of
@@ -226,6 +258,8 @@ public class JenaService
       uri = uri.substring(1, uri.length() - 1);
     }
 
+    Graph results = null;
+
     try (RDFConnection conn = builder.build())
     {
       // Use ParameterizedSparqlString to inject the URI safely
@@ -238,9 +272,18 @@ public class JenaService
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {
         ResultSet rs = qe.execSelect();
-        return SparqlGraphConverter.convert(rs);
+        results = SparqlGraphConverter.convert(rs);
       }
     }
+
+    // The object has no neighbors
+    if (results == null)
+    {
+      results = new Graph();
+      results.setNodes(Arrays.asList(this.getAttributes(uri, true)));
+    }
+
+    return results;
   }
 
 }

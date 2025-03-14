@@ -59,7 +59,7 @@ public class ExplorerController
   @ResponseBody
   public ResponseEntity<Location> neighbors(@RequestParam(name = "uri", required = true) String uri)
   {
-    Location location = this.jena.getAttributes(uri);
+    Location location = this.jena.getAttributes(uri, false);
 
     return new ResponseEntity<Location>(location, HttpStatus.OK);
   }

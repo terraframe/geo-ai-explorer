@@ -18,8 +18,9 @@ public class SparqlGraphConverter {
         Graph graph = new Graph();
         Map<String, Location> locationMap = new HashMap<>();
         
-        if (!rs.hasNext())
-        	System.out.println("Result set was empty!!");
+        if (!rs.hasNext()) {
+          return null;
+        }
 
         while (rs.hasNext()) {
             QuerySolution qs = rs.next();

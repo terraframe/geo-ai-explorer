@@ -4,13 +4,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import JSON5 from 'json5'
-// @ts-ignore
-import ColorGen from "color-generator";
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
 import { CheckboxModule } from 'primeng/checkbox';
-import { combineLatestAll, distinctUntilChanged, Observable, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
+import { combineLatest, combineLatestAll, distinctUntilChanged, Observable, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { GeoObject } from '../models/geoobject.model';
@@ -74,11 +72,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     neighbors: GeoObject[] = [];
 
-    onNeighborsChange: Subscription;
-
     styles$: Observable<StyleConfig> = this.store.select(getStyles);
-
-    onStylesChange: Subscription;
 
     selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
@@ -136,26 +130,20 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         private explorerService: ExplorerService,
         private errorService: ErrorService
     ) {
-        this.onGeoObjectsChange = this.geoObjects$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([geoObjects, zoomMap]) => {
-            this.geoObjects = geoObjects
-            this.zoomMap = zoomMap
 
-            this.resolveStyles();
-        })
+        /*
+         * The map should reload when the geo objects change, the styles change, or the neighbors change
+         */
+        this.onGeoObjectsChange = combineLatest([this.geoObjects$, this.neighbors$])
+            .pipe(withLatestFrom(this.styles$, this.zoomMap$))
+            .subscribe(([[geoObjects, neighbors], styles, zoomMap]) => {
+                this.geoObjects = geoObjects;
+                this.neighbors = neighbors;
+                this.resolvedStyles = styles;
+                this.zoomMap = zoomMap;
 
-
-        this.onNeighborsChange = this.neighbors$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([neighbors, zoomMap]) => {
-            this.neighbors = neighbors
-            this.zoomMap = zoomMap;
-
-            this.resolveStyles();
-        });
-
-        this.onStylesChange = this.styles$.pipe(distinctUntilChanged()).subscribe(styles => {
-            this.resolvedStyles = styles;
-
-            this.render();
-        });
+                this.render();
+            });
 
         this.onVectorLayersChange = this.vectorLayers$.subscribe(() => {
             this.render();
@@ -192,8 +180,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnDestroy(): void {
         this.onGeoObjectsChange.unsubscribe();
-        this.onNeighborsChange.unsubscribe();
-        this.onStylesChange.unsubscribe();
         this.onVectorLayersChange.unsubscribe();
         this.onSelectedObjectChange.unsubscribe();
         this.onHighlightedObjectChange.unsubscribe();
@@ -205,33 +191,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngAfterViewInit() {
         this.initializeMap();
-    }
-
-    resolveStyles(): void {
-        const types = Object.keys(this.geoObjectsByType());
-
-        // Resolve the style of all of the types
-        this.styles$.pipe(take(1)).subscribe(styles => {
-            const missingStyles = types.filter(type => styles[type] == null);
-
-            if (missingStyles.length > 0) {
-                const newStyles = { ...styles };
-
-                types.forEach(type => {
-                    if (newStyles[type] == null) {
-                        newStyles[type] = {
-                            order: 0,
-                            color: ColorGen().hexString()
-                        }
-                    }
-                })
-
-                this.store.dispatch(ExplorerActions.setStyles({ styles: newStyles }));
-            }
-            else {
-                this.render();
-            }
-        })
     }
 
     render(): void {
@@ -887,7 +846,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     renderHighlights() {
         if (this.selectedObject != null) {
-            this.map!.setFeatureState({ source: this.selectedObject.properties.type, id: this.selectedObject.id }, { selected: true });
+            const index = this.orderedTypes.findIndex(t => t === this.selectedObject!.properties.type);
+
+            if (index !== -1) {
+                this.map!.setFeatureState({ source: this.selectedObject.properties.type, id: this.selectedObject.id }, { selected: true });
+            }
         }
     }
 

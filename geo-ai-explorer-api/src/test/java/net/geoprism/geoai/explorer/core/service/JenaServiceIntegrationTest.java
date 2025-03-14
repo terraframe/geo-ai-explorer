@@ -35,7 +35,7 @@ public class JenaServiceIntegrationTest
     statement.append("PREFIX custom: <https://localhost:4200/lpg/graph_801104/0/rdfs#>\n");
     statement.append("PREFIX geo: <http://www.opengis.net/ont/geosparql#>\n");
 
-    statement.append("SELECT DISTINCT ?type ?code ?label ?wkt\n");
+    statement.append("SELECT DISTINCT ?uri ?type ?code ?label ?wkt\n");
     statement.append("FROM <https://localhost:4200/lpg/graph_801104/0#>\n");
     statement.append("WHERE {\n");
     statement.append("?channel rdf:type custom:ChannelReach ; \n");
@@ -43,8 +43,8 @@ public class JenaServiceIntegrationTest
     statement.append("?channel custom:FlowsInto* ?downstream . \n");
     statement.append("?downstream custom:ChannelHasLevee ?leveeArea . \n");
     statement.append("?leveeArea custom:HasFloodZone ?leveedArea . \n");
-    statement.append("?leveedArea custom:HasFloodRisk ?school . \n");
-    statement.append("?school rdf:type custom:School ; \n");
+    statement.append("?leveedArea custom:HasFloodRisk ?uri . \n");
+    statement.append("?uri rdf:type custom:School ; \n");
     statement.append("a ?type ; \n");
     statement.append("obj:GeoObject-code ?code ; \n");
     statement.append("rdfs:label ?label ; \n");
@@ -64,8 +64,18 @@ public class JenaServiceIntegrationTest
   {
     String uri = "https://localhost:4200/lpg/graph_801104/0#CensusTract-06001407101";
 
-    Location location = this.service.getAttributes(uri);
+    Location location = this.service.getAttributes(uri, false);
 
     Assert.assertNotNull(location);
+    Assert.assertNull(location.getGeometry());
+    Assert.assertNotNull(location.getProperties().get("type"));
+    Assert.assertNotNull(location.getProperties().get("uri"));
+
+    location = this.service.getAttributes(uri, true);
+
+    Assert.assertNotNull(location);
+    Assert.assertNotNull(location.getGeometry());
+    Assert.assertNotNull(location.getProperties().get("type"));
+    Assert.assertNotNull(location.getProperties().get("uri"));
   }
 }

@@ -1,4 +1,6 @@
 import { createActionGroup, props, createReducer, on, createFeatureSelector, createSelector } from "@ngrx/store";
+// @ts-ignore
+import ColorGen from "color-generator";
 
 import { GeoObject } from '../models/geoobject.model';
 import { Style, StyleConfig } from '../models/style.model';
@@ -41,22 +43,64 @@ export const initialState: ExplorerStateModel = {
     vectorLayers: []
 }
 
+// Helper function for resolving missing styles based on the provided object types
+const resolveMissingStyles = (styles: StyleConfig, objects: GeoObject[]) => {
+
+    // Get a list of all the types which do not have styles
+    const types: string[] = objects.map(o => o.properties.type).filter(t => t != null).reduce((acc: string[], t: string) => {
+        if (!acc.some(item => t === item)) {
+            acc.push(t);
+        }
+        return acc;
+    }, []).filter(type => styles[type] == null);
+
+
+    if (types.length > 0) {
+        const newStyles = { ...styles };
+
+        types.forEach(type => {
+            if (newStyles[type] == null) {
+                newStyles[type] = {
+                    order: 0,
+                    color: ColorGen().hexString()
+                }
+            }
+        })
+
+        return newStyles
+    }
+
+    return null;
+}
+
 export const explorerReducer = createReducer(
     initialState,
 
     // Set all neighbors
-    on(ExplorerActions.setNeighbors, (state, { objects, zoomMap }) => ({
-        ...state,
-        neighbors: objects,
-        zoomMap: zoomMap,
-    })),
+    on(ExplorerActions.setNeighbors, (state, { objects, zoomMap }) => {
+
+        const styles = resolveMissingStyles(state.styles, objects);
+
+        return {
+            ...state,
+            styles: styles != null ? styles : state.styles,
+            neighbors: objects,
+            zoomMap: zoomMap,
+        };
+    }),
 
     // Set all geo objects
-    on(ExplorerActions.setGeoObjects, (state, { objects, zoomMap }) => ({
-        ...state,
-        objects: objects,
-        zoomMap: zoomMap,
-    })),
+    on(ExplorerActions.setGeoObjects, (state, { objects, zoomMap }) => {
+
+        const styles = resolveMissingStyles(state.styles, objects);
+
+        return {
+            ...state,
+            styles: styles != null ? styles : state.styles,
+            objects: objects,
+            zoomMap: zoomMap,
+        };
+    }),
 
     // Select geo object
     on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => ({
