@@ -1,0 +1,37 @@
+====
+    Copyright (c) 2022 TerraFrame, Inc. All rights reserved.
+
+    This file is part of Geoprism Registry(tm).
+
+    Geoprism Registry(tm) is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Geoprism Registry(tm) is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with Geoprism Registry(tm).  If not, see <http://www.gnu.org/licenses/>.
+====
+
+# How to import certs into the keystore! (And why you should) (SSL 101)
+
+# Did you get this error when developing? :
+
+# sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+
+
+# The answer is simple: We're using a custom truststore here and the truststore doesn't have the cert path you need.
+# You need to download the certificates (you can use Google Chrome) and import them into this here truststore
+
+
+
+# https://connect2id.com/blog/importing-ca-root-cert-into-jvm-trust-store
+
+
+openssl x509 -in LetsEncrypt.pem -inform pem -out LetsEncrypt.der -outform der
+
+/usr/lib/jvm/java-8-openjdk-amd64/bin/keytool -importcert -alias LetsEncrypt -keystore ./tomcat.truststore -storepass 2v8hVW2rPFncN6m -file LetsEncrypt.der

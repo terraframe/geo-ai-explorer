@@ -95,6 +95,71 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
+  <profiles>		
+	<profile>
+		<id>cargo-run</id>
+		<activation>
+			<property>
+				<name>cargo-run</name>
+			</property>
+		</activation>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.cargo</groupId>
+					<artifactId>cargo-maven2-plugin</artifactId>
+					<version>1.9.0</version>
+					<configuration>
+						<container>
+							<containerId>tomcat9x</containerId>
+							<artifactInstaller>
+								<groupId>org.apache.tomcat</groupId>
+								<artifactId>tomcat</artifactId>
+								<version>11.0.5</version>
+							</artifactInstaller>
+							<timeout>4800000</timeout>
+						</container>
+						<configuration>
+							<properties>
+								<cargo.servlet.port>8080</cargo.servlet.port>
+								<cargo.protocol>http</cargo.protocol>
+								<cargo.tomcat.httpSecure>false</cargo.tomcat.httpSecure>
+								<cargo.tomcat.uriencoding>UTF-8</cargo.tomcat.uriencoding>
+								<cargo.jvmargs>
+									-Xmx5120M
+									-Xdebug
+									-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
+									-Dtomcat.home=/${project.basedir}/target/cargo/configurations/tomcat8x
+								</cargo.jvmargs>
+							</properties>
+						</configuration>
+						<deployables>
+							<deployable>
+								<groupId>net.geoprism.geoai.explorer</groupId>
+								<artifactId>geo-ai-explorer-api</artifactId>
+								<type>war</type>
+								<properties>
+									<context>/</context>
+								</properties>
+							</deployable>
+						</deployables>
+					</configuration>
+					<executions>
+						<execution>
+							<id>cargo-run</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	</profile>
+  </profiles>
+  
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
     <scriptSourceDirectory>scripts</scriptSourceDirectory>
@@ -133,10 +198,10 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/classes/static/</outputDirectory>
+              <outputDirectory>${basedir}/target/geo-ai-explorer-api</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${project.basedir}/../geo-ai-explorer-ui/build/</directory>
+                  <directory>${project.basedir}/../geo-ai-explorer-ui/dist/geo-ai-explorer/browser/</directory>
                   <filtering>false</filtering>
                 </resource>
               </resources>

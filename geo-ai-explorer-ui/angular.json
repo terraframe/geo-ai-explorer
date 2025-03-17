@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "rdf-explorer": {
+    "geo-ai-explorer": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/rdf-explorer",
+            "outputPath": "dist/geo-ai-explorer",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -53,10 +53,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "rdf-explorer:build:production"
+              "buildTarget": "geo-ai-explorer:build:production"
             },
             "development": {
-              "buildTarget": "rdf-explorer:build:development"
+              "buildTarget": "geo-ai-explorer:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -64,7 +64,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "rdf-explorer:build"
+            "buildTarget": "geo-ai-explorer:build"
           }
         },
         "test": {
