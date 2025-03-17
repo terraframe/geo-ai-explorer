@@ -56,7 +56,7 @@ export class ChatService {
       }, 3000); // Simulating 3-second network delay
     });
 
-    // // // Uncomment below to make a real HTTP request
+    // // Uncomment below to make a real HTTP request
     // const data = messages.map(message => ({
     //   type: message.sender === 'user' ? 'USER' : 'AI',
     //   content: message.text
