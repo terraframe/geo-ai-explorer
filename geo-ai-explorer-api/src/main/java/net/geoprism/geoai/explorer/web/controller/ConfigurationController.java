@@ -16,12 +16,11 @@
 package net.geoprism.geoai.explorer.web.controller;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -29,67 +28,41 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import net.geoprism.geoai.explorer.core.model.Configuration;
 import net.geoprism.geoai.explorer.core.model.Style;
 import net.geoprism.geoai.explorer.core.model.VectorLayer;
+import net.geoprism.geoai.explorer.core.service.ConfigurationService;
 
 @RestController
 @Validated
 public class ConfigurationController
 {
-  @SuppressWarnings("unchecked")
+  @Autowired
+  private ConfigurationService service;
+
   @GetMapping("/api/configuration/get")
   @ResponseBody
   public ResponseEntity<Configuration> getConfiguration() throws IOException, ParseException
   {
-    ObjectMapper mapper = new ObjectMapper();
     Configuration configuration = new Configuration();
-
-    try (Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("/styles.json")))
-    {
-      Map<String, Style> styles = mapper.readValue(reader, Map.class);
-
-      configuration.setStyles(styles);
-    }
-
-    try (Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("/vector-layers.json")))
-    {
-      List<VectorLayer> layers = mapper.readValue(reader, List.class);
-
-      configuration.setLayers(layers);
-    }
+    configuration.setStyles(this.service.getStyles());
+    configuration.setLayers(this.service.getVectorLayers());
 
     return new ResponseEntity<Configuration>(configuration, HttpStatus.OK);
   }
 
-  @SuppressWarnings("unchecked")
   @GetMapping("/api/configuration/styles")
   @ResponseBody
   public ResponseEntity<Map<String, Style>> getStyles() throws IOException, ParseException
   {
-    try (Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("/styles.json")))
-    {
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, Style> styles = mapper.readValue(reader, Map.class);
-
-      return new ResponseEntity<Map<String, Style>>(styles, HttpStatus.OK);
-    }
+    return new ResponseEntity<Map<String, Style>>(this.service.getStyles(), HttpStatus.OK);
   }
 
-  @SuppressWarnings("unchecked")
   @GetMapping("/api/configuration/vector-layers")
   @ResponseBody
   public ResponseEntity<List<VectorLayer>> getVectorLayerConfiguration() throws IOException, ParseException
   {
-    try (Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("/vector-layers.json")))
-    {
-      ObjectMapper mapper = new ObjectMapper();
-      List<VectorLayer> layers = mapper.readValue(reader, List.class);
-
-      return new ResponseEntity<List<VectorLayer>>(layers, HttpStatus.OK);
-    }
+    return new ResponseEntity<List<VectorLayer>>(this.service.getVectorLayers(), HttpStatus.OK);
   }
 
 }

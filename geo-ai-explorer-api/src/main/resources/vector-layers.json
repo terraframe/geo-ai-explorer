@@ -2,12 +2,38 @@
   {
     "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22ff1a83a2-860f-490e-ad1f-6a3d72000630%22%7D",
     "label":"Census Tract",
-    "color": "#79F294",
+    "color": "#60A561",
     "order": 0,
     "labelProperty":"label",
     "codeProperty":"ascode",
     "prefix":"https://localhost:4200/lpg/graph_801104/0#CensusTract-",
     "enabled":false,
-    "sourceLayer":"context"
+    "sourceLayer":"context",
+    "geometryType" : "Polygon"
+  },
+  {
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22fb16f586-35f8-435f-b386-32d18f000630%22%7D",
+    "label":"Channel Area",
+    "color": "#B2A198",
+    "order": 1,
+    "labelProperty":"label",
+    "codeProperty":"ascode",
+    "prefix":"https://localhost:4200/lpg/graph_801104/0#ChannelArea-",
+    "enabled":false,
+    "sourceLayer":"context",
+    "geometryType" : "Line"
+  },  
+  {
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22b152a88c-d584-418e-bcab-7f40d3000630%22%7D",
+    "label":"Levee",
+    "color": "#F7B2BD",
+    "order": 2,
+    "labelProperty":"label",
+    "codeProperty":"ascode",
+    "prefix":"https://localhost:4200/lpg/graph_801104/0#LeveeArea-",
+    "enabled":false,
+    "sourceLayer":"context",
+    "geometryType" : "Line"
   }
+  
 ]

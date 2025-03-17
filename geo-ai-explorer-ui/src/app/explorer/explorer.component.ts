@@ -302,11 +302,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         const layers = this.map!.getStyle().layers;
 
-        const baseLayer = layers.length > 1 ? layers[1].id : this.baseLayers[0].id;
+        const baseLayer = layers.length > 1 ? layers[1].id : null;
 
         // Assuming the base layer is the first layer on the map
         this.vectorLayers$.pipe(take(1)).subscribe(layers => {
-            [...layers].reverse().filter(l => l.enabled).forEach(layer => {
+            [...layers].filter(l => l.enabled).forEach(layer => {
 
                 this.map!.addSource(layer.id, {
                     type: "vector",
@@ -320,6 +320,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.map!.addLayer({
                     "id": layer.id + "-label",
                     "source": layer.id,
+                    "source-layer": layer.sourceLayer,
                     "type": "symbol",
                     "paint": {
                         "text-color": "black",
@@ -333,27 +334,67 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                         "text-anchor": "top",
                         "text-size": 12,
                     },
-                    "source-layer": layer.sourceLayer
-                }, baseLayer);
+                }, baseLayer as string);
 
-
-                // Add the hierarchy polygon layer
-                this.map!.addLayer({
-                    "id": layer.id + "-polygon",
-                    "source": layer.id,
-                    "type": "fill",
-                    "paint": {
-                        'fill-color': [
-                            "case",
-                            ["boolean", ["feature-state", "selected"], false],
-                            SELECTED_COLOR,
-                            layer.color
-                        ],
-                        "fill-opacity": 0.8,
-                        "fill-outline-color": "black"
-                    },
-                    "source-layer": layer.sourceLayer,
-                }, layer.id + "-label");
+                if (layer.geometryType === "Polygon") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "fill",
+                        "paint": {
+                            'fill-color': [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ],
+                            "fill-opacity": 0.8,
+                            "fill-outline-color": "black"
+                        }
+                    }, layer.id + "-label");
+                }
+                else if (layer.geometryType === "Line") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "line",
+                        "paint": {
+                            'line-color': [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ]
+                        }
+                    }, layer.id + "-label");
+                }
+                else if (layer.geometryType === "Point") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "circle",
+                        "paint": {
+                            "circle-radius": 10,
+                            "circle-color": [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ],
+                            "circle-stroke-width": 2,
+                            "circle-stroke-color": "#FFFFFF"
+                        }
+                    }, layer.id + "-label");
+                }
+                else {
+                    console.log('Unknown geometry type', layer)
+                }
 
             });
         });

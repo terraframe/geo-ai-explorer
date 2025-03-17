@@ -9,5 +9,6 @@ export interface VectorLayer {
     prefix: string;
     enabled: boolean;
     sourceLayer: string;
+    geometryType: string;
 }
 
