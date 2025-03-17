@@ -66,7 +66,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     renderedObjects: string[] = [];
 
-    onGeoObjectsChange: Subscription;
+    onMapObjectsChange: Subscription;
 
     neighbors$: Observable<GeoObject[]> = this.store.select(getNeighbors);
 
@@ -134,7 +134,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         /*
          * The map should reload when the geo objects change, the styles change, or the neighbors change
          */
-        this.onGeoObjectsChange = combineLatest([this.geoObjects$, this.neighbors$])
+        this.onMapObjectsChange = combineLatest([this.geoObjects$, this.neighbors$])
             .pipe(withLatestFrom(this.styles$, this.zoomMap$))
             .subscribe(([[geoObjects, neighbors], styles, zoomMap]) => {
                 this.geoObjects = geoObjects;
@@ -146,7 +146,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             });
 
         this.onVectorLayersChange = this.vectorLayers$.subscribe(() => {
-            this.render();
+            this.renderVectorLayers();
         });
 
         this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([object, zoomMap]) => {
@@ -179,7 +179,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnDestroy(): void {
-        this.onGeoObjectsChange.unsubscribe();
+        this.onMapObjectsChange.unsubscribe();
         this.onVectorLayersChange.unsubscribe();
         this.onSelectedObjectChange.unsubscribe();
         this.onHighlightedObjectChange.unsubscribe();
@@ -197,9 +197,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this.initialized) {
             // Clear the map
             this.clearAllMapData();
-
-            // Handle the vector layers
-            this.mapVectorLayers();
 
             // Handle the geo objects
             const types = Object.keys(this.geoObjectsByType());
@@ -220,6 +217,17 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.renderHighlights();
 
             this.renderedObjects = this.allGeoObjects().map(obj => obj.properties.uri);
+        }
+    }
+
+
+    renderVectorLayers(): void {
+        if (this.initialized) {
+            // Clear the map
+            this.clearVectorLayers();
+
+            // Handle the vector layers
+            this.mapVectorLayers();
         }
     }
 
@@ -256,20 +264,49 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.map!.getStyle().layers.forEach(layer => {
             if (this.map!.getLayer(layer.id) && this.baseLayers[0].id !== layer.id) {
-                this.map!.removeLayer(layer.id);
+                if (this.map!.getSource((layer as any).source)?.type !== "vector") {
+                    this.map!.removeLayer(layer.id);
+                }
             }
         });
 
         Object.keys(this.map!.getStyle().sources).forEach(source => {
-            if (this.map!.getSource(source) && source !== 'mapbox') {
+            if (this.map!.getSource(source) && source !== 'mapbox' && this.map!.getSource(source)?.type !== "vector") {
                 this.map!.removeSource(source);
             }
         });
     }
 
+    clearVectorLayers() {
+        if (!this.map) return;
+
+        this.map!.getStyle().layers.forEach(layer => {
+            if (this.map!.getLayer(layer.id) && this.baseLayers[0].id !== layer.id) {
+                if (this.map!.getSource((layer as any).source)?.type === "vector") {
+                    this.map!.removeLayer(layer.id);
+                }
+            }
+        });
+
+        Object.keys(this.map!.getStyle().sources).forEach(source => {
+            if (this.map!.getSource(source) && source !== 'mapbox' && this.map!.getSource(source)?.type === "vector") {
+                this.map!.removeSource(source);
+            }
+        });
+    }
+
+
     mapVectorLayers() {
+
+        if (!this.map) return;
+
+        const layers = this.map!.getStyle().layers;
+
+        const baseLayer = layers.length > 1 ? layers[1].id : null;
+
+        // Assuming the base layer is the first layer on the map
         this.vectorLayers$.pipe(take(1)).subscribe(layers => {
-            layers.filter(l => l.enabled).forEach(layer => {
+            [...layers].filter(l => l.enabled).forEach(layer => {
 
                 this.map!.addSource(layer.id, {
                     type: "vector",
@@ -279,28 +316,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     promoteId: layer.codeProperty
                 });
 
-                // Add the hierarchy polygon layer
-                this.map!.addLayer({
-                    "id": layer.id + "-polygon",
-                    "source": layer.id,
-                    "type": "fill",
-                    "paint": {
-                        'fill-color': [
-                            "case",
-                            ["boolean", ["feature-state", "selected"], false],
-                            SELECTED_COLOR,
-                            layer.color
-                        ],
-                        "fill-opacity": 0.8,
-                        "fill-outline-color": "black"
-                    },
-                    "source-layer": layer.sourceLayer,
-                });
-
                 // Add the hierarchy label layer
                 this.map!.addLayer({
                     "id": layer.id + "-label",
                     "source": layer.id,
+                    "source-layer": layer.sourceLayer,
                     "type": "symbol",
                     "paint": {
                         "text-color": "black",
@@ -314,8 +334,68 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                         "text-anchor": "top",
                         "text-size": 12,
                     },
-                    "source-layer": layer.sourceLayer
-                });
+                }, baseLayer as string);
+
+                if (layer.geometryType === "Polygon") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "fill",
+                        "paint": {
+                            'fill-color': [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ],
+                            "fill-opacity": 0.8,
+                            "fill-outline-color": "black"
+                        }
+                    }, layer.id + "-label");
+                }
+                else if (layer.geometryType === "Line") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "line",
+                        "paint": {
+                            'line-color': [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ]
+                        }
+                    }, layer.id + "-label");
+                }
+                else if (layer.geometryType === "Point") {
+                    // Add the hierarchy polygon layer
+                    this.map!.addLayer({
+                        "id": layer.id + "-shape",
+                        "source": layer.id,
+                        "source-layer": layer.sourceLayer,
+                        "type": "circle",
+                        "paint": {
+                            "circle-radius": 10,
+                            "circle-color": [
+                                "case",
+                                ["boolean", ["feature-state", "selected"], false],
+                                SELECTED_COLOR,
+                                layer.color
+                            ],
+                            "circle-stroke-width": 2,
+                            "circle-stroke-color": "#FFFFFF"
+                        }
+                    }, layer.id + "-label");
+                }
+                else {
+                    console.log('Unknown geometry type', layer)
+                }
+
             });
         });
 

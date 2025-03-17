@@ -22,4 +22,6 @@ public class VectorLayer
   private Boolean enabled;
 
   private String  sourceLayer;
+
+  private String  geometryType;
 }
