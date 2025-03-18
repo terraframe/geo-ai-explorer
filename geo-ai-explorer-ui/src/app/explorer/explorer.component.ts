@@ -295,7 +295,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         });
     }
 
-
     mapVectorLayers() {
 
         if (!this.map) return;
