@@ -21,7 +21,7 @@
   <dependencies>
     <dependency>
       <groupId>net.geoprism.geoai.explorer</groupId>
-      <artifactId>geo-ai-explorer</artifactId>
+      <artifactId>geo-ai-explorer-api</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
 
