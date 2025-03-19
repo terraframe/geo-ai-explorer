@@ -218,7 +218,7 @@ public class JenaService
 
     // Prefix section
     sparql.append(statement.substring(0, selectIndex));
-    sparql.append("SELECT (COUNT(*) AS ?count)\n");
+    sparql.append("SELECT (COUNT(distinct ?uri) AS ?count)\n");
     sparql.append(statement.substring(fromIndex));
 
     try (RDFConnection conn = builder.build())

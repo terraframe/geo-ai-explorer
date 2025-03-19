@@ -1,9 +1,9 @@
 <div>
     <ng-container *ngrxLet="page$ as page; ">
-        <ng-container *ngIf="page.locations.length > 0">
+        <ng-container *ngIf="page.count > 0">
             <h2 style="margin: 10px;">Results</h2>
 
-            <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
+            <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '30rem', 'height': '100%' }" stripedRows
                 [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'"
                 (mouseleave)="onMouseLeaveTable()">
                 <ng-template #header>

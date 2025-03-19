@@ -81,7 +81,7 @@ export class AichatComponent {
 
         this.loading = true;
 
-        this.chatService.getLocations(history, 0, 10).then((page) => {
+        this.chatService.getLocations(history, 0, 100).then((page) => {
 
           this.store.dispatch(ExplorerActions.setPage({
             page,
