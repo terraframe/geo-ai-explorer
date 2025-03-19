@@ -797,7 +797,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                         'tileSize': 512
                     }
                 },
-                glyphs: "http://rdf-explorer.s3-website-us-west-2.amazonaws.com/glyphs/{fontstack}/{range}.pbf",
+                glyphs: "https://ai.geoprism.net/glyphs/{fontstack}/{range}.pbf",
                 layers: [
                     {
                         id: layer.id,
