@@ -15,8 +15,6 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.History;
-import net.geoprism.geoai.explorer.core.model.Location;
+import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.model.Message;
 
 @Service
@@ -52,17 +50,39 @@ public class ChatService
     }
   }
 
-  public List<Location> getLocations(History history)
+  public LocationPage getLocations(History history)
   {
     try
     {
       String statement = this.bedrock.getLocationSparql(history);
 
-      return this.jena.query(statement);
+      return this.getPage(statement, history.getOffset(), history.getLimit());
+    }
+    catch (Exception e)
+    {
+      log.error("Error invoking a bedrock service: ", e);
+
+      throw new GenericRestException("Unable to map the locations. An error occurred while generating the response", e);
+    }
+  }
+
+  public LocationPage getPage(String statement, int offset, int limit)
+  {
+    try
+    {
+      LocationPage page = new LocationPage();
+      page.setLocations(this.jena.query(statement, offset, limit));
+      page.setCount(this.jena.getCount(statement));
+      page.setLimit(limit);
+      page.setOffset(offset);
+      page.setStatement(statement);
+
+      return page;
     }
     catch (Exception e)
     {
       log.error("Error invoking a remote service: ", e);
+      log.error("SPARQL statement: " + statement);
 
       throw new GenericRestException("Unable to map the locations. An error occurred while generating the response", e);
     }

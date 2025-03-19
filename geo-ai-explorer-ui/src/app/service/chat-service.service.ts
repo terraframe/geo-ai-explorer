@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ChatMessage, ServerChatResponse } from '../models/chat.model';
+import { ChatMessage, LocationPage, ServerChatResponse } from '../models/chat.model';
 import { MockUtil } from '../mock-util';
 import { environment } from '../../environments/environment';
 import { GeoObject } from '../models/geoobject.model';
@@ -49,7 +49,7 @@ export class ChatService {
     });
   }
 
-  getLocations(messages: ChatMessage[]): Promise<GeoObject[]> {
+  getLocations(messages: ChatMessage[], offset: number, limit: number): Promise<LocationPage> {
     // return new Promise<GeoObject[]>((resolve) => {
     //   setTimeout(() => {
     //     resolve(MockUtil.locations);
@@ -57,12 +57,33 @@ export class ChatService {
     // });
 
     // // // Uncomment below to make a real HTTP request
-    const data = messages.map(message => ({
-      type: message.sender === 'user' ? 'USER' : 'AI',
-      content: message.text
-    }))
+    const params = {
+      messages: messages.map(message => ({
+        type: message.sender === 'user' ? 'USER' : 'AI',
+        content: message.text
+      })),
+      limit,
+      offset
+    }
 
-    return firstValueFrom(this.http.post<GeoObject[]>(environment.apiUrl + 'api/chat/get-locations', { messages: data }));
+    return firstValueFrom(this.http.post<LocationPage>(environment.apiUrl + 'api/chat/get-locations', params));
+  }
+
+  getPage(statement: string, offset: number, limit: number): Promise<LocationPage> {
+    // return new Promise<GeoObject[]>((resolve) => {
+    //   setTimeout(() => {
+    //     resolve(MockUtil.locations);
+    //   }, 3000); // Simulating 3-second network delay
+    // });
+
+    // // // Uncomment below to make a real HTTP request
+    const params = {
+      statement,
+      limit,
+      offset
+    }
+
+    return firstValueFrom(this.http.post<LocationPage>(environment.apiUrl + 'api/chat/get-page', params));
   }
 
 }

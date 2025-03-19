@@ -30,7 +30,7 @@ export class AichatComponent {
 
   messages$: Observable<ChatMessage[]> = this.store.select(getMessages);
   sessionId$: Observable<string> = this.store.select(getSessionId);
-    
+
   onMessagesChange: Subscription;
 
   public loading: boolean = false;
@@ -40,9 +40,9 @@ export class AichatComponent {
   constructor(
     private chatService: ChatService,
     private errorService: ErrorService) {
-      this.onMessagesChange = this.messages$.subscribe(messages => {
-        this.renderedMessages = [...messages].reverse();
-      });
+    this.onMessagesChange = this.messages$.subscribe(messages => {
+      this.renderedMessages = [...messages].reverse();
+    });
   }
 
   sendMessage() {
@@ -81,8 +81,13 @@ export class AichatComponent {
 
         this.loading = true;
 
-        this.chatService.getLocations(history).then((response) => {
-          this.store.dispatch(ExplorerActions.setGeoObjects({ objects: response, zoomMap: true }));
+        this.chatService.getLocations(history, 0, 10).then((page) => {
+
+          this.store.dispatch(ExplorerActions.setPage({
+            page,
+            zoomMap: true
+          }));
+
         }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.loading = false;
         })

@@ -1,23 +1,27 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { TableModule } from 'primeng/table';
-import { GeoObject } from '../models/geoobject.model';
-import { Observable, Subscription } from 'rxjs';
-import { Store } from '@ngrx/store';
 import { LetDirective } from '@ngrx/component';
-
 import { CommonModule } from '@angular/common';
-import { ExplorerActions, getObjects, highlightedObject, selectedObject } from '../state/explorer.state';
+
+import { TableModule } from 'primeng/table';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+
+import { GeoObject } from '../models/geoobject.model';
+import { Observable, Subscription, take } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { ExplorerActions, getPage, highlightedObject, selectedObject } from '../state/explorer.state';
+import { ChatService } from '../service/chat-service.service';
+import { LocationPage } from '../models/chat.model';
 
 @Component({
     selector: 'results-table',
-    imports: [TableModule, LetDirective, CommonModule],
+    imports: [TableModule, PaginatorModule, LetDirective, CommonModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss',
 })
 export class ResultsTableComponent implements OnInit, OnDestroy {
     private store = inject(Store);
 
-    objects$: Observable<GeoObject[]> = this.store.select(getObjects);
+    page$: Observable<LocationPage> = this.store.select(getPage);
 
     selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
@@ -27,7 +31,9 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     public highlightedObjectUri: string | null | undefined;
 
-    constructor() {
+    constructor(
+        private chatService: ChatService
+    ) {
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
             this.highlightObject(object == null ? undefined : object.properties.uri);
         });
@@ -41,19 +47,32 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     }
 
-    onClick(obj: GeoObject) {
+    onClick(obj: GeoObject): void {
         this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj, zoomMap: true }));
     }
 
-    onRowHover(obj: GeoObject) {
+    onRowHover(obj: GeoObject): void {
         this.store.dispatch(ExplorerActions.highlightGeoObject({ object: obj }));
     }
 
-    onMouseLeaveTable() {
+    onMouseLeaveTable(): void {
         this.highlightedObjectUri = null;
     }
 
-    highlightObject(uri?: string) {
+    highlightObject(uri?: string): void {
         this.highlightedObjectUri = uri;
+    }
+
+    onPageChange(state: PaginatorState): void {
+
+        this.page$.pipe(take(1)).subscribe(page => {
+            this.chatService.getPage(page.statement, state.first!, state.rows!).then(page => {
+                this.store.dispatch(ExplorerActions.setPage({
+                    page,
+                    zoomMap: true
+                }));
+            })
+        })
+
     }
 }

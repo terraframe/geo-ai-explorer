@@ -13,6 +13,10 @@ public class History
 {
   private List<HistoryMessage> messages = new LinkedList<>();
 
+  private int                  limit    = 1000;
+
+  private int                  offset   = 0;
+
   public void addMessage(HistoryMessage message)
   {
     this.messages.add(message);

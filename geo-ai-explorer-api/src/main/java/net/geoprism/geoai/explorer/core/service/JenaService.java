@@ -16,8 +16,10 @@
 package net.geoprism.geoai.explorer.core.service;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.jena.geosparql.implementation.parsers.wkt.WKTReader;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -159,14 +161,32 @@ public class JenaService
 
   public List<Location> query(String statement)
   {
+    return this.query(statement, 0, 1000);
+  }
+
+  public List<Location> query(String statement, int offset, int limit)
+  {
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
         .destination(properties.getJenaUrl());
+
+    String sparql = new String(statement);
+
+    if (!sparql.toUpperCase().contains("ORDER BY"))
+    {
+      sparql += " ORDER BY ASC(?label)";
+    }
+
+    // TODO: Remove the existing limit statement if it exists
+    if (!sparql.toUpperCase().contains("LIMIT"))
+    {
+      sparql += " LIMIT " + limit + " OFFSET " + offset;
+    }
 
     try (RDFConnection conn = builder.build())
     {
       LinkedList<Location> results = new LinkedList<>();
 
-      conn.querySelect(statement, (qs) -> {
+      conn.querySelect(sparql, (qs) -> {
         String uri = qs.getResource("uri").getURI();
         String type = qs.getResource("type").getURI();
         String code = qs.getLiteral("code").getString();
@@ -181,6 +201,33 @@ public class JenaService
       });
 
       return results;
+    }
+  }
+
+  public Long getCount(String statement)
+  {
+    Map<String, Long> holder = new HashMap<>();
+
+    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
+        .destination(properties.getJenaUrl());
+
+    StringBuilder sparql = new StringBuilder();
+
+    int selectIndex = statement.toUpperCase().indexOf("SELECT");
+    int fromIndex = statement.toUpperCase().indexOf("FROM");
+
+    // Prefix section
+    sparql.append(statement.substring(0, selectIndex));
+    sparql.append("SELECT (COUNT(*) AS ?count)\n");
+    sparql.append(statement.substring(fromIndex));
+
+    try (RDFConnection conn = builder.build())
+    {
+      conn.querySelect(sparql.toString(), (qs) -> {
+        holder.put("count", qs.getLiteral("count").getLong());
+      });
+
+      return holder.getOrDefault("count", 0L);
     }
   }
 

@@ -6,12 +6,16 @@ import { GeoObject } from '../models/geoobject.model';
 import { Style, StyleConfig } from '../models/style.model';
 import { VectorLayer } from "../models/vector-layer.model";
 import { Configuration } from "../models/configuration.model";
+import { LocationPage } from "../models/chat.model";
 
 export const ExplorerActions = createActionGroup({
     source: 'explorer',
     events: {
         'Add GeoObject': props<{ object: GeoObject }>(),
-        'Set GeoObjects': props<{ objects: GeoObject[], zoomMap: boolean }>(),
+        'Set Page': props<{
+            page: LocationPage,
+            zoomMap: boolean
+        }>(),
         'Add Neighbor': props<{ object: GeoObject }>(),
         'Set Neighbors': props<{ objects: GeoObject[], zoomMap: boolean }>(),
         'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
@@ -24,23 +28,29 @@ export const ExplorerActions = createActionGroup({
 });
 
 export interface ExplorerStateModel {
-    objects: GeoObject[];
     neighbors: GeoObject[];
     styles: StyleConfig;
     selectedObject: GeoObject | null;
     highlightedObject: GeoObject | null;
     zoomMap: boolean;
     vectorLayers: VectorLayer[];
+    page: LocationPage
 }
 
 export const initialState: ExplorerStateModel = {
-    objects: [],
     neighbors: [],
     styles: {},
     selectedObject: null,
     zoomMap: false,
     highlightedObject: null,
-    vectorLayers: []
+    vectorLayers: [],
+    page: {
+        locations: [],
+        statement: "",
+        limit: 100,
+        offset: 0,
+        count: 0
+    }
 }
 
 // Helper function for resolving missing styles based on the provided object types
@@ -90,15 +100,15 @@ export const explorerReducer = createReducer(
     }),
 
     // Set all geo objects
-    on(ExplorerActions.setGeoObjects, (state, { objects, zoomMap }) => {
+    on(ExplorerActions.setPage, (state, { page, zoomMap }) => {
 
-        const styles = resolveMissingStyles(state.styles, objects);
+        const styles = resolveMissingStyles(state.styles, page.locations);
 
         return {
             ...state,
             styles: styles != null ? styles : state.styles,
-            objects: objects,
-            zoomMap: zoomMap,
+            page,
+            zoomMap
         };
     }),
 
@@ -124,7 +134,10 @@ export const explorerReducer = createReducer(
     // Add geo object
     on(ExplorerActions.addGeoObject, (state, { object }) => ({
         ...state,
-        objects: [...state.objects, object]
+        page: {
+            ...state.page,
+            locations: [...state.page.locations, object]
+        }
     })),
 
     // Add style
@@ -166,7 +179,11 @@ export const explorerReducer = createReducer(
 const selector = createFeatureSelector<ExplorerStateModel>('explorer');
 
 export const getObjects = createSelector(selector, (s) => {
-    return s.objects;
+    return s.page.locations;
+});
+
+export const getPage = createSelector(selector, (s) => {
+    return s.page;
 });
 
 export const getNeighbors = createSelector(selector, (s) => {

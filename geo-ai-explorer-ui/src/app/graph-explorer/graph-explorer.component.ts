@@ -326,7 +326,7 @@ export class GraphExplorerComponent implements OnDestroy {
   }
 
   public onClickNode(node: any) {
-    this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+    // this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
 
     let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
 

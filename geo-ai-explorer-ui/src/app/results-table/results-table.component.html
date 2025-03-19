@@ -1,10 +1,11 @@
 <div>
-    <ng-container *ngrxLet="objects$ as objects">
-        <ng-container *ngIf="objects.length > 0">
+    <ng-container *ngrxLet="page$ as page; ">
+        <ng-container *ngIf="page.locations.length > 0">
             <h2 style="margin: 10px;">Results</h2>
 
-            <p-table [value]="objects" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
-                [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'" (mouseleave)="onMouseLeaveTable()">
+            <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '50rem', 'height': '100%' }" stripedRows
+                [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'"
+                (mouseleave)="onMouseLeaveTable()">
                 <ng-template #header>
                     <tr>
                         <th>Label</th>
@@ -12,16 +13,25 @@
                     </tr>
                 </ng-template>
                 <ng-template #body let-object>
-                    <tr
-                        class="clickable"
-                        [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
-                        (click)="onClick(object)"
-                        (mouseenter)="onRowHover(object)">
+                    <tr class="clickable" [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
+                        (click)="onClick(object)" (mouseenter)="onRowHover(object)">
                         <td>{{ object.properties.label }}</td>
                         <td>{{ object.properties.uri }}</td>
+
+                    </tr>
+                </ng-template>
+
+                <ng-template #footer>
+                    <tr>
+                        <td colspan="2">
+                            <p-paginator (onPageChange)="onPageChange($event)" [first]="page.offset" [rows]="page.limit"
+                                [totalRecords]="page.count" />
+
+                        </td>
                     </tr>
                 </ng-template>
             </p-table>
+
         </ng-container>
     </ng-container>
 </div>

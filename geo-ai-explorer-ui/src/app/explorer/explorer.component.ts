@@ -881,7 +881,9 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             // Clear the feature state of all vector layers
             vectorLayers.forEach(layer => {
-                this.map!.removeFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer });
+                if (layer.enabled) {
+                    this.map!.removeFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer });
+                }
             })
 
             const features = this.getSortedFeature(e);
