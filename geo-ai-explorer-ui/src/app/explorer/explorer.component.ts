@@ -27,6 +27,7 @@ import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, 
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
+import { environment } from '../../environments/environment';
 
 
 @Component({
@@ -797,7 +798,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                         'tileSize': 512
                     }
                 },
-                glyphs: "https://ai.geoprism.net/glyphs/{fontstack}/{range}.pbf",
+                glyphs: environment.apiUrl + "glyphs/{fontstack}/{range}.pbf",
                 layers: [
                     {
                         id: layer.id,
