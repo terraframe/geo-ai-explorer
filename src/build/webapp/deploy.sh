@@ -15,7 +15,7 @@ export ANSIBLE_HOST_KEY_CHECKING=false
   ## Build angular source ##
   npm version
   cd $WORKSPACE/geo-ai-explorer/geo-ai-explorer-ui
-  sed -i 's|http://localhost:8080/|https://ai.geoprism.net/|g' ./src/environments/environment.ts
+  #sed -i 's|http://localhost:8080/|https://ai.geoprism.net/|g' ./src/environments/environment.ts
   npm install --force
   node -v && npm -v
   #node --max_old_space_size=4096 ./node_modules/webpack/bin/webpack.js --config config/webpack.prod.js --profile
