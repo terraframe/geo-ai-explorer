@@ -2,7 +2,6 @@ package net.geoprism.geoai.explorer.core.service;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -20,6 +19,7 @@ import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.HistoryMessage;
 import net.geoprism.geoai.explorer.core.model.HistoryMessageType;
 import net.geoprism.geoai.explorer.core.model.Location;
+import net.geoprism.geoai.explorer.core.model.LocationPage;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = TestConfiguration.class)
@@ -46,14 +46,14 @@ public class ChatServiceIntegrationTest
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "CEMVK_RR_03_ONE_25"));
     history.addMessage(new HistoryMessage(HistoryMessageType.AI, "The total population that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 431,826 people."));
 
-    List<Location> locations = service.getLocations(history);
+    LocationPage page = service.getLocations(history);
 
-    Assert.assertTrue(locations.size() > 0);
+    Assert.assertTrue(page.getCount() > 0);
 
     // Test serialization
     ObjectMapper mapper = new ObjectMapper();
 
-    for (Location location : locations)
+    for (Location location : page.getLocations())
     {
 
       try (StringWriter writer = new StringWriter())

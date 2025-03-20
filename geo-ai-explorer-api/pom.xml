@@ -71,20 +71,20 @@
       <artifactId>jena-geosparql</artifactId>
       <version>5.3.0</version>
     </dependency>
-    
+
     <!-- https://mvnrepository.com/artifact/org.geotools/gt-geojson -->
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-geojson</artifactId>
       <version>32.2</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.18.36</version>
       <scope>provided</scope>
-	</dependency>
+    </dependency>
 
 
     <!-- Testing -->
@@ -95,71 +95,95 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
-  <profiles>		
-	<profile>
-		<id>cargo-run</id>
-		<activation>
-			<property>
-				<name>cargo-run</name>
-			</property>
-		</activation>
-		<build>
-			<plugins>
-				<plugin>
-					<groupId>org.codehaus.cargo</groupId>
-					<artifactId>cargo-maven2-plugin</artifactId>
-					<version>1.9.0</version>
-					<configuration>
-						<container>
-							<containerId>tomcat9x</containerId>
-							<artifactInstaller>
-								<groupId>org.apache.tomcat</groupId>
-								<artifactId>tomcat</artifactId>
-								<version>11.0.5</version>
-							</artifactInstaller>
-							<timeout>4800000</timeout>
-						</container>
-						<configuration>
-							<properties>
-								<cargo.servlet.port>8080</cargo.servlet.port>
-								<cargo.protocol>http</cargo.protocol>
-								<cargo.tomcat.httpSecure>false</cargo.tomcat.httpSecure>
-								<cargo.tomcat.uriencoding>UTF-8</cargo.tomcat.uriencoding>
-								<cargo.jvmargs>
-									-Xmx5120M
-									-Xdebug
-									-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
-									-Dtomcat.home=/${project.basedir}/target/cargo/configurations/tomcat8x
-								</cargo.jvmargs>
-							</properties>
-						</configuration>
-						<deployables>
-							<deployable>
-								<groupId>net.geoprism.geoai.explorer</groupId>
-								<artifactId>geo-ai-explorer-api</artifactId>
-								<type>war</type>
-								<properties>
-									<context>/</context>
-								</properties>
-							</deployable>
-						</deployables>
-					</configuration>
-					<executions>
-						<execution>
-							<id>cargo-run</id>
-							<phase>verify</phase>
-							<goals>
-								<goal>run</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
-		</build>
-	</profile>
+
+  <profiles>
+    <profile>
+      <id>category</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.1.2</version>
+            <configuration>
+              <includes>
+                <include>**/*IntegrationTest.java</include>
+              </includes>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>cargo-run</id>
+      <activation>
+        <property>
+          <name>cargo-run</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven2-plugin</artifactId>
+            <version>1.9.0</version>
+            <configuration>
+              <container>
+                <containerId>tomcat9x</containerId>
+                <artifactInstaller>
+                  <groupId>org.apache.tomcat</groupId>
+                  <artifactId>tomcat</artifactId>
+                  <version>11.0.5</version>
+                </artifactInstaller>
+                <timeout>4800000</timeout>
+              </container>
+              <configuration>
+                <properties>
+                  <cargo.servlet.port>8080</cargo.servlet.port>
+                  <cargo.protocol>http</cargo.protocol>
+                  <cargo.tomcat.httpSecure>false</cargo.tomcat.httpSecure>
+                  <cargo.tomcat.uriencoding>UTF-8</cargo.tomcat.uriencoding>
+                  <cargo.jvmargs>
+                    -Xmx5120M
+                    -Xdebug
+                    -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
+                    -Dtomcat.home=/${project.basedir}/target/cargo/configurations/tomcat8x
+                  </cargo.jvmargs>
+                </properties>
+              </configuration>
+              <deployables>
+                <deployable>
+                  <groupId>net.geoprism.geoai.explorer</groupId>
+                  <artifactId>geo-ai-explorer-api</artifactId>
+                  <type>war</type>
+                  <properties>
+                    <context>/</context>
+                  </properties>
+                </deployable>
+              </deployables>
+            </configuration>
+            <executions>
+              <execution>
+                <id>cargo-run</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
-  
+
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
     <scriptSourceDirectory>scripts</scriptSourceDirectory>
@@ -178,12 +202,12 @@
     <finalName>geo-ai-explorer-api</finalName>
     <plugins>
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
         <configuration>
-          <arguments>
-            <argument>--api.url=https://localhost:8443</argument>
-          </arguments>
+          <excludes>
+            <exclude>**IntegrationTest.java</exclude>
+          </excludes>          
         </configuration>
       </plugin>
       <!--  Copy over the compiled react code    -->
@@ -201,7 +225,8 @@
               <outputDirectory>${project.build.directory}/classes/static/</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${project.basedir}/../geo-ai-explorer-ui/dist/geo-ai-explorer/browser/</directory>
+                  <directory>
+                    ${project.basedir}/../geo-ai-explorer-ui/dist/geo-ai-explorer/browser/</directory>
                   <filtering>false</filtering>
                 </resource>
               </resources>
