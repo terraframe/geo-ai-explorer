@@ -48,7 +48,11 @@ public class ConfigurationController
     Configuration configuration = new Configuration();
     configuration.setStyles(this.service.getStyles());
     configuration.setLayers(this.service.getVectorLayers());
-    configuration.setToken(token.getToken());
+
+    if (token != null)
+    {
+      configuration.setToken(token.getToken());
+    }
 
     return new ResponseEntity<Configuration>(configuration, HttpStatus.OK);
   }
