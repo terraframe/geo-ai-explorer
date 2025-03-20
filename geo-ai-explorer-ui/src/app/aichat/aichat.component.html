@@ -6,7 +6,9 @@
     <div *ngFor="let msg of renderedMessages" class="message">
       <strong>{{ msg.sender }}:</strong>
       <label>
-        {{ msg.text }}
+        <span style="white-space: pre-line;">
+          {{ msg.text }}
+        </span>
 
         <ng-container *ngIf="msg.mappable">
           <p-button class="btn btn-primary" (click)="mapIt(msg)">Map It!</p-button>
