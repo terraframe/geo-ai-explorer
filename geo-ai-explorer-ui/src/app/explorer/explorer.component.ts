@@ -17,7 +17,7 @@ import { StyleConfig } from '../models/style.model';
 import { AttributePanelComponent } from '../attribute-panel/attribute-panel.component';
 import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
-import { StyleService } from '../service/configuration-service.service';
+import { ConfigurationService } from '../service/configuration-service.service';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
 import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
@@ -126,7 +126,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     public activeTab: string = '0';
 
     constructor(
-        private styleService: StyleService,
+        private configurationService: ConfigurationService,
         private explorerService: ExplorerService,
         private errorService: ErrorService
     ) {
@@ -173,7 +173,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnInit(): void {
-        this.styleService.get().then(configuration => {
+        this.configurationService.get().then(configuration => {
             this.store.dispatch(ExplorerActions.setConfiguration(configuration));
         }).catch(error => this.errorService.handleError(error));
     }

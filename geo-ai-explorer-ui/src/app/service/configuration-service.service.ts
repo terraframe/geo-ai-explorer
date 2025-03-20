@@ -12,7 +12,7 @@ import { Configuration } from '../models/configuration.model';
 @Injectable({
   providedIn: 'root',
 })
-export class StyleService {
+export class ConfigurationService {
 
   constructor(private http: HttpClient) {
   }
@@ -29,9 +29,11 @@ export class StyleService {
     // Uncomment below to make a real HTTP request
     return firstValueFrom(this.http.get<Configuration>(environment.apiUrl + 'api/configuration/get')).then(configuration => {
       configuration.layers.map(l => l.id = uuidv4())
+
+      localStorage.setItem('token', configuration.token);
       
       return configuration;
-    });;
+    });
   }
 
 

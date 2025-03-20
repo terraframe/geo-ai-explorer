@@ -23,15 +23,16 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import net.geoprism.geoai.explorer.core.model.Configuration;
 import net.geoprism.geoai.explorer.core.model.Style;
 import net.geoprism.geoai.explorer.core.model.VectorLayer;
 import net.geoprism.geoai.explorer.core.service.ConfigurationService;
+import net.geoprism.geoai.explorer.web.model.Configuration;
 
 @RestController
 @Validated
@@ -42,11 +43,12 @@ public class ConfigurationController
 
   @GetMapping("/api/configuration/get")
   @ResponseBody
-  public ResponseEntity<Configuration> getConfiguration() throws IOException, ParseException
+  public ResponseEntity<Configuration> getConfiguration(CsrfToken token) throws IOException, ParseException
   {
     Configuration configuration = new Configuration();
     configuration.setStyles(this.service.getStyles());
     configuration.setLayers(this.service.getVectorLayers());
+    configuration.setToken(token.getToken());
 
     return new ResponseEntity<Configuration>(configuration, HttpStatus.OK);
   }

@@ -198,7 +198,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/geo-ai-explorer-api</outputDirectory>
+              <outputDirectory>${project.build.directory}/classes/static/</outputDirectory>
               <resources>
                 <resource>
                   <directory>${project.basedir}/../geo-ai-explorer-ui/dist/geo-ai-explorer/browser/</directory>
