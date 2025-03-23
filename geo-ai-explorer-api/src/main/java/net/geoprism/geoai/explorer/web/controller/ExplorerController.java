@@ -57,9 +57,14 @@ public class ExplorerController
 
   @GetMapping("/api/get-attributes")
   @ResponseBody
-  public ResponseEntity<Location> neighbors(@RequestParam(name = "uri", required = true) String uri)
+  public ResponseEntity<Location> neighbors(
+      @RequestParam(name = "uri", required = true) String uri, 
+      @RequestParam(name = "includeGeometry", required = false, defaultValue = "false") Boolean includeGeometry, 
+      @RequestParam(name = "hasPrefix", required = false, defaultValue = "true") Boolean hasPrefix)
   {
-    Location location = this.jena.getAttributes(uri, false);
+    uri = hasPrefix ? uri : JenaService.OBJECT_PRFIX + uri;
+    
+    Location location = this.jena.getAttributes(uri, includeGeometry);
 
     return new ResponseEntity<Location>(location, HttpStatus.OK);
   }

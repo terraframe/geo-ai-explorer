@@ -1,10 +1,18 @@
 import { GeoObject } from "./geoobject.model";
 
+export interface MessageSection {
+  text: string;
+  type: number;
+  uri?: string;
+}
+
+
 export interface ChatMessage {
   id: string
   sender: 'user' | 'system';
   text: string;
   mappable: boolean;
+  sections?: MessageSection[];
 }
 
 export interface ServerChatResponse {

@@ -7,7 +7,13 @@
       <strong>{{ msg.sender }}:</strong>
       <label>
         <span style="white-space: pre-line;">
-          {{ msg.text }}
+          <ng-container *ngFor="let section of msg.sections">
+            <span *ngIf="section.type === 0" [innerHTML]="section.text">
+            </span>
+            <ng-container *ngIf="section.type === 1">
+              <p-button [label]="section.text" [link]="true" (click)="select(section.uri!)" />
+            </ng-container>
+          </ng-container>
         </span>
 
         <ng-container *ngIf="msg.mappable">

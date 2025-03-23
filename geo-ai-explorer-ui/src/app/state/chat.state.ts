@@ -3,6 +3,35 @@ import { createReducer, on, createActionGroup, props, createFeatureSelector, cre
 import { ChatMessage } from '../models/chat.model';
 import { MockUtil } from '../mock-util';
 
+const parseText = (m: ChatMessage): ChatMessage => {
+
+    const message = { ...m }
+    message.sections = [];
+
+    const tokens = message.text.replaceAll('\n', "<br/>").split('<location>')
+
+    const text = tokens.forEach(token => {
+
+        const pattern = /<label>(.*)<\/label><uri>(.*)<\/uri><\/location>(.*)/
+
+        if (pattern.test(token)) {
+            const values = pattern.exec(token);
+            const label: string = values?.at(1) as string;
+            const uri: string = values?.at(2) as string;
+            const post: string = values?.at(3) as string;
+
+            message.sections?.push({ type: 1, text: label, uri: uri })
+            message.sections?.push({ type: 0, text: post })
+        }
+        else {
+            message.sections?.push({ type: 0, text: token })
+        }
+    })
+
+    return message;
+}
+
+
 export const ChatActions = createActionGroup({
     source: 'chat',
     events: {
@@ -17,15 +46,17 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: MockUtil.messages,
+    messages: MockUtil.messages.map(m => parseText(m)),
     sessionId: uuidv4()
 }
+
 
 export const chatReducer = createReducer(
     initialState,
     on(ChatActions.addMessage, (state, message) => {
+
         const messages = [...state.messages];
-        messages.push(message);
+        messages.push(parseText(message));
 
         return { ...state, messages }
     }),

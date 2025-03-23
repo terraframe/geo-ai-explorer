@@ -151,16 +151,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         });
 
         this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([object, zoomMap]) => {
-            if (object) {
-                this.selectObject(object.properties.uri, zoomMap);
-
-                if (zoomMap) {
-
-                    this.zoomTo(object.properties.uri);
-                }
-            } else {
-                this.selectObject(undefined, false);
-            }
+            this.selectObject(object, zoomMap);
 
             // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
             setTimeout(() => {
@@ -952,39 +943,37 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.highlightedObject = highlightedObject;
     }
 
-    selectObject(uri?: string, zoomTo = false) {
-        if (this.selectedObject != null && this.selectedObject.properties.uri === uri) return;
+    selectObject(geoObject: GeoObject | null, zoomTo = false) {
 
-        let previousSelected = this.selectedObject;
+        if (geoObject != null) {
 
-        if (uri != undefined) {
-            let go = this.allGeoObjects().find(go => go.properties.uri === uri);
-            if (go == null) return;
+            // If its already selected do nothing
+            if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
 
-            this.selectedObject = go;
+            let previousSelected = this.selectedObject;
 
-            if (zoomTo)
-                this.zoomTo(uri);
-        } else {
+            if (previousSelected != null && previousSelected != this.selectedObject) {
+                this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
+            }
+
+            let go = this.allGeoObjects().find(go => go.properties.uri === geoObject.properties.uri);
+            
+            this.selectedObject = geoObject;
+
+            // The geo object does exist on the map
+            if (go != null) {
+
+                if (zoomTo)
+                    this.zoomTo(go.properties.uri);
+
+                this.renderHighlights();
+            }
+
+
+        }
+        else {
             this.selectedObject = undefined;
         }
-
-        this.renderHighlights();
-
-        if (previousSelected != null && previousSelected != this.selectedObject) {
-            this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
-        }
-
-
-        // if (this.selectedObject != null) {
-        //     setTimeout(() => {
-        //         // this.graphExplorer.renderGeoObjects(this, this.allGeoObjects());
-        //         this.graphExplorer.renderGeoObjectAndNeighbors(this, this.selectedObject!);
-
-        //         // if (uri)
-        //         //     setTimeout(() => { this.graphExplorer.zoomToUri(uri); }, 500);
-        //     }, 1);
-        // }
     }
 
     toggleVectorLayer(layer: VectorLayer): void {

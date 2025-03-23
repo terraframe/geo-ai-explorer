@@ -140,11 +140,13 @@ export class ExplorerService {
   }
   
 
-  getAttributes(uri: string): Promise<GeoObject> {
+  getAttributes(uri: string, includeGeometry: boolean = false, hasPrefix: boolean = true): Promise<GeoObject> {
 
     // Uncomment below to make a real HTTP request
     let params = new HttpParams();
     params = params.append("uri", uri);
+    params = params.append("includeGeometry", includeGeometry);
+    params = params.append("hasPrefix", hasPrefix);
 
     return firstValueFrom(this.http.get<GeoObject>(environment.apiUrl + 'api/get-attributes', { params }));
   }

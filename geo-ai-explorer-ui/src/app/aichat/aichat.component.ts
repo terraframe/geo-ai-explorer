@@ -15,6 +15,7 @@ import { ChatMessage } from '../models/chat.model';
 import { ChatActions, getMessages, getSessionId } from '../state/chat.state';
 import { ErrorService } from '../service/error-service.service';
 import { ExplorerActions } from '../state/explorer.state';
+import { ExplorerService } from '../service/explorer.service';
 
 @Component({
   selector: 'aichat',
@@ -39,6 +40,7 @@ export class AichatComponent {
 
   constructor(
     private chatService: ChatService,
+    private explorerService: ExplorerService,
     private errorService: ErrorService) {
     this.onMessagesChange = this.messages$.subscribe(messages => {
       this.renderedMessages = [...messages].reverse();
@@ -53,7 +55,8 @@ export class AichatComponent {
           id: uuidv4(),
           sender: 'user',
           text: this.message,
-          mappable: false
+          mappable: false,
+          sections: [{ type: 0, text: this.message }]
         };
 
         this.message = '';
@@ -61,6 +64,7 @@ export class AichatComponent {
         this.loading = true;
 
         this.chatService.sendMessage(sessionId, message).then((response) => {
+
           this.store.dispatch(ChatActions.addMessage(message));
           this.store.dispatch(ChatActions.addMessage(response));
         }).catch(error => this.errorService.handleError(error)).finally(() => {
@@ -102,5 +106,14 @@ export class AichatComponent {
   @HostListener('document:keydown.enter', ['$event'])
   handleEnterKey(event: KeyboardEvent) {
     this.sendMessage();
+  }
+
+  select(uri: string): void {
+
+    this.explorerService.getAttributes(uri)
+      .then(geoObject => {
+        this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: true }));
+      })
+      .catch(error => this.errorService.handleError(error))
   }
 }

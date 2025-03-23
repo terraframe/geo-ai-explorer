@@ -34,13 +34,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import net.geoprism.geoai.explorer.core.config.AppProperties;
+import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.Graph;
 import net.geoprism.geoai.explorer.core.model.Location;
 
 @Service
 public class JenaService
 {
-  public static final String GRAPH                          = "https://localhost:4200/lpg/graph_801104/0#>";
+  public static final String OBJECT_PRFIX                   = "https://localhost:4200/lpg/graph_801104/0/rdfs#";
 
   public static final String PREFIXES                       = """
       	PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
@@ -231,12 +232,12 @@ public class JenaService
     }
   }
 
-  public Location getAttributes(String uri, boolean includeGeometry)
+  public Location getAttributes(final String uri, boolean includeGeometry)
   {
-    if (uri.startsWith("<") && uri.endsWith(">"))
-    {
-      uri = uri.substring(1, uri.length() - 1);
-    }
+//    if (uri.startsWith("<") && uri.endsWith(">"))
+//    {
+//      uri = uri.substring(1, uri.length() - 1);
+//    }
 
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
         .destination(properties.getJenaUrl());
@@ -254,40 +255,48 @@ public class JenaService
       location.setId(uri);
       location.addProperty("uri", uri);
 
-      conn.querySelect(pss.asQuery(), (qs) -> {
-        String attribute = qs.get("p").asResource().getLocalName();
+      conn.queryResultSet(pss.asQuery(), (resultSet) -> {
 
-        RDFNode object = qs.get("o");
-
-        if (attribute.equalsIgnoreCase("asWKT"))
+        if (!resultSet.hasNext())
         {
-          WKTReader reader = WKTReader.extract(object.asLiteral().getString());
-          Geometry geometry = reader.getGeometry();
-
-          location.setGeometry(geometry);
+          throw new GenericRestException("Unable to find a location with the uri [" + uri + "]");
         }
-        else if (object.isLiteral())
-        {
-          // TODO: Use metadata if we have it for attribute names
-          // For now assume the attribute is in the style of
-          // ClassName-AttributeName
-          if (attribute.contains("-"))
+
+        resultSet.forEachRemaining(qs -> {
+
+          String attribute = qs.get("p").asResource().getLocalName();
+
+          RDFNode object = qs.get("o");
+
+          if (attribute.equalsIgnoreCase("asWKT"))
           {
-            attribute = attribute.split("-")[1];
+            WKTReader reader = WKTReader.extract(object.asLiteral().getString());
+            Geometry geometry = reader.getGeometry();
+
+            location.setGeometry(geometry);
           }
-
-          Object value = object.asLiteral().getValue();
-
-          location.addProperty(attribute, value);
-        }
-        else if (object.isResource())
-        {
-          if (attribute.equalsIgnoreCase("type"))
+          else if (object.isLiteral())
           {
-            location.addProperty("type", object.asResource().getURI());
-          }
-        }
+            // TODO: Use metadata if we have it for attribute names
+            // For now assume the attribute is in the style of
+            // ClassName-AttributeName
+            if (attribute.contains("-"))
+            {
+              attribute = attribute.split("-")[1];
+            }
 
+            Object value = object.asLiteral().getValue();
+
+            location.addProperty(attribute, value);
+          }
+          else if (object.isResource())
+          {
+            if (attribute.equalsIgnoreCase("type"))
+            {
+              location.addProperty("type", object.asResource().getURI());
+            }
+          }
+        });
       });
 
       return location;
