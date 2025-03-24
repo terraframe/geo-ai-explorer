@@ -1,12 +1,15 @@
 <div class="chat-container">
-  <div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
+  <!-- <div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div> -->
   <div>
   </div>
   <div class="messages">
     <div *ngFor="let msg of renderedMessages" class="message">
       <strong>{{ msg.sender }}:</strong>
       <label [for]="msg.id">
-        <div>
+        <ng-container *ngIf="msg.loading">
+          <p-progress-spinner [style]="{ width: '40px', height: '40px' }" ariaLabel="loading" />
+        </ng-container>
+        <ng-container *ngIf="!msg.loading">
           <ng-container *ngFor="let section of msg.sections">
             <span *ngIf="section.type === 0" [innerHTML]="section.text">
             </span>
@@ -14,11 +17,11 @@
               <p-button [label]="section.text" [link]="true" (onClick)="select(section.uri!)"></p-button>
             </ng-container>
           </ng-container>
-        </div>
-        <div *ngIf="msg.mappable">
-          <br />
-          <p-button class="btn btn-primary" (onClick)="mapIt(msg)">Map It!</p-button>
-        </div>
+          <div *ngIf="msg.mappable">
+            <br />
+            <p-button class="btn btn-primary" (onClick)="mapIt(msg)">Map It!</p-button>
+          </div>
+        </ng-container>
       </label>
     </div>
   </div>
@@ -27,6 +30,6 @@
       <fa-icon [icon]="icon"></fa-icon>
     </p-button>
     <input type="text" [(ngModel)]="message" placeholder="Type a message..." />
-    <p-button class="btn btn-primary" (onClick)="sendMessage()">Send</p-button>
+    <p-button class="btn btn-primary" [disabled]="loading" (onClick)="sendMessage()">Send</p-button>
   </div>
 </div>
