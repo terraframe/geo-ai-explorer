@@ -19,7 +19,7 @@ import { AichatComponent } from '../aichat/aichat.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { ConfigurationService } from '../service/configuration-service.service';
 import { GraphExplorerComponent } from '../graph-explorer/graph-explorer.component';
-import { defaultQueries, SELECTED_COLOR } from './defaultQueries';
+import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
@@ -455,8 +455,71 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     "text-size": 12
                 }
             });
+
+            this.addHighlightLayers(type, geoObjects[0].geometry.type.toUpperCase());
         }
         // },10);
+    }
+
+    private addHighlightLayers(type: string, geometryType: string)
+    {
+        if (geometryType === "MULTIPOLYGON" || geometryType === "POLYGON") {
+            this.map!.addLayer({
+                "id": "hover-" + type,
+                "type": "fill",
+                "source": type,
+                "paint": {
+                    'fill-color': [
+                        "case",
+                        ["boolean", ["feature-state", "selected"], false],
+                        SELECTED_COLOR,
+                        HOVER_COLOR
+                    ],
+                    'fill-opacity': 0.8
+                },
+                filter: ["all",
+                    ["==", "uri", "NONE"] // start with a filter that doesn"t select anything
+                ]
+            });
+        } else if (geometryType === "POINT" || geometryType === "MULTIPOINT") {
+            this.map!.addLayer({
+                "id": "hover-" + type,
+                "type": "circle",
+                "source": type,
+                "paint": {
+                    "circle-radius": 10,
+                    "circle-color": [
+                        "case",
+                        ["boolean", ["feature-state", "selected"], false],
+                        SELECTED_COLOR,
+                        HOVER_COLOR
+                    ],
+                    "circle-stroke-width": 2,
+                    "circle-stroke-color": "#FFFFFF"
+                },
+                filter: ["all",
+                    ["==", "uri", "NONE"] // start with a filter that doesn"t select anything
+                ]
+            });
+        } else if (geometryType === "LINE" || geometryType === "MULTILINE" || geometryType === "MULTILINESTRING") {
+            this.map!.addLayer({
+                "id": "hover-" + type,
+                "type": "line",
+                "source": type,
+                "paint": {
+                    "line-color": [
+                        "case",
+                        ["boolean", ["feature-state", "selected"], false],
+                        SELECTED_COLOR,
+                        HOVER_COLOR
+                    ],
+                    "line-width": 3,
+                },
+                filter: ["all",
+                    ["==", "uri", "NONE"] // start with a filter that doesn"t select anything
+                ]
+            });
+        }
     }
 
     private layerConfig(type: string, geometryType: string): any {
@@ -928,19 +991,31 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     highlightObject(uri?: string) {
-        var highlightedObject = (uri == null) ? null : this.allGeoObjects().find(go => go.properties.uri === uri);
+        let oldHighlight = this.highlightedObject;
+        let newHighlight = (uri == null) ? null : this.allGeoObjects().find(go => go.properties.uri === uri);
 
-        if (highlightedObject != null) {
-            this.map!.setFeatureState({ source: highlightedObject.properties.type, id: highlightedObject.id }, { selected: true });
+        if (oldHighlight != null
+            // && (newHighlight == null || oldHighlight.properties.uri !== newHighlight?.properties.uri)
+            // && (this.selectedObject == null || oldHighlight.properties.uri !== this.selectedObject?.properties.uri))
+            ) {
+            // this.map!.setFeatureState({ source: oldHighlight.properties.type, id: oldHighlight.id }, { selected: false });
+
+            if (this.selectedObject != null)
+                this.map!.setFilter("hover-" + oldHighlight.properties.type, ["all", ["==", "uri", this.selectedObject.id] ]);
+            else
+                this.map!.setFilter("hover-" + oldHighlight.properties.type, ["all", ["==", "uri", "NONE"] ]);
         }
 
-        if (this.highlightedObject != null
-            && (highlightedObject == null || this.highlightedObject.properties.uri !== highlightedObject?.properties.uri)
-            && (this.selectedObject == null || this.highlightedObject.properties.uri !== this.selectedObject?.properties.uri)) {
-            this.map!.setFeatureState({ source: this.highlightedObject.properties.type, id: this.highlightedObject.id }, { selected: false });
+        if (newHighlight != null) {
+            // this.map!.setFeatureState({ source: newHighlight.properties.type, id: newHighlight.id }, { selected: true });
+
+            if (this.selectedObject != null)
+                this.map!.setFilter("hover-" + newHighlight.properties.type, ["any", ["==", "uri", newHighlight.id], ["==", "uri", this.selectedObject.id] ]);
+            else
+                this.map!.setFilter("hover-" + newHighlight.properties.type, ["all", ["==", "uri", newHighlight.id] ]);
         }
 
-        this.highlightedObject = highlightedObject;
+        this.highlightedObject = newHighlight;
     }
 
     selectObject(geoObject: GeoObject | null, zoomTo = false) {
