@@ -4,6 +4,7 @@ If the response starts with "No results found" then tell the user a location cou
 If there is more than a single code returned list some of the top codes and ask the user which is the correct code. 
 Based on the rules and location type generate a SPARQL SELECT statement for the location code. 
 Finally, use the 'sparql' tool to execute the SPARQL SELECT statement and return the results.  If the respons starts with "No data found" then tell the user that you were unable to find any results for that question and to ask a different question and STOP.
+If possible display any locations with the label and the uri in the format of "<location><label>$label</label><uri>?uri</uri></location>"
 If and ONLY if the the tool 'sparql' was used to generate then result tag the result with #mapit at the end of the message
 
 Instructions:
