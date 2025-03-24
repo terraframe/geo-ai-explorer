@@ -5,28 +5,28 @@
   <div class="messages">
     <div *ngFor="let msg of renderedMessages" class="message">
       <strong>{{ msg.sender }}:</strong>
-      <label>
-        <span style="white-space: pre-line;">
+      <label [for]="msg.id">
+        <div>
           <ng-container *ngFor="let section of msg.sections">
             <span *ngIf="section.type === 0" [innerHTML]="section.text">
             </span>
             <ng-container *ngIf="section.type === 1">
-              <p-button [label]="section.text" [link]="true" (click)="select(section.uri!)" />
+              <p-button [label]="section.text" [link]="true" (onClick)="select(section.uri!)"></p-button>
             </ng-container>
           </ng-container>
-        </span>
-
-        <ng-container *ngIf="msg.mappable">
-          <p-button class="btn btn-primary" (click)="mapIt(msg)">Map It!</p-button>
-        </ng-container>
+        </div>
+        <div *ngIf="msg.mappable">
+          <br />
+          <p-button class="btn btn-primary" (onClick)="mapIt(msg)">Map It!</p-button>
+        </div>
       </label>
     </div>
   </div>
   <div class="input-container">
-    <p-button severity="secondary" pTooltip="Erase conversation" (click)="clear()">
+    <p-button severity="secondary" pTooltip="Erase conversation" (onClick)="clear()">
       <fa-icon [icon]="icon"></fa-icon>
     </p-button>
     <input type="text" [(ngModel)]="message" placeholder="Type a message..." />
-    <p-button class="btn btn-primary" (click)="sendMessage()">Send</p-button>
+    <p-button class="btn btn-primary" (onClick)="sendMessage()">Send</p-button>
   </div>
 </div>
