@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createReducer, on, createActionGroup, props, createFeatureSelector, createSelector } from '@ngrx/store';
 import { ChatMessage } from '../models/chat.model';
 import { MockUtil } from '../mock-util';
+import { environment } from '../../environments/environment';
 
 const parseText = (m: ChatMessage): ChatMessage => {
 
@@ -20,7 +21,14 @@ const parseText = (m: ChatMessage): ChatMessage => {
             const uri: string = values?.at(2) as string;
             const post: string = values?.at(3) as string;
 
-            message.sections?.push({ type: 1, text: label, uri: uri })
+            // Ensure that the response contains a real URI and wasn't generated with some other
+            if (uri.startsWith(environment.basePrefix)) {
+                message.sections?.push({ type: 1, text: label, uri: uri })
+            }
+            else {
+                message.sections?.push({ type: 0, text: label, uri: uri })
+            }
+
             message.sections?.push({ type: 0, text: post })
         }
         else {
@@ -36,6 +44,7 @@ export const ChatActions = createActionGroup({
     source: 'chat',
     events: {
         'Add Message': props<ChatMessage>(),
+        'Update Message': props<ChatMessage>(),
         'setMessageAndSession': props<{ messages: ChatMessage[], sessionId: string }>(),
     },
 });
@@ -59,6 +68,19 @@ export const chatReducer = createReducer(
         messages.push(parseText(message));
 
         return { ...state, messages }
+    }),
+    on(ChatActions.updateMessage, (state, message) => {
+
+        const messages = [...state.messages];
+
+        const index = messages.findIndex(m => m.id === message.id)
+
+        if (index != -1) {
+            messages[index] = (parseText(message));
+            return { ...state, messages }
+        }
+
+        return { ...state }
     }),
     on(ChatActions.setMessageAndSession, (state, wrapper) => {
         return { ...state, messages: wrapper.messages, sessionId: wrapper.sessionId }

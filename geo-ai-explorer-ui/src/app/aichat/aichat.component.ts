@@ -56,18 +56,44 @@ export class AichatComponent {
           sender: 'user',
           text: this.message,
           mappable: false,
-          sections: [{ type: 0, text: this.message }]
+          sections: [{ type: 0, text: this.message }],
+          loading: false
         };
 
         this.message = '';
 
+        this.store.dispatch(ChatActions.addMessage(message));
+
+        const system: ChatMessage = {
+          id: uuidv4(),
+          sender: 'system',
+          text: '',
+          mappable: false,
+          sections: [],
+          loading: true
+        };
+
+        this.store.dispatch(ChatActions.addMessage(system));
+
         this.loading = true;
 
         this.chatService.sendMessage(sessionId, message).then((response) => {
+          this.store.dispatch(ChatActions.updateMessage({
+            ...system,
+            text: response.text,
+            mappable: response.mappable,
+            loading: false
+          }));
+        }).catch(error => {
+          this.errorService.handleError(error)
 
-          this.store.dispatch(ChatActions.addMessage(message));
-          this.store.dispatch(ChatActions.addMessage(response));
-        }).catch(error => this.errorService.handleError(error)).finally(() => {
+          this.store.dispatch(ChatActions.updateMessage({
+            ...system,
+            text: 'An error occurred',
+            loading: false
+          }));
+
+        }).finally(() => {
           this.loading = false;
         })
       });
@@ -105,7 +131,9 @@ export class AichatComponent {
 
   @HostListener('document:keydown.enter', ['$event'])
   handleEnterKey(event: KeyboardEvent) {
-    this.sendMessage();
+    if (!this.loading) {
+      this.sendMessage();
+    }
   }
 
   select(uri: string): void {

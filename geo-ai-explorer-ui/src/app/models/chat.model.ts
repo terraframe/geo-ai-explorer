@@ -13,6 +13,7 @@ export interface ChatMessage {
   text: string;
   mappable: boolean;
   sections?: MessageSection[];
+  loading?: boolean;
 }
 
 export interface ServerChatResponse {

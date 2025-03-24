@@ -621,7 +621,12 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     return a;
                 }
 
-                return union(a.geometry, b.geometry) as any
+                try {
+                    return union(a.geometry, b.geometry) as any
+                }
+                catch (e) {
+                    return b.geometry
+                }
             }, null)) as LngLatBoundsLike
 
             this.map?.fitBounds(allBounds, { padding: 50 })
@@ -943,7 +948,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.highlightedObject = highlightedObject;
     }
 
-    selectObject(geoObject: GeoObject | null, zoomTo = false) {
+    selectObject(geoObject: GeoObject | null, zoomTo = false): void {
 
         if (geoObject != null) {
 
@@ -957,7 +962,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             }
 
             let go = this.allGeoObjects().find(go => go.properties.uri === geoObject.properties.uri);
-            
+
             this.selectedObject = geoObject;
 
             // The geo object does exist on the map
