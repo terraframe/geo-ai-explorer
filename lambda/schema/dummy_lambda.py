@@ -75,9 +75,34 @@ WHERE {
   ?parent custom:FlowsInto* ?channel .     
   ?channel custom:ChannelHasLevee ?leveeArea .     
   ?leveeArea obj:GeoObject-code ?leveeAreaCode .     
+}```
+- Aggregation functions must always be wrapped in parenthesis with its variable name 
+```
+// Incorrect
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX obj: <https://localhost:4200/lpg/rdfs#>
+PREFIX custom: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+
+SELECT SUM(?population) as ?totalPopulation
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {
+  ?censusTract obj:GeoObject-code "CEMVK_RR_03_ONE_27" .
+  ?censusTract custom:CensusTract-population ?population .  
 } 
 
-}```
+// Correct
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX obj: <https://localhost:4200/lpg/rdfs#>
+PREFIX custom: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+
+SELECT (SUM(?population) as ?totalPopulation) 
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {
+  ?censusTract obj:GeoObject-code "CEMVK_RR_03_ONE_27" .
+  ?censusTract custom:CensusTract-population ?population .  
+} ```
 
 Note: Be as concise as possible.
 Do not include any explanations or apologies in your responses.
