@@ -95,7 +95,6 @@ label {
 }
 
 .legend .legend-item {
-  display: table;
   cursor: pointer;
 }
 
@@ -107,11 +106,13 @@ label {
   width: 25px;
   height: 25px;
   margin-right: 5px;
-  float: left;
+}
+
+.legend p-checkbox {
+  margin-right: 5px;
 }
 
 .legend label {
-  float: left;
   line-height: 25px;
   height: 25px;
   cursor: pointer;

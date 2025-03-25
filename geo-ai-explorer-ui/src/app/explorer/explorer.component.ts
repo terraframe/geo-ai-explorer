@@ -97,7 +97,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public loading: boolean = false;
 
-    public typeLegend: { [key: string]: { label: string, color: string } } = {};
+    public typeLegend: { [key: string]: { label: string, color: string, enabled: boolean } } = {};
 
     public selectedObject?: GeoObject;
 
@@ -224,14 +224,21 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     calculateTypeLegend() {
+        var oldTypeLegend = JSON.parse(JSON.stringify(this.typeLegend));
         this.typeLegend = {};
 
         this.orderedTypes.forEach(type => {
             this.typeLegend[type] = {
                 label: this.labelForType(type),
-                color: this.resolvedStyles[type].color
+                color: this.resolvedStyles[type].color,
+                enabled: (oldTypeLegend[type] == null ? true : oldTypeLegend[type].enabled)
             }
         });
+    }
+
+    toggleTypeLegend(legend: any): void {
+        legend.enabled = !legend.enabled;
+        this.render();
     }
 
     labelForType(typeUri: string): string {
@@ -414,6 +421,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             if (geoObjects.length == 0) continue;
             if (geoObjects[0].geometry == null) continue; // TODO : Find this out at the type level...
+            if (!this.typeLegend[type].enabled) continue;
 
             let geojson: any = {
                 type: "FeatureCollection",
@@ -674,6 +682,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
                 return null;
             }).filter(a => a != null)
+
+            if (layerBounds.length == 0) return;
 
             const allBounds = bbox(layerBounds.reduce((a: any, b: any) => {
                 if (a == null) {

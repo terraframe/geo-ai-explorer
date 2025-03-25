@@ -42,8 +42,9 @@
 	<p-panel [toggleable]="true" header="Layers" collapsed="true" class="legend">
 		<ng-container *ngIf="orderedTypes.length > 0">
 			<div cdkDropList (cdkDropListDropped)="drop($event)">
-				<div class="legend-item" *ngFor="let type of orderedTypes" cdkDrag>
+				<div class="legend-item horizontal-layout" *ngFor="let type of orderedTypes" cdkDrag>
 					<ng-container *ngIf="typeLegend[type] as legend">
+						<p-checkbox binary="true" [ngModel]="legend.enabled" [inputId]="legend.label" (onChange)="toggleTypeLegend(legend)" />
 						<div class="square" [ngStyle]="{ background: legend.color }"></div>
 
 						<label>{{ legend.label }}</label>
@@ -51,11 +52,12 @@
 				</div>
 			</div>
 		</ng-container>
-		<hr>
+		<hr style="margin-top:25px;">
+		<h4 style="margin-bottom:15px;">Context Layers</h4>
 		<div>
-			<div class="legend-item" *ngFor="let layer of vectorLayers$ | async">
-				<div class="square" [ngStyle]="{ background: layer.color }"></div>
+			<div class="legend-item horizontal-layout" *ngFor="let layer of vectorLayers$ | async">
 				<p-checkbox binary="true" [ngModel]="layer.enabled" [inputId]="layer.id" (onChange)="toggleVectorLayer(layer)" />
+				<div class="square" [ngStyle]="{ background: layer.color }"></div>
 				<label [for]="layer.id" class="ml-2">{{ layer.label }}</label>
 			</div>
 		</div>
