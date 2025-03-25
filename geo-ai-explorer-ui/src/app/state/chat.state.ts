@@ -4,6 +4,13 @@ import { ChatMessage } from '../models/chat.model';
 import { MockUtil } from '../mock-util';
 import { environment } from '../../environments/environment';
 
+/*
+Begin by introducing yourself as a geo-enabled RDF virtual assistant. List the features you are capable of helping the user with, including (but not limited to):
+- Finding an object by label, code, location or URI
+- Navigating a graph of relationships - for example “What is the total population impacted if channel reach CEMVK_RR_03_ONE_25 floods?”
+
+Finally, end by listing the types and edges inside the dataset.
+*/
 const initialMessage = `Hello! I'm your geo-enabled RDF virtual assistant, specialized in analyzing spatial and demographic data relationships. Here's what I can help you with:
 
 1. Location-based Queries:
