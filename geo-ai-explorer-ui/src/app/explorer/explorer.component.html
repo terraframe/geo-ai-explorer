@@ -51,7 +51,8 @@
 				</div>
 			</div>
 		</ng-container>
-		<hr>
+		<hr style="margin-top:25px;">
+		<h4 style="margin-bottom:15px;">Context Layers</h4>
 		<div>
 			<div class="legend-item horizontal-layout" *ngFor="let layer of vectorLayers$ | async">
 				<p-checkbox binary="true" [ngModel]="layer.enabled" [inputId]="layer.id" (onChange)="toggleVectorLayer(layer)" />
