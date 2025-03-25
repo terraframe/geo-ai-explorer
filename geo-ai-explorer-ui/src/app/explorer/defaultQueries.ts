@@ -66,6 +66,7 @@ PREFIX spatialF: <http://jena.apache.org/function/spatial#>
 `
 
 export const SELECTED_COLOR = "#ffff00";
+export const HOVER_COLOR = "#cf0000";
 
 let defaultStyles = {
   'lpgvs:Hospital': { color: '#F2799D', order: 0 },
