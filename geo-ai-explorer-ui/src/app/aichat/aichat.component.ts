@@ -35,6 +35,7 @@ export class AichatComponent {
   onMessagesChange: Subscription;
 
   public loading: boolean = false;
+  public mapLoading: boolean = false;
 
   public renderedMessages: ChatMessage[] = [];
 
@@ -109,7 +110,7 @@ export class AichatComponent {
         const history = [...messages];
         history.splice(index);
 
-        this.loading = true;
+        this.mapLoading = true;
 
         this.chatService.getLocations(history, 0, 100).then((page) => {
 
@@ -119,7 +120,7 @@ export class AichatComponent {
           }));
 
         }).catch(error => this.errorService.handleError(error)).finally(() => {
-          this.loading = false;
+          this.mapLoading = false;
         })
       }
     });
