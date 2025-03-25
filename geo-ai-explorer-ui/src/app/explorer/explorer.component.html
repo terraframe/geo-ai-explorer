@@ -44,6 +44,7 @@
 			<div cdkDropList (cdkDropListDropped)="drop($event)">
 				<div class="legend-item horizontal-layout" *ngFor="let type of orderedTypes" cdkDrag>
 					<ng-container *ngIf="typeLegend[type] as legend">
+						<p-checkbox binary="true" [ngModel]="legend.enabled" [inputId]="legend.label" (onChange)="toggleTypeLegend(legend)" />
 						<div class="square" [ngStyle]="{ background: legend.color }"></div>
 
 						<label>{{ legend.label }}</label>
