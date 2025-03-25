@@ -58,7 +58,8 @@ export class AichatComponent {
           text: this.message,
           mappable: false,
           sections: [{ type: 0, text: this.message }],
-          loading: false
+          loading: false,
+          purpose: 'standard'
         };
 
         this.message = '';
@@ -71,7 +72,8 @@ export class AichatComponent {
           text: '',
           mappable: false,
           sections: [],
-          loading: true
+          loading: true,
+          purpose: 'standard'
         };
 
         this.store.dispatch(ChatActions.addMessage(system));
@@ -91,7 +93,8 @@ export class AichatComponent {
           this.store.dispatch(ChatActions.updateMessage({
             ...system,
             text: 'An error occurred',
-            loading: false
+            loading: false,
+            purpose: 'info'
           }));
 
         }).finally(() => {
@@ -107,8 +110,9 @@ export class AichatComponent {
       const index = messages.findIndex(m => m.id === message.id);
 
       if (index !== -1) {
-        const history = [...messages];
+        let history = [...messages];
         history.splice(index);
+        history = history.filter(m => m.purpose === 'standard');
 
         this.mapLoading = true;
 

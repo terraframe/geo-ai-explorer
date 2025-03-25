@@ -36,6 +36,7 @@ export class ChatService {
         sender: 'system',
         text: response.content,
         mappable: response.mappable,
+        purpose: 'standard'
       };
       return chatMessage;
     });

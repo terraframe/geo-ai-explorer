@@ -14,6 +14,7 @@ export interface ChatMessage {
   mappable: boolean;
   sections?: MessageSection[];
   loading?: boolean;
+  purpose: 'info' | 'standard'
 }
 
 export interface ServerChatResponse {
