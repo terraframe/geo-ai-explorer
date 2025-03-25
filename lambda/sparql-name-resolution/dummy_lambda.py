@@ -14,7 +14,7 @@ def execute(name: str) -> str:
         f"PREFIX text: <http://jena.apache.org/text#>\n"
         f"PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>\n"
         
-        f"SELECT ?code ?type\n"
+        f"SELECT ?code ?type $s\n"
         f"FROM <https://localhost:4200/lpg/graph_801104/0#>\n"
         f"WHERE {{\n"
         f"  (?s ?score) text:query (rdfs:label '{name}') .\n"
@@ -35,6 +35,7 @@ def execute(name: str) -> str:
         data = {}
         data['code'] = r.get('code').get('value')
         data['type'] = r.get('type').get('value')        
+        data['uri'] = r.get('s').get('value')        
         results.append(data)
 
     return results    
