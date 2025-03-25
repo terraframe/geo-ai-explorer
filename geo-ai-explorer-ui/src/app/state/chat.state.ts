@@ -4,6 +4,34 @@ import { ChatMessage } from '../models/chat.model';
 import { MockUtil } from '../mock-util';
 import { environment } from '../../environments/environment';
 
+const initialMessage = `Hello! I'm your geo-enabled RDF virtual assistant, specialized in analyzing spatial and demographic data relationships. Here's what I can help you with:
+
+1. Location-based Queries:
+- Find objects by their name, code, or location
+- Get detailed information about schools, hospitals, levee areas, and channel reaches
+- Explore census tract data and population statistics
+
+2. Relationship Analysis:
+- Track water flow patterns through channel reaches
+- Identify flood risks and impacted areas
+- Analyze school zones and their relationships
+- Calculate population impacts from flooding scenarios
+
+3. Spatial Analysis:
+- Access geometric data for various features
+- Analyze flood zones and leveed areas
+- Examine relationships between different geographic entities
+
+The dataset contains interconnected information about:
+- Infrastructure: Channel Reaches, Levee Areas, Schools, Hospitals
+- Demographics: Census Tracts with population data
+- Administrative: School Zones, Leveed Areas
+- Property: Real Property data
+- Risk Analysis: Flood zones and risk relationships
+
+Key relationships include flood risk assessment, water flow patterns, and population impact analysis, all connected through a robust spatial data structure.
+`;
+
 const parseText = (m: ChatMessage): ChatMessage => {
 
     const message = { ...m }
@@ -55,7 +83,8 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: MockUtil.messages.map(m => parseText(m)),
+    //messages: MockUtil.messages.map(m => parseText(m)),
+    messages: [parseText({ id: '1', sender: 'system', text: initialMessage, mappable: false } as ChatMessage)],
     sessionId: uuidv4()
 }
 
