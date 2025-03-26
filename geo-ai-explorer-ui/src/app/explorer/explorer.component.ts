@@ -483,7 +483,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                         SELECTED_COLOR,
                         HOVER_COLOR
                     ],
-                    'fill-opacity': 0.8
+                    'fill-opacity': 0.5
                 },
                 filter: ["all",
                     ["==", "uri", "NONE"] // start with a filter that doesn"t select anything
@@ -1006,28 +1006,17 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     highlightObject(uri?: string) {
+        if (uri != null && this.selectedObject != null && uri == this.selectedObject.properties.uri) return;
+
         let oldHighlight = this.highlightedObject;
         let newHighlight = (uri == null) ? null : this.allGeoObjects().find(go => go.properties.uri === uri);
 
-        if (oldHighlight != null
-            // && (newHighlight == null || oldHighlight.properties.uri !== newHighlight?.properties.uri)
-            // && (this.selectedObject == null || oldHighlight.properties.uri !== this.selectedObject?.properties.uri))
-            ) {
-            // this.map!.setFeatureState({ source: oldHighlight.properties.type, id: oldHighlight.id }, { selected: false });
-
-            if (this.selectedObject != null)
-                this.map!.setFilter("hover-" + oldHighlight.properties.type, ["all", ["==", "uri", this.selectedObject.id] ]);
-            else
-                this.map!.setFilter("hover-" + oldHighlight.properties.type, ["all", ["==", "uri", "NONE"] ]);
+        if (oldHighlight != null) {
+            this.map!.setFilter("hover-" + oldHighlight.properties.type, ["all", ["==", "uri", "NONE"] ]);
         }
 
         if (newHighlight != null) {
-            // this.map!.setFeatureState({ source: newHighlight.properties.type, id: newHighlight.id }, { selected: true });
-
-            if (this.selectedObject != null)
-                this.map!.setFilter("hover-" + newHighlight.properties.type, ["any", ["==", "uri", newHighlight.id], ["==", "uri", this.selectedObject.id] ]);
-            else
-                this.map!.setFilter("hover-" + newHighlight.properties.type, ["all", ["==", "uri", newHighlight.id] ]);
+            this.map!.setFilter("hover-" + newHighlight.properties.type, ["all", ["==", "uri", newHighlight.id] ]);
         }
 
         this.highlightedObject = newHighlight;
@@ -1035,34 +1024,31 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     selectObject(geoObject: GeoObject | null, zoomTo = false): void {
 
-        if (geoObject != null) {
+        let previousSelected = this.selectedObject;
 
+        if (geoObject != null) {
             // If its already selected do nothing
             if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
-
-            let previousSelected = this.selectedObject;
-
-            if (previousSelected != null && previousSelected != this.selectedObject) {
-                this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
-            }
 
             let go = this.allGeoObjects().find(go => go.properties.uri === geoObject.properties.uri);
 
             this.selectedObject = geoObject;
 
+            this.highlightObject();
+
             // The geo object does exist on the map
             if (go != null) {
-
                 if (zoomTo)
                     this.zoomTo(go.properties.uri);
 
                 this.renderHighlights();
             }
-
-
-        }
-        else {
+        } else {
             this.selectedObject = undefined;
+        }
+
+        if (previousSelected != null) {
+            this.map!.setFeatureState({ source: previousSelected.properties.type, id: previousSelected.id }, { selected: false });
         }
     }
 
