@@ -18,22 +18,26 @@ export class ConfigurationService {
   }
 
   get(): Promise<Configuration> {
+    // if (environment.mockRequests)
+    // {
+    //   return new Promise<Configuration>((resolve) => {
+    //     setTimeout(() => {
+    //       // Simulated server response
+    //       resolve(MockUtil.styles);
+    //     }, 3000); // Simulating 3-second network delay
+    //   });
+    // }
+    // else
+    // {
+      // Uncomment below to make a real HTTP request
+      return firstValueFrom(this.http.get<Configuration>(environment.apiUrl + 'api/configuration/get')).then(configuration => {
+        configuration.layers.map(l => l.id = uuidv4())
 
-    // return new Promise<StyleConfig>((resolve) => {
-    //   setTimeout(() => {
-    //     // Simulated server response
-    //     resolve(MockUtil.styles);
-    //   }, 3000); // Simulating 3-second network delay
-    // });
-
-    // Uncomment below to make a real HTTP request
-    return firstValueFrom(this.http.get<Configuration>(environment.apiUrl + 'api/configuration/get')).then(configuration => {
-      configuration.layers.map(l => l.id = uuidv4())
-
-      localStorage.setItem('token', configuration.token);
-      
-      return configuration;
-    });
+        localStorage.setItem('token', configuration.token);
+        
+        return configuration;
+      });
+    // }
   }
 
 

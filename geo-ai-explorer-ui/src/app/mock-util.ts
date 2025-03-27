@@ -1,4 +1,5 @@
-import { ChatMessage } from "./models/chat.model";
+import { ChatMessage, LocationPage } from "./models/chat.model";
+import { Configuration } from "./models/configuration.model";
 import { GeoObject } from "./models/geoobject.model";
 import { Style } from "./models/style.model";
 import { ExplorerInit } from "./service/explorer.service";
@@ -46,408 +47,435 @@ export class MockUtil {
 
   }
 
-  public static locations: any[] = [
-    {
-      "properties": {
-        "code": "220072002479",
-        "label": "BELLE PLACE ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072002479"
+  public static locations: LocationPage = {
+    statement: "A list of available locations",
+    locations: [
+      {
+        "properties": {
+          "code": "220072002479",
+          "label": "BELLE PLACE ELEMENTARY SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072002479",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220072002479",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.7549,
+              30.007
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220072002479",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.7549,
-            30.007
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220159001222",
-        "label": "CECILIA PRIMARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001222"
+      {
+        "properties": {
+          "code": "220159001222",
+          "label": "CECILIA PRIMARY SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001222",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001222",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.852,
+              30.3396
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001222",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.852,
-            30.3396
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "228010002497",
-        "label": "CENTRAL LOUISIANA SUPPORTS AND SERVICES CENTER",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010002497"
+      {
+        "properties": {
+          "code": "228010002497",
+          "label": "CENTRAL LOUISIANA SUPPORTS AND SERVICES CENTER",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010002497",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-228010002497",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.4971,
+              31.2965
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-228010002497",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.4971,
-            31.2965
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220072000519",
-        "label": "JEANERETTE SENIOR HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072000519"
+      {
+        "properties": {
+          "code": "220072000519",
+          "label": "JEANERETTE SENIOR HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220072000519",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220072000519",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.7026,
+              29.9453
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220072000519",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.7026,
-            29.9453
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220129001054",
-        "label": "D.F. HUDDLE ELEMENTARY",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001054"
+      {
+        "properties": {
+          "code": "220129001054",
+          "label": "D.F. HUDDLE ELEMENTARY",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001054",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001054",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.4754,
+              31.2976
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001054",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.4754,
-            31.2976
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220156001209",
-        "label": "PORT BARRE ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001209"
+      {
+        "properties": {
+          "code": "220156001209",
+          "label": "PORT BARRE ELEMENTARY SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001209",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001209",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.9504,
+              30.569
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001209",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.9504,
-            30.569
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220156001989",
-        "label": "NORTH CENTRAL HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001989"
+      {
+        "properties": {
+          "code": "220156001989",
+          "label": "NORTH CENTRAL HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220156001989",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001989",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.9845,
+              30.7278
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220156001989",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.9845,
-            30.7278
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220129001053",
-        "label": "HORSESHOE DRIVE ELEMENTARY NEW VISION ACADEMY",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001053"
+      {
+        "properties": {
+          "code": "220129001053",
+          "label": "HORSESHOE DRIVE ELEMENTARY NEW VISION ACADEMY",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001053",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001053",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.4616,
+              31.2614
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001053",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.4616,
-            31.2614
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220129001072",
-        "label": "POLAND JUNIOR HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001072"
+      {
+        "properties": {
+          "code": "220129001072",
+          "label": "POLAND JUNIOR HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001072",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001072",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.2757,
+              31.1673
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001072",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.2757,
-            31.1673
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220159001220",
-        "label": "CATAHOULA ELEMENTARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001220"
+      {
+        "properties": {
+          "code": "220159001220",
+          "label": "CATAHOULA ELEMENTARY SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001220",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001220",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.7098,
+              30.2173
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001220",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.7098,
-            30.2173
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "228010001627",
-        "label": "RAYMOND LABORDE CORRECTIONAL CENTER",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010001627"
+      {
+        "properties": {
+          "code": "228010001627",
+          "label": "RAYMOND LABORDE CORRECTIONAL CENTER",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-228010001627",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-228010001627",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.0257,
+              30.9728
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-228010001627",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.0257,
-            30.9728
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220159001219",
-        "label": "BREAUX BRIDGE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001219"
+      {
+        "properties": {
+          "code": "220159001219",
+          "label": "BREAUX BRIDGE HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001219",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001219",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.8578,
+              30.255
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001219",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.8578,
-            30.255
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220015000073",
-        "label": "MARKSVILLE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220015000073"
+      {
+        "properties": {
+          "code": "220015000073",
+          "label": "MARKSVILLE HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220015000073",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220015000073",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.0716,
+              31.1271
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220015000073",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.0716,
-            31.1271
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220129001038",
-        "label": "ACADIAN ELEMENTARY",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001038"
+      {
+        "properties": {
+          "code": "220129001038",
+          "label": "ACADIAN ELEMENTARY",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001038",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001038",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.4119,
+              31.2872
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001038",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.4119,
-            31.2872
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220159001218",
-        "label": "BREAUX BRIDGE PRIMARY SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001218"
+      {
+        "properties": {
+          "code": "220159001218",
+          "label": "BREAUX BRIDGE PRIMARY SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220159001218",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001218",
+        "geometry": {
+          "coordinates": [
+            [
+              -91.8912,
+              30.2786
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220159001218",
-      "geometry": {
-        "coordinates": [
-          [
-            -91.8912,
-            30.2786
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    },
-    {
-      "properties": {
-        "code": "220129001080",
-        "label": "W.O. HALL 6TH GRADE ACADEMY",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001080"
+      {
+        "properties": {
+          "code": "220129001080",
+          "label": "W.O. HALL 6TH GRADE ACADEMY",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220129001080",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001080",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.432,
+              31.2918
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220129001080",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.432,
-            31.2918
-          ]
-        ],
-        "type": "MultiPoint"
+      {
+        "properties": {
+          "code": "220004702462",
+          "label": "CENTRAL SOUTHWEST ALTERNATIVE HIGH SCHOOL",
+          "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
+          "uri": "https://localhost:4200/lpg/graph_801104/0#School-220004702462",
+          edges: {}
+        },
+        "type": "Feature",
+        "id": "https://localhost:4200/lpg/graph_801104/0#School-220004702462",
+        "geometry": {
+          "coordinates": [
+            [
+              -92.1665,
+              30.9368
+            ]
+          ],
+          "type": "MultiPoint"
+        }
       }
-    },
-    {
-      "properties": {
-        "code": "220004702462",
-        "label": "CENTRAL SOUTHWEST ALTERNATIVE HIGH SCHOOL",
-        "type": "https://localhost:4200/lpg/graph_801104/0/rdfs#School",
-        "uri": "https://localhost:4200/lpg/graph_801104/0#School-220004702462"
-      },
-      "type": "Feature",
-      "id": "https://localhost:4200/lpg/graph_801104/0#School-220004702462",
-      "geometry": {
-        "coordinates": [
-          [
-            -92.1665,
-            30.9368
-          ]
-        ],
-        "type": "MultiPoint"
-      }
-    }
-  ];
+    ],
+    limit: 17,
+    offset: 0,
+    count: 17
+  };
 
-  public static styles: { [key: string]: Style } = {
-    "https://localhost:4200/lpg/graph_801104/0#RealProperty": {
-      "color": "#79F294",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#ChannelReach": {
-      "color": "#79DAF2",
-      "order": 4
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Reservoir": {
-      "color": "#CAEEFB",
-      "order": 5
-    },
-    "https://localhost:4200/lpg/graph_801104/0#RecreationArea": {
-      "color": "#F2E779",
-      "order": 3
-    },
-    "https://localhost:4200/lpg/graph_801104/0#LeveedArea": {
-      "color": "#C379F2",
-      "order": 4
-    },
-    "https://localhost:4200/lpg/graph_801104/0#SchoolZone": {
-      "color": "#FBE3D6",
-      "order": 6
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Project": {
-      "color": "#C0F279",
-      "order": 6
-    },
-    "https://localhost:4200/lpg/graph_801104/0#LeveeArea": {
-      "color": "#D1D1D1",
-      "order": 4
-    },
-    "https://localhost:4200/lpg/graph_801104/0#School": {
-      "color": "#F2A579",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Levee": {
-      "color": "#F279E0",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Hospital": {
-      "color": "#F2799D",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Dam": {
-      "color": "#D5F279",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#River": {
-      "color": "#7999F2",
-      "order": 2
-    },
-    "https://localhost:4200/lpg/graph_801104/0#Watershed": {
-      "color": "#79F2C9",
-      "order": 4
-    },
-    "https://localhost:4200/lpg/graph_801104/0#ChannelArea": {
-      "color": "#156082",
-      "order": 4
-    },
-    "https://localhost:4200/lpg/graph_801104/0#ChannelLine": {
-      "color": "#79F2A0",
-      "order": 1
-    },
-    "https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea": {
-      "color": "#F2BE79",
-      "order": 3
-    },
-    "http://dime.usace.mil/ontologies/cwbi-concept#Program": {
-      "color": "#FF5733",
-      "order": 0
-    },
-    "https://localhost:4200/lpg/graph_801104/0#WaterLock": {
-      "color": "#79F2E2",
-      "order": 0
+  public static styles: Configuration = {
+    layers: [],
+    token: "",
+    styles: {
+      "https://localhost:4200/lpg/graph_801104/0#RealProperty": {
+        "color": "#79F294",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#ChannelReach": {
+        "color": "#79DAF2",
+        "order": 4
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Reservoir": {
+        "color": "#CAEEFB",
+        "order": 5
+      },
+      "https://localhost:4200/lpg/graph_801104/0#RecreationArea": {
+        "color": "#F2E779",
+        "order": 3
+      },
+      "https://localhost:4200/lpg/graph_801104/0#LeveedArea": {
+        "color": "#C379F2",
+        "order": 4
+      },
+      "https://localhost:4200/lpg/graph_801104/0#SchoolZone": {
+        "color": "#FBE3D6",
+        "order": 6
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Project": {
+        "color": "#C0F279",
+        "order": 6
+      },
+      "https://localhost:4200/lpg/graph_801104/0#LeveeArea": {
+        "color": "#D1D1D1",
+        "order": 4
+      },
+      "https://localhost:4200/lpg/graph_801104/0#School": {
+        "color": "#F2A579",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Levee": {
+        "color": "#F279E0",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Hospital": {
+        "color": "#F2799D",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Dam": {
+        "color": "#D5F279",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#River": {
+        "color": "#7999F2",
+        "order": 2
+      },
+      "https://localhost:4200/lpg/graph_801104/0#Watershed": {
+        "color": "#79F2C9",
+        "order": 4
+      },
+      "https://localhost:4200/lpg/graph_801104/0#ChannelArea": {
+        "color": "#156082",
+        "order": 4
+      },
+      "https://localhost:4200/lpg/graph_801104/0#ChannelLine": {
+        "color": "#79F2A0",
+        "order": 1
+      },
+      "https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea": {
+        "color": "#F2BE79",
+        "order": 3
+      },
+      "http://dime.usace.mil/ontologies/cwbi-concept#Program": {
+        "color": "#FF5733",
+        "order": 0
+      },
+      "https://localhost:4200/lpg/graph_801104/0#WaterLock": {
+        "color": "#79F2E2",
+        "order": 0
+      }
     }
   }
 
