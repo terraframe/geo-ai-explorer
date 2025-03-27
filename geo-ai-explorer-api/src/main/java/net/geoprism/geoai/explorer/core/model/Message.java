@@ -19,5 +19,7 @@ public class Message
    * Flag indicating if the message represents a mappable message
    */
   private Boolean mappable;
+  
+  private Boolean ambiguous;
 
 }

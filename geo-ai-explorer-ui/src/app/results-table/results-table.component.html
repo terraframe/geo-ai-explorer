@@ -1,29 +1,33 @@
-<div>
+<div style="height: 100%; width: 100%;">
     <ng-container *ngrxLet="page$ as page; ">
         <ng-container *ngIf="page.count > 0">
-            <h2 style="margin: 10px;">Results</h2>
+            <h2 *ngIf="workflowStep !== WorkflowStep.DisambiguateObject" style="margin: 10px;">Results</h2>
 
             <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '30rem', 'height': '100%' }" stripedRows
-                [scrollable]="true" scrollHeight="calc(50vh - 3rem)" [size]="'small'"
+                [scrollable]="true" [scrollHeight]="calculateScrollHeight()" [size]="'small'"
                 (mouseleave)="onMouseLeaveTable()">
                 <ng-template #header>
                     <tr>
                         <th>Label</th>
-                        <th>Uri</th>
+                        <th>Code</th>
+                        <th>Type</th>
+                        <!-- <th>Uri</th> -->
                     </tr>
                 </ng-template>
                 <ng-template #body let-object>
                     <tr class="clickable" [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
                         (click)="onClick(object)" (mouseenter)="onRowHover(object)">
                         <td>{{ object.properties.label }}</td>
-                        <td>{{ object.properties.uri }}</td>
+                        <td>{{ object.properties.code }}</td>
+                        <td>{{ object.properties.type.split("rdfs#")[1] }}</td>
+                        <!-- <td>{{ object.properties.uri }}</td> -->
 
                     </tr>
                 </ng-template>
 
                 <ng-template #footer>
                     <tr>
-                        <td colspan="2">
+                        <td colspan="3">
                             <p-paginator (onPageChange)="onPageChange($event)" [first]="page.offset" [rows]="page.limit"
                                 [totalRecords]="page.count" />
 

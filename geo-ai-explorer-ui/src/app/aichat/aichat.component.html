@@ -13,7 +13,7 @@
         <strong>{{ msg.sender }}:</strong>
         <label [for]="msg.id">
           <ng-container *ngIf="msg.loading">
-            <p-progress-spinner [style]="{ width: '40px', height: '40px' }" ariaLabel="loading" />
+             <div style="margin-left:16px; margin-top: 5px;" class="dot-pulse"></div>
           </ng-container>
           <ng-container *ngIf="!msg.loading">
             <ng-container *ngFor="let section of msg.sections">
@@ -26,6 +26,10 @@
             <div *ngIf="msg.mappable">
               <br />
               <p-button class="btn btn-primary" (onClick)="mapIt(msg)">View details</p-button>
+            </div>
+            <div *ngIf="msg.ambiguous">
+              <br />
+              <p-button class="btn btn-primary" (onClick)="setWorkflowStepDisambiguate(msg)">Disambiguate</p-button>
             </div>
           </ng-container>
         </label>

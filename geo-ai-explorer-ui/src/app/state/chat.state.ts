@@ -90,11 +90,11 @@ export interface ChatStateModel {
 }
 
 export const initialState: ChatStateModel = {
-    messages: [parseText({ id: '1', sender: 'system', text: initialMessage, mappable: false, purpose: 'info' })],
+    messages: [parseText({ id: '1', sender: 'system', text: initialMessage, mappable: false, ambiguous: false, purpose: 'info' })],
     sessionId: uuidv4()
 }
 
-if (environment.mockRequests)
+// if (environment.mockRequests)
     initialState.messages = MockUtil.messages.map(m => parseText(m));
 
 

@@ -24,7 +24,7 @@ export const ExplorerActions = createActionGroup({
         'Set Styles': props<{ styles: StyleConfig }>(),
         'Set Vector Layer': props<{ layer: VectorLayer }>(),
         'Set Configuration': props<Configuration>(),
-        'Set Workflow Step': props<{ step: WorkflowStep }>()
+        'Set Workflow Step': props<{ step: WorkflowStep, data?: any }>()
     },
 });
 
@@ -45,6 +45,7 @@ export interface ExplorerStateModel {
     vectorLayers: VectorLayer[];
     page: LocationPage;
     workflowStep: WorkflowStep;
+    workflowData?: any;
 }
 
 export const initialState: ExplorerStateModel = {
@@ -186,9 +187,10 @@ export const explorerReducer = createReducer(
     })),
 
     // Set Workflow Step
-    on(ExplorerActions.setWorkflowStep, (state, { step }) => ({
+    on(ExplorerActions.setWorkflowStep, (state, { step, data }) => ({
         ...state,
-        workflowStep: step
+        workflowStep: step,
+        workflowData: data
     })),
     
 );
@@ -229,3 +231,5 @@ export const getVectorLayers = createSelector(selector, (s) => {
 });
 
 export const getWorkflowStep = createSelector(selector, (s) => s.workflowStep);
+
+export const getWorkflowData = createSelector(selector, (s) => s.workflowData);

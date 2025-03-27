@@ -7,8 +7,19 @@
 		<div id="left-panel" class="vertical-layout">
 			<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 
-			<aichat [class]="{'small-ai-chat' : smallAiChat}"></aichat>
-
+			<aichat *ngIf="workflowStep != WorkflowStep.DisambiguateObject" [class]="{'small-ai-chat' : workflowStep === WorkflowStep.MinimizeChat}"></aichat>
+			<div id="disambiguate-header" class="horizontal-layout" *ngIf="workflowStep === WorkflowStep.DisambiguateObject">
+				<p-button severity="secondary" pTooltip="Erase conversation" (onClick)="cancelDisambiguation()">
+					<fa-icon [icon]="backIcon"></fa-icon>
+					<label>Cancel</label>
+				</p-button>
+				<h2>Select An Object</h2>
+				<p-button severity="secondary" pTooltip="Use the selected object to resolve the ambiguity" (onClick)="disambiguate()" [disabled]="selectedObject == null">
+					<label>Select</label>
+					<fa-icon [icon]="forwardIcon"></fa-icon>
+				</p-button>
+			</div>
+			
 			<!-- <input type="text" style="height: 40px; width: 96% !important; margin: 10px;" placeholder="Search for an object"> -->
 
 			<results-table *ngIf="selectedObject == null"></results-table>

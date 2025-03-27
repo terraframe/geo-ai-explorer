@@ -40,6 +40,7 @@ export class ChatService {
           sender: 'system',
           text: response.content,
           mappable: response.mappable,
+          ambiguous: response.ambiguous,
           purpose: 'standard'
         };
         return chatMessage;

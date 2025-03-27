@@ -8,7 +8,7 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, getPage, highlightedObject, selectedObject } from '../state/explorer.state';
+import { ExplorerActions, getPage, getWorkflowStep, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
 import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
@@ -21,6 +21,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     styleUrl: './results-table.component.scss',
 })
 export class ResultsTableComponent implements OnInit, OnDestroy {
+    public WorkflowStep = WorkflowStep;
     private store = inject(Store);
 
     page$: Observable<LocationPage> = this.store.select(getPage);
@@ -33,11 +34,21 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     public highlightedObjectUri: string | null | undefined;
 
+    workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+    
+    onWorkflowStepChange: Subscription;
+
+    public workflowStep: WorkflowStep = WorkflowStep.AiChatAndResults;
+
     constructor(
         private chatService: ChatService
     ) {
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
             this.highlightObject(object == null ? undefined : object.properties.uri);
+        });
+
+        this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
+            this.workflowStep = step;
         });
     }
 
@@ -47,6 +58,16 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
 
+    }
+
+    calculateScrollHeight(): string {
+        if (this.workflowStep == WorkflowStep.DisambiguateObject) {
+            return "calc(100vh - 75px)"
+        } else if (this.workflowStep === WorkflowStep.MinimizeChat) {
+            return "calc(100vh - 50px)";
+        } else {
+            return "calc(50vh - 3rem)";
+        }
     }
 
     onClick(obj: GeoObject): void {

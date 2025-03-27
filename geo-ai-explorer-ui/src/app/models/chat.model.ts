@@ -12,6 +12,7 @@ export interface ChatMessage {
   sender: 'user' | 'system';
   text: string;
   mappable: boolean;
+  ambiguous?: boolean;
   sections?: MessageSection[];
   loading?: boolean;
   purpose: 'info' | 'standard'
@@ -21,6 +22,7 @@ export interface ServerChatResponse {
   content: string;
   sessionId: string;
   mappable: boolean;
+  ambiguous: boolean;
 }
 
 export interface LocationPage {

@@ -7,6 +7,7 @@ export interface GeoObject {
     properties: {
         uri: string,
         type: string,
+        code: string,
         label: string,
         edges: { [key: string]: [string] }, [key: string]: any
     }

@@ -28,6 +28,9 @@ import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
 import { environment } from '../../environments/environment';
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { ButtonModule } from 'primeng/button';
 
 
 @Component({
@@ -44,12 +47,17 @@ import { environment } from '../../environments/environment';
         PanelModule,
         ToastModule,
         TabsModule,
-        CheckboxModule
+        CheckboxModule,
+        FontAwesomeModule,
+        ButtonModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
 export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
+    public WorkflowStep = WorkflowStep;
+    public backIcon = faArrowLeft;
+    public forwardIcon = faArrowRight;
 
     public static GEO = "http://www.opengis.net/ont/geosparql#";
 
@@ -128,8 +136,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public workflowStep: WorkflowStep = WorkflowStep.AiChatAndResults;
 
-    public smallAiChat = false;
-
     private zoomMap: boolean = false;
 
     public activeTab: string = '0';
@@ -173,7 +179,6 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
             this.workflowStep = step;
-            this.smallAiChat = step === WorkflowStep.MinimizeChat;
         });
     }
 
@@ -188,6 +193,28 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.onVectorLayersChange.unsubscribe();
         this.onSelectedObjectChange.unsubscribe();
         this.onHighlightedObjectChange.unsubscribe();
+    }
+
+    cancelDisambiguation() {
+        this.store.dispatch(ExplorerActions.setPage({ page: { 
+            locations: [],
+            statement: "",
+            limit: 100,
+            offset: 0,
+            count: 0
+        }, zoomMap: false }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+    }
+
+    disambiguate() {
+        this.store.dispatch(ExplorerActions.setPage({ page: { 
+            locations: [],
+            statement: "",
+            limit: 100,
+            offset: 0,
+            count: 0
+        }, zoomMap: false }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults, data: this.selectedObject }));
     }
 
     onTabChange(event: any) {

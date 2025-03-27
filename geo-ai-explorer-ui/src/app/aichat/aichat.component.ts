@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Store } from '@ngrx/store';
-import { Observable, Subscription, take } from 'rxjs';
+import { combineLatest, debounceTime, Observable, Subscription, take, withLatestFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEraser, faDownLeftAndUpRightToCenter, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
@@ -14,8 +14,10 @@ import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
 import { ChatActions, getMessages, getSessionId } from '../state/chat.state';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, WorkflowStep } from '../state/explorer.state';
+import { ExplorerActions, getWorkflowData, getWorkflowStep, WorkflowStep } from '../state/explorer.state';
 import { ExplorerService } from '../service/explorer.service';
+import { GeoObject } from '../models/geoobject.model';
+import { debounce } from 'lodash';
 
 @Component({
   selector: 'aichat',
@@ -36,6 +38,10 @@ export class AichatComponent {
 
   onMessagesChange: Subscription;
 
+  workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+  workflowData$: Observable<any> = this.store.select(getWorkflowData);
+  onWorkflowStepChange: Subscription;
+
   public loading: boolean = false;
   public mapLoading: boolean = false;
 
@@ -47,12 +53,29 @@ export class AichatComponent {
     private chatService: ChatService,
     private explorerService: ExplorerService,
     private errorService: ErrorService) {
+
     this.onMessagesChange = this.messages$.subscribe(messages => {
       this.renderedMessages = [...messages].reverse();
     });
+
+    this.onWorkflowStepChange = combineLatest([
+      this.workflowStep$,
+      this.workflowData$
+    ]).subscribe(([step, data]) => {
+      if (step === WorkflowStep.AiChatAndResults && data != null) {
+        let go = (data as GeoObject);
+        this.message = go.properties.type.split("rdfs#")[1] + " " + go.properties.code;
+        this.sendMessage();
+      }
+    });
   }
 
-  sendMessage() {
+  ngOnDestroy(): void {
+    this.onMessagesChange.unsubscribe();
+    this.onWorkflowStepChange.unsubscribe();
+}
+
+  sendMessage(): void {
     if (this.message.trim()) {
       if (this.minimized)
         this.minimizeChat();
@@ -91,6 +114,7 @@ export class AichatComponent {
             ...system,
             text: response.text,
             mappable: response.mappable,
+            ambiguous: response.ambiguous,
             loading: false
           }));
         }).catch(error => {
@@ -130,8 +154,17 @@ export class AichatComponent {
 
       if (index !== -1) {
         let history = [...messages];
-        history.splice(index);
+        history.splice(index + (message.ambiguous ? 1 : 0));
         history = history.filter(m => m.purpose === 'standard');
+
+        if (message.ambiguous)
+          history.push({
+            id: uuidv4(),
+            sender: "user",
+            purpose: "standard",
+            text: "Please return me a list of objects to help me disambiguate",
+            mappable: false
+          });
 
         this.mapLoading = true;
 
@@ -142,11 +175,18 @@ export class AichatComponent {
             zoomMap: true
           }));
 
+          if (message.ambiguous)
+            this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.DisambiguateObject }));
+
         }).catch(error => this.errorService.handleError(error)).finally(() => {
           this.mapLoading = false;
         })
       }
     });
+  }
+
+  setWorkflowStepDisambiguate(message: ChatMessage) {
+    this.mapIt(message);
   }
 
   clear(): void {

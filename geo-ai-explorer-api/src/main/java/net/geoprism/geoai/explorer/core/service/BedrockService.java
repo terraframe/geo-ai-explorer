@@ -84,11 +84,13 @@ public class BedrockService
 
     String value = content.toString();
     boolean mappable = value.contains("#mapit");
+    boolean ambiguous = !mappable && value.toLowerCase().contains("i found multiple");
 
     Message message = new Message();
     message.setContent(value.replace("#mapit", ""));
     message.setSessionId(sessionId);
     message.setMappable(mappable);
+    message.setAmbiguous(ambiguous);
 
     return message;
   }
