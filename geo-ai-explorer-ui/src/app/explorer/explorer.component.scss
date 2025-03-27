@@ -18,10 +18,18 @@ aichat {
   width: 100%;
 }
 
+aichat.small-ai-chat {
+  height: 60px;
+}
+
 results-table {
   height: 50vh;
   width: 100%;
   // overflow: scroll;
+}
+
+results-table.small-ai-chat {
+  height: calc(100vh - 60px);
 }
 
 #graphExplorerContainer {

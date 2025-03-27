@@ -24,8 +24,17 @@ export const ExplorerActions = createActionGroup({
         'Set Styles': props<{ styles: StyleConfig }>(),
         'Set Vector Layer': props<{ layer: VectorLayer }>(),
         'Set Configuration': props<Configuration>(),
+        'Set Workflow Step': props<{ step: WorkflowStep }>()
     },
 });
+
+export enum WorkflowStep {
+    AiChatAndResults = 'AiChatAndResults',
+    DisambiguateObject = 'DisambiguateObject',
+    ViewNeighbors = 'ViewNeighbors',
+    InspectObject = 'InspectObject',
+    MinimizeChat = 'MinimizeChat'
+}
 
 export interface ExplorerStateModel {
     neighbors: GeoObject[];
@@ -34,7 +43,8 @@ export interface ExplorerStateModel {
     highlightedObject: GeoObject | null;
     zoomMap: boolean;
     vectorLayers: VectorLayer[];
-    page: LocationPage
+    page: LocationPage;
+    workflowStep: WorkflowStep;
 }
 
 export const initialState: ExplorerStateModel = {
@@ -44,7 +54,8 @@ export const initialState: ExplorerStateModel = {
     zoomMap: false,
     highlightedObject: null,
     vectorLayers: [],
-    page: {
+    workflowStep: WorkflowStep.AiChatAndResults,
+    page: { 
         locations: [],
         statement: "",
         limit: 100,
@@ -173,6 +184,13 @@ export const explorerReducer = createReducer(
         ...state,
         styles: styles
     })),
+
+    // Set Workflow Step
+    on(ExplorerActions.setWorkflowStep, (state, { step }) => ({
+        ...state,
+        workflowStep: step
+    })),
+    
 );
 
 
@@ -210,4 +228,4 @@ export const getVectorLayers = createSelector(selector, (s) => {
     return s.vectorLayers
 });
 
-
+export const getWorkflowStep = createSelector(selector, (s) => s.workflowStep);

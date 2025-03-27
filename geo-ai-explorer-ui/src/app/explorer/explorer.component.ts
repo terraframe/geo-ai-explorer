@@ -23,7 +23,7 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -83,6 +83,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onHighlightedObjectChange: Subscription;
 
+    workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+
+    onWorkflowStepChange: Subscription;
+
     resolvedStyles: StyleConfig = {};
 
     public inspectorTab = 0;
@@ -121,6 +125,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     vectorLayers$: Observable<VectorLayer[]> = this.store.select(getVectorLayers);
 
     onVectorLayersChange: Subscription;
+
+    public workflowStep: WorkflowStep = WorkflowStep.AiChatAndResults;
+
+    public smallAiChat = false;
 
     private zoomMap: boolean = false;
 
@@ -161,6 +169,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
             this.highlightObject(object == null ? undefined : object.properties.uri);
+        });
+
+        this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
+            this.workflowStep = step;
+            this.smallAiChat = step === WorkflowStep.MinimizeChat;
         });
     }
 

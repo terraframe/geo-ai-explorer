@@ -7,7 +7,7 @@
 		<div id="left-panel" class="vertical-layout">
 			<div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 
-			<aichat></aichat>
+			<aichat [class]="{'small-ai-chat' : smallAiChat}"></aichat>
 
 			<!-- <input type="text" style="height: 40px; width: 96% !important; margin: 10px;" placeholder="Search for an object"> -->
 

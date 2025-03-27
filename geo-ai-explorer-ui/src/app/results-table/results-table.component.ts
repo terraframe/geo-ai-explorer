@@ -11,10 +11,12 @@ import { Store } from '@ngrx/store';
 import { ExplorerActions, getPage, highlightedObject, selectedObject } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
+import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
     selector: 'results-table',
-    imports: [TableModule, PaginatorModule, LetDirective, CommonModule],
+    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss',
 })

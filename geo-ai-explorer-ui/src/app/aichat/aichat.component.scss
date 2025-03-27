@@ -9,6 +9,12 @@
   box-sizing: border-box; /* Ensures the border is included in the width/height calculations */
 }
 
+.minimize-chat-icon {
+  position:absolute;
+  left: 5px;
+  top: 5px;
+}
+
 .messages {
   flex-grow: 1;
   overflow-y: auto;

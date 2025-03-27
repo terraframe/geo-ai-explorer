@@ -8,13 +8,13 @@ import { Store } from '@ngrx/store';
 import { Observable, Subscription, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEraser } from '@fortawesome/free-solid-svg-icons';
+import { faEraser, faDownLeftAndUpRightToCenter, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
 
 import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
 import { ChatActions, getMessages, getSessionId } from '../state/chat.state';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions } from '../state/explorer.state';
+import { ExplorerActions, WorkflowStep } from '../state/explorer.state';
 import { ExplorerService } from '../service/explorer.service';
 
 @Component({
@@ -25,6 +25,8 @@ import { ExplorerService } from '../service/explorer.service';
 })
 export class AichatComponent {
   icon = faEraser;
+  public minimizeIcon = faDownLeftAndUpRightToCenter;
+  public upsizeIcon = faUpRightAndDownLeftFromCenter;
   private store = inject(Store);
 
   message: string = '';
@@ -39,6 +41,8 @@ export class AichatComponent {
 
   public renderedMessages: ChatMessage[] = [];
 
+  public minimized: boolean = false;
+
   constructor(
     private chatService: ChatService,
     private explorerService: ExplorerService,
@@ -50,6 +54,8 @@ export class AichatComponent {
 
   sendMessage() {
     if (this.message.trim()) {
+      if (this.minimized)
+        this.minimizeChat();
 
       this.sessionId$.pipe(take(1)).subscribe(sessionId => {
         const message: ChatMessage = {
@@ -101,6 +107,19 @@ export class AichatComponent {
           this.loading = false;
         })
       });
+    }
+  }
+
+  minimizeChat() {
+    if (!this.minimized)
+    {
+      this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
+      this.minimized = true;
+    }
+    else
+    {
+      this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+      this.minimized = false;
     }
   }
 
