@@ -154,17 +154,8 @@ export class AichatComponent {
 
       if (index !== -1) {
         let history = [...messages];
-        history.splice(index + (message.ambiguous ? 1 : 0));
+        history.splice(index);
         history = history.filter(m => m.purpose === 'standard');
-
-        if (message.ambiguous)
-          history.push({
-            id: uuidv4(),
-            sender: "user",
-            purpose: "standard",
-            text: "Please return me a list of objects to help me disambiguate",
-            mappable: false
-          });
 
         this.mapLoading = true;
 
@@ -186,7 +177,23 @@ export class AichatComponent {
   }
 
   setWorkflowStepDisambiguate(message: ChatMessage) {
-    this.mapIt(message);
+    this.mapLoading = true;
+
+    const match = message.text.match(/<name>(.*?)<\/name>/);
+    let query = match ? match[1] : "";
+
+    this.explorerService.fullTextLookup(query).then((page) => {
+
+      this.store.dispatch(ExplorerActions.setPage({
+        page,
+        zoomMap: true
+      }));
+
+      this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.DisambiguateObject }));
+
+    }).catch(error => this.errorService.handleError(error)).finally(() => {
+      this.mapLoading = false;
+    })
   }
 
   clear(): void {

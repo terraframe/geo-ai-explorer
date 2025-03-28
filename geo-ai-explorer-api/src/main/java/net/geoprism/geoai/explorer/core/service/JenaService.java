@@ -15,6 +15,7 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import java.util.Map;
 import org.apache.jena.geosparql.implementation.parsers.wkt.WKTReader;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -37,6 +39,7 @@ import net.geoprism.geoai.explorer.core.config.AppProperties;
 import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.Graph;
 import net.geoprism.geoai.explorer.core.model.Location;
+import net.geoprism.geoai.explorer.core.model.LocationPage;
 
 @Service
 public class JenaService
@@ -156,6 +159,27 @@ public class JenaService
         }
         LIMIT 50
       """;
+  
+  public static String FULL_TEXT_LOOKUP = PREFIXES + """
+  		PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX text: <http://jena.apache.org/text#>
+        PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+        
+        SELECT ?uri ?type ?code ?label ?wkt
+        FROM <https://localhost:4200/lpg/graph_801104/0#>
+        WHERE {{
+          (?uri ?score) text:query (rdfs:label ?query) .
+          ?uri lpgs:GeoObject-code ?code .
+          ?uri rdfs:label ?label .
+          ?uri a ?type .
+          OPTIONAL {
+              ?uri geo:hasGeometry ?g .
+              ?g geo:asWKT ?wkt .
+          }
+        }}
+        ORDER BY DESC(?score)
+  """;
 
   @Autowired
   private AppProperties      properties;
@@ -340,6 +364,59 @@ public class JenaService
     }
 
     return results;
+  }
+  
+  public LocationPage fullTextLookup(String query, int offset, int limit)
+  {
+    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create().destination(properties.getJenaUrl());
+    
+    List<Location> results = new ArrayList<Location>();
+
+    try (RDFConnection conn = builder.build())
+    {
+      var sparql = FULL_TEXT_LOOKUP;
+      sparql += " LIMIT " + limit + " OFFSET " + offset;
+    	
+      // Use ParameterizedSparqlString to inject the URI safely
+      ParameterizedSparqlString pss = new ParameterizedSparqlString();
+      pss.setCommandText(sparql);
+      
+      System.out.println("Setting query as " + query);
+//      pss.setIri("query", query);
+      pss.setLiteral("query", query);
+      
+      System.out.println("Executing Full Text Query SPARQL:");
+      System.out.println(pss.asQuery());
+      
+      try (QueryExecution qe = conn.query(pss.asQuery()))
+      {
+        ResultSet rs = qe.execSelect();
+        
+        while (rs.hasNext()) {
+            QuerySolution qs = rs.next();
+            
+	        String uri = qs.getResource("uri").getURI();
+	        String type = qs.getResource("type").getURI();
+	        String code = qs.getLiteral("code").getString();
+	        String label = qs.getLiteral("label").getString();
+	        String wkt = qs.getLiteral("wkt").getString();
+	
+	        WKTReader reader = WKTReader.extract(wkt);
+	        Geometry geometry = reader.getGeometry();
+	
+	        results.add(new Location(uri, type, code, label, geometry));
+        }
+      }
+    }
+    
+    LocationPage page = new LocationPage();
+    page.setLocations(results);
+    page.setCount(results.size());
+    page.setLimit(100);
+    page.setOffset(0);
+    page.setStatement(FULL_TEXT_LOOKUP);
+
+    return page;
   }
 
 }

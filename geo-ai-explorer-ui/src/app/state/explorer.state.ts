@@ -127,7 +127,10 @@ export const explorerReducer = createReducer(
     // Select geo object
     on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => {
 
-        const styles = resolveMissingStyles(state.styles, [ object ]);
+        let styles = state.styles
+
+        if (object != null)
+            styles = resolveMissingStyles(state.styles, [ object ]) as StyleConfig;
 
         return {
             ...state,

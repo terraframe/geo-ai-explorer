@@ -7,6 +7,7 @@ import { GprGraph } from '../graph-explorer/graph-explorer.component';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { LocationPage } from '../models/chat.model';
 
 export interface SPARQLResultSetBinding {
     type: string, value: string, datatype?: string
@@ -51,6 +52,10 @@ export class ExplorerService {
 
     // Uncomment below to make a real HTTP request
     return firstValueFrom(this.http.post<GprGraph>(environment.apiUrl + 'api/neighbors', { uri: uri }));
+  }
+
+  fullTextLookup(query: string): Promise<LocationPage> {
+    return firstValueFrom(this.http.post<LocationPage>(environment.apiUrl + 'api/full-text-lookup', { query: query }));
   }
 
   async query(sparqlText: string): Promise<SPARQLResultSet> {

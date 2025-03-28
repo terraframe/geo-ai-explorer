@@ -15,6 +15,7 @@
  */
 package net.geoprism.geoai.explorer.web.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import net.geoprism.geoai.explorer.core.model.Graph;
 import net.geoprism.geoai.explorer.core.model.Location;
+import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.service.JenaService;
+import software.amazon.awssdk.utils.StringUtils;
 
 @RestController
 @Validated
@@ -53,6 +56,33 @@ public class ExplorerController
     Graph graph = this.jena.neighbors(uri);
 
     return new ResponseEntity<Graph>(graph, HttpStatus.OK);
+  }
+  
+  @PostMapping("/api/full-text-lookup")
+  @ResponseBody
+  public ResponseEntity<LocationPage> fullTextLookup(@RequestBody Map<String, String> request)
+  {
+    String query = request.get("query");
+
+    if (query == null || query.isBlank())
+    {
+      return ResponseEntity.badRequest().build();
+    }
+    
+    LocationPage locations = this.jena.fullTextLookup(query, parseRequestInt(request, "offset", 0), parseRequestInt(request, "limit", 1000));
+
+    return new ResponseEntity<LocationPage>(locations, HttpStatus.OK);
+  }
+  
+  private int parseRequestInt(Map<String, String> request, String param, int defaultValue)
+  {
+	  Integer out = defaultValue;
+	  String sObj = request.get(param);
+	  
+	  if (StringUtils.isNotBlank(sObj))
+		  out = Integer.parseInt(sObj);
+	  
+	  return out;
   }
 
   @GetMapping("/api/get-attributes")
