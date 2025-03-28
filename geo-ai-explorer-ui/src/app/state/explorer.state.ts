@@ -125,11 +125,17 @@ export const explorerReducer = createReducer(
     }),
 
     // Select geo object
-    on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => ({
-        ...state,
-        selectedObject: object,
-        zoomMap: zoomMap
-    })),
+    on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => {
+
+        const styles = resolveMissingStyles(state.styles, [ object ]);
+
+        return {
+            ...state,
+            styles: styles != null ? styles : state.styles,
+            selectedObject: object,
+            zoomMap
+        };
+    }),
 
     // Highlight geo object
     on(ExplorerActions.highlightGeoObject, (state, { object }) => ({

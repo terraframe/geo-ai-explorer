@@ -64,7 +64,7 @@ export class AichatComponent {
     ]).subscribe(([step, data]) => {
       if (step === WorkflowStep.AiChatAndResults && data != null) {
         let go = (data as GeoObject);
-        this.message = go.properties.type.split("rdfs#")[1] + " " + go.properties.code;
+        this.message = go.properties.code; // go.properties.type.split("rdfs#")[1] + " " + 
         this.sendMessage();
       }
     });
@@ -202,7 +202,7 @@ export class AichatComponent {
 
   select(uri: string): void {
 
-    this.explorerService.getAttributes(uri)
+    this.explorerService.getAttributes(uri, true)
       .then(geoObject => {
         this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: true }));
       })

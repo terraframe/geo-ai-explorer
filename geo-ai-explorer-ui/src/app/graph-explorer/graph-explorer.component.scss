@@ -6,7 +6,8 @@
     position: relative;
 
     // ng prime's tab panel has some sort of animation which causes us to slowly change height and glitch out
-    height: calc(50dvh - 9em);
+    // height: calc(50dvh - 9em);
+    height: 100%;
 }
 
 

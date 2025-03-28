@@ -164,7 +164,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.renderVectorLayers();
         });
 
-        this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$)).subscribe(([object, zoomMap]) => {
+        this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$, this.styles$)).subscribe(([object, zoomMap, styles]) => {
+            this.resolvedStyles = styles;
             this.selectObject(object, zoomMap);
 
             // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
@@ -1074,15 +1075,19 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.selectedObject = geoObject;
 
+            if (go == null) {
+                this.render();
+            }
+
             this.highlightObject();
 
             // The geo object does exist on the map
-            if (go != null) {
+            // if (go != null) {
                 if (zoomTo)
-                    this.zoomTo(go.properties.uri);
+                    this.zoomTo(this.selectedObject.properties.uri);
 
                 this.renderHighlights();
-            }
+            // }
         } else {
             this.selectedObject = undefined;
         }
