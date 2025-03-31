@@ -64,7 +64,7 @@ export class AichatComponent {
     ]).subscribe(([step, data]) => {
       if (step === WorkflowStep.AiChatAndResults && data != null) {
         let go = (data as GeoObject);
-        this.message = go.properties.code; // go.properties.type.split("rdfs#")[1] + " " + 
+        this.message = go.properties.uri;
         this.sendMessage();
       }
     });
