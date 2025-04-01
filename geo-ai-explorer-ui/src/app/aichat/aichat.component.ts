@@ -8,7 +8,7 @@ import { Store } from '@ngrx/store';
 import { combineLatest, debounceTime, Observable, Subscription, take, withLatestFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEraser, faDownLeftAndUpRightToCenter, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
+import { faEraser, faDownLeftAndUpRightToCenter, faUpRightAndDownLeftFromCenter, faUserTie, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import { ChatService } from '../service/chat-service.service';
 import { ChatMessage } from '../models/chat.model';
@@ -29,6 +29,8 @@ export class AichatComponent {
   icon = faEraser;
   public minimizeIcon = faDownLeftAndUpRightToCenter;
   public upsizeIcon = faUpRightAndDownLeftFromCenter;
+  public messageUserIcon = faUser;
+  public messageSenderIcon = faUpRightAndDownLeftFromCenter;
   private store = inject(Store);
 
   message: string = '';

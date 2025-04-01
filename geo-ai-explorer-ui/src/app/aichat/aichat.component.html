@@ -9,11 +9,16 @@
 
   <div *ngIf="!minimized" class="messages">
     <ng-container>
-      <div *ngFor="let msg of renderedMessages" class="message">
-        <strong>{{ msg.sender }}:</strong>
-        <label [for]="msg.id">
-          <ng-container *ngIf="msg.loading">
-             <div style="margin-left:16px; margin-top: 5px;" class="dot-pulse"></div>
+      <div *ngFor="let msg of renderedMessages" class="message" [class]="{'user' : msg.sender === 'user', 'system' : msg.sender === 'system'}">
+        <!-- <strong>{{ msg.sender }}:</strong> -->
+         <div class="sender-icon">
+            <fa-icon *ngIf="msg.sender === 'user'" class="icon" [icon]="messageUserIcon"></fa-icon>
+          <!-- <fa-icon *ngIf="msg.sender === 'system'" [icon]="messageSystemIcon"></fa-icon> -->
+             <img *ngIf="msg.sender === 'system'" src="assets/gpr.png">
+         </div>
+        <label [for]="msg.id" class="vertical-layout">
+          <ng-container *ngIf="msg.loading"> <!-- *ngIf="msg.loading" -->
+             <div class="dot-pulse-container"><div style="margin-left:16px; margin-right: 16px;" class="dot-pulse"></div></div>
           </ng-container>
           <ng-container *ngIf="!msg.loading">
             <ng-container *ngFor="let section of msg.sections">
@@ -23,13 +28,13 @@
                 <p-button [label]="section.text" [link]="true" (onClick)="select(section.uri!)"></p-button>
               </ng-container>
             </ng-container>
-            <div *ngIf="msg.mappable">
+            <div class="action" *ngIf="msg.mappable">
               <br />
-              <p-button class="btn btn-primary" (onClick)="mapIt(msg)">View details</p-button>
+              <p-button (onClick)="mapIt(msg)">View details</p-button>
             </div>
-            <div *ngIf="msg.ambiguous">
+            <div class="action" *ngIf="msg.ambiguous">
               <br />
-              <p-button class="btn btn-primary" (onClick)="setWorkflowStepDisambiguate(msg)">View Options</p-button>
+              <p-button (onClick)="setWorkflowStepDisambiguate(msg)">View Options</p-button>
             </div>
           </ng-container>
         </label>

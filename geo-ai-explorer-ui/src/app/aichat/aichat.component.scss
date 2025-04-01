@@ -29,11 +29,64 @@
   gap: 10px;
 }
 
+.sender-icon {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  margin-right: 20px;
+  background-color: rgb(138, 138, 138, 0.5);
+  border-radius: 18px;
+}
+
+.message .action {
+  text-align: center;
+  width: 100%;
+}
+
+.message fa-icon {
+  color: white;
+}
+
+.message.system .sender-icon {
+  margin-right: 0px;
+  margin-left: 20px;
+}
+
+.sender-icon .icon {
+  display: block;
+  height:100%;
+  width: 100%;
+}
+
+.sender-icon img {
+  height: 100%;
+  width: 100%;
+  padding: 20%;
+}
+
+::ng-deep .sender-icon .icon svg {
+  height: 60%;
+  width: 60%;
+  padding: 20%;
+}
+
 .message {
-  display: grid;
-  grid-template-columns: 4em auto; /* Sender column width, Message takes remaining space */
-  align-items: start;
-  gap: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-start;
+  margin-right: 30px;
+}
+
+.message.system {
+  flex-direction: row-reverse;
+  margin-left: 30px;
+  margin-right: 0px;
+}
+
+.message.system label {
+  background-color: #f1f3f4;
+  color: #202124;
 }
 
 .message strong {
@@ -43,10 +96,19 @@
 }
 
 .message label {
-  display: block;
+  // display: block;
   word-wrap: break-word;
-  overflow-wrap: break-word;
-  flex: 1;
+  overflow-wrap: anywhere;
+
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+
+  background-color: #e0f2f1;
+  color: #004d40;
+  border-radius: 16px;
+  padding: 10px;
 }
 
 
@@ -66,6 +128,13 @@ button {
   padding: 5px;
   margin-left: 5px;
   cursor: pointer;
+}
+
+.message.system .dot-pulse-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
 }
   
 
