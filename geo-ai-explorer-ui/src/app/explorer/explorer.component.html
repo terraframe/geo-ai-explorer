@@ -24,7 +24,7 @@
 
 			<results-table *ngIf="selectedObject == null"></results-table>
 
-			<div *ngIf="selectedObject" id="graphExplorerContainer">
+			<div *ngIf="selectedObject" id="graphExplorerContainer" [class]="{'bottom-panel-half' : workflowStep == WorkflowStep.AiChatAndResults, 'bottom-panel-disambig': workflowStep == WorkflowStep.DisambiguateObject, 'bottom-panel-minichat': workflowStep == WorkflowStep.MinimizeChat}">
 				<h2 class="inspector-title" style="margin: 10px; text-align: left;">{{selectedObject!.properties.label}}
 				</h2>
 

@@ -9,7 +9,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, getZoomMap, highlightedObject, selectedObject } from '../state/explorer.state';
+import { ExplorerActions, getWorkflowStep, getZoomMap, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
 import { Observable, Subscription, withLatestFrom } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
 
@@ -114,6 +114,10 @@ export class GraphExplorerComponent implements OnDestroy {
 
   onSelectedObjectChange: Subscription;
 
+  workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+      
+  onWorkflowStepChange: Subscription;
+
   private selectedObject: GeoObject | null = null;
 
   private highlightedObject: GeoObject | null = null;
@@ -136,6 +140,10 @@ export class GraphExplorerComponent implements OnDestroy {
         this.highlightedObject = object;
       }
     });
+
+    this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
+      window.setTimeout(() => { if (this.gprGraph != null) this.renderGraph(this.gprGraph, false) }, 500);
+    });
   }
 
   ngOnDestroy(): void {
@@ -143,6 +151,7 @@ export class GraphExplorerComponent implements OnDestroy {
 
     this.onSelectedObjectChange.unsubscribe();
     this.onHighlightedObjectChange.unsubscribe();
+    this.onWorkflowStepChange.unsubscribe();
   }
 
   public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
@@ -173,7 +182,7 @@ export class GraphExplorerComponent implements OnDestroy {
       });
   }
 
-  public renderGraph(graph: GprGraph) {
+  public renderGraph(graph: GprGraph, zoom: boolean = false) {
     this.gprGraph = graph;
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
 
@@ -212,6 +221,9 @@ export class GraphExplorerComponent implements OnDestroy {
     }, 100);
 
     this.resizeDimensions();
+
+    if (zoom != null)
+      window.setTimeout(() => { this.zoomToUri(this.selectedObject!.properties.uri); }, 500);
   }
 
 
