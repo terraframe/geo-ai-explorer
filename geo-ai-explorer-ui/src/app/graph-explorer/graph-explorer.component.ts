@@ -142,7 +142,7 @@ export class GraphExplorerComponent implements OnDestroy {
     });
 
     this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
-      window.setTimeout(() => { if (this.gprGraph != null) this.renderGraph(this.gprGraph, false) }, 500);
+      window.setTimeout(() => { if (this.gprGraph != null) this.renderGraph(this.gprGraph, false) }, 100);
     });
   }
 
@@ -222,8 +222,8 @@ export class GraphExplorerComponent implements OnDestroy {
 
     this.resizeDimensions();
 
-    if (zoom != null)
-      window.setTimeout(() => { this.zoomToUri(this.selectedObject!.properties.uri); }, 500);
+    if (zoom)
+      window.setTimeout(() => { this.zoomToUri(this.selectedObject!.properties.uri); }, 100);
   }
 
 
@@ -344,27 +344,11 @@ export class GraphExplorerComponent implements OnDestroy {
   }
 
   public zoomToUri(uri: string) {
-    // this.graph.zoomLevel = 10;
-    // this.graph.zoomToFit();
-
-    // this.graph.zoom(this.graph.zoomLevel - 1);
-    // if (this.graph.zoomLevel)
-    // console.log(this.graph.zoomLevel);
-
-    // console.log(this.graph.zoomLevel);
-    // this.graph.zoom(2);
-    // console.log(this.graph.zoomLevel);
-
     const desiredZoomLevel = 1.1;
 
     this.graph.zoom(desiredZoomLevel / this.graph.zoomLevel);
 
     this.graph.panToNodeId(this.uriToId(uri));
-
-    // window.setTimeout(() => {
-    //   this.graph.zoom(4);
-    //   this.graph.panToNodeId(this.uriToId(uri));
-    // }, 10);
   }
 
 }
