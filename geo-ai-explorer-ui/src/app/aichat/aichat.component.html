@@ -14,7 +14,7 @@
          <div class="sender-icon">
             <fa-icon *ngIf="msg.sender === 'user'" class="icon" [icon]="messageUserIcon"></fa-icon>
           <!-- <fa-icon *ngIf="msg.sender === 'system'" [icon]="messageSystemIcon"></fa-icon> -->
-             <img *ngIf="msg.sender === 'system'" src="assets/gpr.png">
+             <img *ngIf="msg.sender === 'system'" src="assets/system-logo.svg">
          </div>
         <label [for]="msg.id" class="vertical-layout">
           <ng-container *ngIf="msg.loading"> <!-- *ngIf="msg.loading" -->
