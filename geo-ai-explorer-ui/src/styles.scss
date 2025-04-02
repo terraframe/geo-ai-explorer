@@ -32,3 +32,15 @@ html, body {
     justify-content: center;
     z-index: 10; /* Ensures it is above other children */
   }
+
+  html, body {
+    font-family: 'Roboto', sans-serif;
+  }
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('assets/fonts/Roboto-Medium.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
