@@ -44,9 +44,16 @@ const parseText = (m: ChatMessage): ChatMessage => {
     const message = { ...m }
     message.sections = [];
 
-    const tokens = message.text.replaceAll('\n', "<br/>").split('<location>')
+    const match = message.text.match(/<name>(.*?)<\/name>/);
+    message.location = match ? match[1] : "";
 
-    const text = tokens.forEach(token => {
+    const tokens = message.text
+        .replaceAll(/<name>(.*?)<\/name>/g, "")
+        .replaceAll('\n', "<br/>")
+        .replaceAll('<br/><br/>', "<br/>")
+        .split('<location>')
+
+    tokens.forEach(token => {
 
         const pattern = /<label>(.*)<\/label><uri>(.*)<\/uri><\/location>(.*)/
 
@@ -95,7 +102,7 @@ export const initialState: ChatStateModel = {
 }
 
 // if (environment.mockRequests)
-    initialState.messages = MockUtil.messages.map(m => parseText(m));
+initialState.messages = MockUtil.messages.map(m => parseText(m));
 
 
 export const chatReducer = createReducer(

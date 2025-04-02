@@ -13,6 +13,7 @@ export interface ChatMessage {
   text: string;
   mappable: boolean;
   ambiguous?: boolean;
+  location?: string;
   sections?: MessageSection[];
   loading?: boolean;
   purpose: 'info' | 'standard'

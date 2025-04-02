@@ -17,6 +17,7 @@
     <java.version>17</java.version>
     <aws.version>2.29.6</aws.version>
     <spring.version>3.3.4</spring.version>
+    <geotools.version>32.2</geotools.version>
   </properties>
   <dependencies>
     <!--  Spring!  -->
@@ -76,7 +77,7 @@
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-geojson</artifactId>
-      <version>32.2</version>
+      <version>${geotools.version}</version>
     </dependency>
 
     <dependency>
@@ -93,6 +94,21 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
       <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.geotools/gt-shapefile -->
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-shapefile</artifactId>
+      <version>${geotools.version}</version>
+      <scope>test</scope>
+
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-epsg-hsql</artifactId>
+      <version>${geotools.version}</version>
+      <scope>test</scope>
+
     </dependency>
   </dependencies>
 
@@ -207,7 +223,7 @@
         <configuration>
           <excludes>
             <exclude>**IntegrationTest.java</exclude>
-          </excludes>          
+          </excludes>
         </configuration>
       </plugin>
       <!--  Copy over the compiled react code    -->

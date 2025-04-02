@@ -25,9 +25,10 @@
               <span *ngIf="section.type === 0" [innerHTML]="section.text">
               </span>
               <ng-container *ngIf="section.type === 1">
-                <p-button [label]="section.text" [link]="true" (onClick)="select(section.uri!)"></p-button>
+                 <a class="clickable" (click)="select($event, section.uri!)">{{section.text}}</a>
               </ng-container>
             </ng-container>
+            
             <div class="action" *ngIf="msg.mappable">
               <br />
               <p-button (onClick)="mapIt(msg)">View details</p-button>

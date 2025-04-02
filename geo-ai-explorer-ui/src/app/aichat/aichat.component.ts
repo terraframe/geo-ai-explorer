@@ -75,7 +75,7 @@ export class AichatComponent {
   ngOnDestroy(): void {
     this.onMessagesChange.unsubscribe();
     this.onWorkflowStepChange.unsubscribe();
-}
+  }
 
   sendMessage(): void {
     if (this.message.trim()) {
@@ -141,13 +141,11 @@ export class AichatComponent {
   }
 
   minimizeChat() {
-    if (!this.minimized)
-    {
+    if (!this.minimized) {
       this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
       this.minimized = true;
     }
-    else
-    {
+    else {
       this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
       this.minimized = false;
     }
@@ -185,10 +183,7 @@ export class AichatComponent {
   setWorkflowStepDisambiguate(message: ChatMessage) {
     this.mapLoading = true;
 
-    const match = message.text.match(/<name>(.*?)<\/name>/);
-    let query = match ? match[1] : "";
-
-    this.explorerService.fullTextLookup(query).then((page) => {
+    this.explorerService.fullTextLookup(message.location!).then((page) => {
 
       this.store.dispatch(ExplorerActions.setPage({
         page,
@@ -213,7 +208,10 @@ export class AichatComponent {
     }
   }
 
-  select(uri: string): void {
+  select(event: Event, uri: string): void {
+    console.log(event)
+
+    event.stopPropagation();
 
     this.explorerService.getAttributes(uri, true)
       .then(geoObject => {
