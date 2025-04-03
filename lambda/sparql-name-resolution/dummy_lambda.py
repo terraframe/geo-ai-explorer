@@ -9,15 +9,22 @@ load_dotenv()
 def execute(name: str) -> str:
     
     statement = (
-        f"PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>\n" 
+        f"PREFIX ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>\n"
         f"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
         f"PREFIX text: <http://jena.apache.org/text#>\n"
         f"PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>\n"
         
-        f"SELECT ?code ?type $s\n"
+        f"SELECT ?code ?type ?s\n"
         f"FROM <https://localhost:4200/lpg/graph_801104/0#>\n"
         f"WHERE {{\n"
-        f"  (?s ?score) text:query (rdfs:label '{name}') .\n"
+        f"  {{\n"
+        f"    (?s ?score) text:query (rdfs:label '{name}') .\n"
+        f"  }}\n"
+        f"  UNION\n"
+        f"  {{\n"
+        f"    ?s lpgs:GeoObject-code '{name}' .\n"
+        f"    BIND(1000000 AS ?score)\n"
+        f"  }}\n"
         f"  ?s lpgs:GeoObject-code ?code .\n"
         f"  ?s a ?type .\n"
         f"}}\n"
