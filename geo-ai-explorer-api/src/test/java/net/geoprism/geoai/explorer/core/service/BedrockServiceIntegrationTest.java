@@ -29,32 +29,37 @@ public class BedrockServiceIntegrationTest
   private BedrockService service;
 
   @Test
-  public void test()
-  {
-    // Placeholder
-  }
-
-  @Test
-  @Ignore
   public void testPrompt() throws InterruptedException, ExecutionException, TimeoutException
   {
     String sessionId = UUID.randomUUID().toString();
 
     Message message = service.prompt(sessionId, "what is the total population impacted if channel reach_25 floods?");
 
-    System.out.println(message.getContent());
-
     Assert.assertTrue(message.getContent().trim().length() > 0);
+    Assert.assertTrue(message.getContent().contains("I found multiple channel reaches with \"25\" in their name"));
+    Assert.assertTrue(message.getContent().contains("<location><label>"));
+    Assert.assertTrue(message.getContent().contains("<name>"));
     Assert.assertFalse(message.getMappable());
+    Assert.assertTrue(message.getAmbiguous());
     Assert.assertEquals(sessionId, message.getSessionId());
 
     message = service.prompt(sessionId, "CEMVK_RR_03_ONE_25");
 
-    System.out.println(message.getContent());
-
     Assert.assertTrue(message.getContent().trim().length() > 0);
+    Assert.assertTrue(message.getContent().contains("431,826"));
+    Assert.assertFalse(message.getContent().contains("<location><label>"));
     Assert.assertTrue(message.getMappable());
     Assert.assertEquals(sessionId, message.getSessionId());
+    Assert.assertFalse(message.getAmbiguous());
+
+    message = service.prompt(sessionId, "what school zones are impacted?");
+
+    Assert.assertTrue(message.getContent().trim().length() > 0);
+    Assert.assertTrue(message.getContent().contains("The following school districts would be impacted"));
+    Assert.assertTrue(message.getContent().contains("<location><label>"));
+    Assert.assertTrue(message.getMappable());
+    Assert.assertEquals(sessionId, message.getSessionId());
+    Assert.assertFalse(message.getAmbiguous());
   }
 
   @Test
@@ -69,8 +74,10 @@ public class BedrockServiceIntegrationTest
 
     String sparql = service.getLocationSparql(history);
 
-    System.out.println(sparql);
-
+    Assert.assertTrue(sparql.contains("CEMVK_RR_03_ONE_25"));
+    Assert.assertTrue(sparql.contains("ChannelHasLevee"));
+    Assert.assertTrue(sparql.contains("HasFloodZone"));
+    Assert.assertTrue(sparql.contains("TractAtRisk"));
     Assert.assertTrue(sparql.contains("?type"));
     Assert.assertTrue(sparql.contains("?code"));
     Assert.assertTrue(sparql.contains("?label"));
