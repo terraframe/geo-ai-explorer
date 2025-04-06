@@ -136,6 +136,10 @@ export class AichatComponent {
     }
   }
 
+  askNewQuestion() {
+    this.clear();
+  }
+
   minimizeChat() {
     if (!this.minimized) {
       this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
