@@ -117,7 +117,8 @@ export class AichatComponent {
             text: response.text,
             mappable: response.mappable,
             ambiguous: response.ambiguous,
-            loading: false
+            loading: false,
+            location: response.location
           }));
         }).catch(error => {
           this.errorService.handleError(error)
