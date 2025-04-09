@@ -15,11 +15,15 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,14 +87,23 @@ public class BedrockService
     }
 
     String value = content.toString();
+
+    Pattern pattern = Pattern.compile(".*<name>(.*?)<\\/name>.*");
+    Matcher matcher = pattern.matcher(value);
+    boolean find = matcher.find();
     boolean mappable = value.contains("#mapit");
-    boolean ambiguous = !mappable && (value.toLowerCase().contains("#ambiguous") || value.toLowerCase().contains("i found multiple"));
+    boolean ambiguous = !mappable && ( find && value.toLowerCase().contains("#ambiguous") || value.toLowerCase().contains("i found multiple") );
 
     Message message = new Message();
-    message.setContent(value.replace("#mapit", "").replace("#ambiguous", ""));
+    message.setContent(value.replace("#mapit", "").replace("#ambiguous", "").replaceFirst("<name>(.*?)<\\/name>", ""));
     message.setSessionId(sessionId);
     message.setMappable(mappable);
     message.setAmbiguous(ambiguous);
+
+    if (find)
+    {
+      message.setLocation(matcher.group(1));
+    }
 
     return message;
   }
@@ -137,11 +150,17 @@ public class BedrockService
 
   private BedrockAgentRuntimeAsyncClient getClient()
   {
+    final Duration timeout = Duration.of(2, ChronoUnit.MINUTES);
+
     Builder credentials = AwsBasicCredentials.builder() //
         .accessKeyId(properties.getAccessKeyId()) //
         .secretAccessKey(properties.getSecretAccessKey());
 
     BedrockAgentRuntimeAsyncClientBuilder builder = BedrockAgentRuntimeAsyncClient.builder() //
+        .overrideConfiguration((c) -> {
+          c.apiCallTimeout(timeout);
+          c.apiCallAttemptTimeout(timeout);
+        }) //
         .region(properties.getRegion()) //
         .credentialsProvider(StaticCredentialsProvider.create(credentials.build()));
 

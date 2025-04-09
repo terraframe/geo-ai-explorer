@@ -381,13 +381,8 @@ public class JenaService
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText(sparql);
       
-      System.out.println("Setting query as " + query);
-//      pss.setIri("query", query);
       pss.setLiteral("query", query);
-      
-      System.out.println("Executing Full Text Query SPARQL:");
-      System.out.println(pss.asQuery());
-      
+            
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {
         ResultSet rs = qe.execSelect();

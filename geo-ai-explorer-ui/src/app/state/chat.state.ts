@@ -44,11 +44,7 @@ const parseText = (m: ChatMessage): ChatMessage => {
     const message = { ...m }
     message.sections = [];
 
-    const match = message.text.match(/<name>(.*?)<\/name>/);
-    message.location = match ? match[1] : "";
-
     const tokens = message.text
-        .replaceAll(/<name>(.*?)<\/name>/g, "")
         .replaceAll('\n', "<br/>")
         .replaceAll('<br/><br/>', "<br/>")
         .split('<location>')
