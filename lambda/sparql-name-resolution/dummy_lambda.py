@@ -9,28 +9,46 @@ load_dotenv()
 def execute(name: str) -> str:
     
     statement = (
-        f"PREFIX ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>\n"
-        f"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
-        f"PREFIX text: <http://jena.apache.org/text#>\n"
-        f"PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>\n"
-        
-        f"SELECT ?code ?type ?s\n"
-        f"FROM <https://localhost:4200/lpg/graph_801104/0#>\n"
-        f"WHERE {{\n"
-        f"  {{\n"
-        f"    (?s ?score) text:query (rdfs:label '{name}') .\n"
-        f"  }}\n"
-        f"  UNION\n"
-        f"  {{\n"
-        f"    ?s lpgs:GeoObject-code '{name}' .\n"
-        f"    BIND(1000000 AS ?score)\n"
-        f"  }}\n"
-        f"  ?s lpgs:GeoObject-code ?code .\n"
-        f"  ?s a ?type .\n"
-        f"}}\n"
-        f"ORDER BY DESC(?score)\n"
-        f"LIMIT 100"
-    )
+	    f"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n"
+	    f"PREFIX ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>\n"
+	    f"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
+	    f"PREFIX text: <http://jena.apache.org/text#>\n"
+	    f"PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>\n"
+	    
+	    f"SELECT ?code ?type ?s\n"
+	    f"WHERE {{\n"
+	    f"  GRAPH ?g {{\n"
+	    f"    # We're looking for this\n"
+	    f"    BIND('{name}' AS ?search)\n"
+	    
+	    f"    {{\n"
+	    f"      # Full text search on the label field, which is used across all datasets\n"
+	    f"      (?s ?score) text:query (rdfs:label ?search) .\n"
+	    f"    }}\n"
+	    f"    UNION\n"
+	    f"    {{\n"
+	    f"      # Allow them to also search for objects by code\n"
+	    f"      ?s lpgs:GeoObject-code ?search .\n"
+	    f"      BIND(1000000 AS ?score)\n"
+	    f"    }}\n"
+	    f"    UNION\n"
+	    f"    {{\n"
+	    f"      # LDS often puts code in the altLabel\n"
+	    f"      ?s skos:altLabel ?search .\n"
+	    f"      BIND(1000000 AS ?score)\n"
+	    f"    }}\n"
+	    
+	    f"    # Code can either be GeoObject-code or altLabel, depending on which graph it comes from\n"
+	    f"    OPTIONAL {{ ?s lpgs:GeoObject-code ?geoCode . }}\n"
+	    f"    OPTIONAL {{ ?s skos:altLabel ?altCode . }}\n"
+	    f"    BIND(COALESCE(?geoCode, ?altCode) AS ?code)\n"
+	    
+	    f"    ?s a ?type .\n"
+	    f"  }}\n"
+	    f"}}\n"
+	    f"ORDER BY DESC(?score)\n"
+	    f"LIMIT 100"
+	)
     
     response = requests.post(os.getenv('JENA_URL'), data={'query': statement})
     
