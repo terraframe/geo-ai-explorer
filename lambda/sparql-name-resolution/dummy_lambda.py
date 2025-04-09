@@ -57,11 +57,13 @@ def execute(name: str) -> str:
     results = []
     
     for r in responseJson.get('results').get('bindings'):
-        data = {}
-        data['code'] = r.get('code').get('value')
-        data['type'] = r.get('type').get('value')        
-        data['uri'] = r.get('s').get('value')        
-        results.append(data)
+    	if 'code' in r:
+	        data = {}
+	        data['code'] = r.get('code').get('value')
+	        data['type'] = r.get('type').get('value')        
+	        data['uri'] = r.get('s').get('value')        
+	        results.append(data)
+    
 
     return results    
 
@@ -72,6 +74,13 @@ def lambda_handler(event, context):
     parameters = event.get('parameters', [])
 
     # Execute your business logic here. For more information, refer to: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html
+    
+    print("EVENT:", json.dumps(event))
+    if not parameters or "value" not in parameters[0]:
+        return {
+            "error": "Missing required 'value' parameter.",
+            "event": event
+        }
     
     result = execute(parameters[0]["value"])
 

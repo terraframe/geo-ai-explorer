@@ -404,7 +404,9 @@ lpgs:GeoObjectType-code - A string literal, defines the code of the GeoObject. C
 lpgs:GeoObjectType-uid - A generated, unique UUID for the object. Should not be shown to the end user as it does not contain much significance. Use code instead.
 
 
-Geometries for this dataset are stored in accordance with the GeoSPARQL standard, although you likely shouldn’t need to fetch them.
+Geometries for this dataset are stored in accordance with the GeoSPARQL standard and are only available on the lpgv dataset.
+?geoObject geo:hasGeometry ?geometry .
+?geometry geo:asWKT ?wkt .
 
 
 The ‘apex:’ datasets use the following attributes:
@@ -451,7 +453,6 @@ lpgvs:Project can be joined against cwbi:Remis_Project or cwbi:Program by code. 
 
 
 These objects are all conceptually very similar objects. The lpgvs:Project is the object which contains the geometries and have “geometric” relationships with objects, whereas the cwbi objects contain more “domain specific” data.
-
     """
 
     # Execute your business logic here. For more information, refer to: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html
