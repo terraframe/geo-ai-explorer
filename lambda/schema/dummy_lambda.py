@@ -273,6 +273,7 @@ lpgvs:RealProperty, lpgvs:RealProperty-realPropertyUse, String literal. Specifie
 lpgvs:School, lpgvs:School-population, Number. Population of the school.
 lpgvs:CensusTract, lpgvs:CensusTract-population, Number. Population of the census tract.
 
+When answering questions about population, you need to use CensusTract-population unless the user explicitly mentions number of students. Do not query for hospitals and real properties on flood zones to answer this question as it will not be accurate.
 
 ============
 Joining Data
