@@ -83,7 +83,7 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      future.get(30, TimeUnit.SECONDS);
+      future.get(2, TimeUnit.MINUTES);
     }
 
     String value = content.toString();
@@ -142,7 +142,7 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      future.get(30, TimeUnit.SECONDS);
+      future.get(2, TimeUnit.MINUTES);
     }
 
     return content.toString();
