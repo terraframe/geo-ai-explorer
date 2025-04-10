@@ -83,27 +83,21 @@ WHERE {
 }
 ===
 
-
 Note: Be as concise as possible.
 Do not include any explanations or apologies in your responses.
 Do not include any text except the SPARQL query generated.
-
 
 ======
 Schema
 ======
 
-
 The full schema of the database is provided. For each section, a short description of the schema will be provided, followed by the data. This schema will be used to generate SPARQL queries used to serve end-user requests.
 
-
 The ‘lpg’ schema often refers to ‘Geo-Object’, a concept coined by TerraFrame. A Geo-Object is a spatial concept, and can be thought of as a more formalized extension of a traditional GIS Feature. A GeoObjectType contains the metadata which defines the concrete GeoObject.
-
 
 ========
 Prefixes
 ========
-
 
 A full list of the prefixes used for the IRIs within this database.
 
@@ -118,21 +112,16 @@ A full list of the prefixes used for the IRIs within this database.
 @prefix lpgv: <https://localhost:4200/lpg/graph_801104/0#>
 @prefix lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
 
-
 Most of your queries will also need these prefixes:
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 
-
-
 =====
 Types
 =====
 
-
 A CSV list of (graph, type) pairs. This is the full list of rdf:type within the database.
-
 
 lpgv,lpgvs:Hospital
 lpgv,lpgvs:Dam
@@ -269,14 +258,11 @@ apex:levee-to-program,cwbi:Levee
 apex:WATER_SUPPLY_AGREEMENTS,cwbi:WaterSupplyContract
 apex:WATERWAY_TO_CHANNEL_AREA,cwbi:Waterway
 
-
 =====
 Edges
 =====
 
-
 A list of relationships between types. The relationship format is described as (SourceType)->[EdgeType]->(TargetType) and is directional from left to right. If a relationship is bi-directional it will be listed twice, one in each direction.
-
 
 (pm:Appropriation)->[cwbi:Fiscal_Year]->(cwbi:Fiscal_Year)
 (cwbi:CEFMSWorkItem)->[cwbi:AMSCO]->(cwbi:Program)
@@ -362,51 +348,36 @@ lpgvs:RecreationArea, lpgvs:WaterBody, lpgvs:UsaceRecreationArea, lpgvs:Project,
 Attributes
 ==========
 
-
 There are many ‘data’ attributes which exist on these types for which various information can be fetched. These data attributes, for example, may define a display label, a code, or even a ‘population’ which might be required to service a particular user query.
-
 
 rdfs:label - A string literal, defines the label of the GeoObject
 lpgs:GeoObjectType-code - A string literal, defines the code of the GeoObject. Code is the uniqueness constraint for this dataset.
 lpgs:GeoObjectType-uid - A generated, unique UUID for the object. Should not be shown to the end user as it does not contain much significance. Use code instead.
 
-
 Geometries for this dataset are stored in accordance with the GeoSPARQL standard and are only available on the lpgv dataset.
 ?geoObject geo:hasGeometry ?geometry .
 ?geometry geo:asWKT ?wkt .
 
-
 The ‘apex:’ datasets use the following attributes:
-
-
 rdfs:label - A string literal, defines the label of the object
 skos:altLabel - A string literal, often contains the code of the object (although not guaranteed)
 dct:description - A string literal, sometimes contains a description of the object
-
-
-
 
 # Code can either be GeoObject-code or altLabel, depending on which graph it comes from
 OPTIONAL { ?s lpgs:GeoObject-code ?geoCode . }
 OPTIONAL { ?s skos:altLabel ?altCode . }
 BIND(COALESCE(?geoCode, ?altCode) AS ?code)
 
-
-
-
 The following types contain domain specific attribution, where the type is listed first and an iri for the predicate which links to the literal is listed second, and then a description of the attribute is listed third.
-
 
 lpgvs:RealProperty, lpgvs:RealProperty-realPropertyType, String literal. Specifies the type of the property
 lpgvs:RealProperty, lpgvs:RealProperty-realPropertyUse, String literal. Specifies the usage of the property
 lpgvs:School, lpgvs:School-population, Number. Population of the school.
 lpgvs:CensusTract, lpgvs:CensusTract-population, Number. Population of the census tract.
 
-
 ============
 Joining Data
 ============
-
 
 lpgvs:Project can be joined against cwbi:Remis_Project or cwbi:Program by code. An example is as follows:
 
@@ -417,7 +388,6 @@ lpgvs:Project can be joined against cwbi:Remis_Project or cwbi:Program by code. 
 ?remisproj skos:altLabel "000510" .
 ?program a cwbi:Program .
 ?program skos:altLabel "000510" .
-
 
 These objects are all conceptually very similar objects. The lpgvs:Project is the object which contains the geometries and have “geometric” relationships with objects, whereas the cwbi objects contain more “domain specific” data.
     """
