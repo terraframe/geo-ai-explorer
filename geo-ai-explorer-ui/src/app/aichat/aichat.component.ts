@@ -191,6 +191,8 @@ export class AichatComponent {
         zoomMap: true
       }));
 
+      this.store.dispatch(ExplorerActions.selectGeoObject(null));
+
       this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.DisambiguateObject }));
 
     }).catch(error => this.errorService.handleError(error)).finally(() => {
