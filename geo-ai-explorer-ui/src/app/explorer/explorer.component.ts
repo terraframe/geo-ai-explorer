@@ -931,6 +931,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.initMap();
 
             this.initialized = true;
+
+            this.renderVectorLayers();
         });
 
         this.map.on('mousemove', this.highlightSelectedLayerOnMouseMove);
