@@ -88,77 +88,69 @@ public class JenaService
       """;
 
   public static String       NEIGHBOR_QUERY                 = PREFIXES + """
-        SELECT
-            ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
-            ?e1 ?ev1 # Outgoing Edge
-            ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
-            ?e2 ?ev2 # Incoming Edge
-            ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
-        WHERE {
-          BIND(geo:Feature as ?gf1) .
-          BIND(?uri as ?f1) .
+		PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+		PREFIX lpg: <https://localhost:4200/lpg#>
+		PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+		PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+		PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+		PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+		PREFIX spatialF: <http://jena.apache.org/function/spatial#>
+		
+		SELECT
+		?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
+		?e1 ?ev1 # Outgoing Edge
+		?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
+		?e2 ?ev2 # Incoming Edge
+		?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
+		FROM lpgv:
+		WHERE {
+			BIND(geo:Feature as ?gf1) .
+			BIND(?uri as ?f1) .
+		
+			# Source Object
+			?f1 a ?ft1 .
+			?f1 rdfs:label ?lbl1 .
+			?f1 lpgs:GeoObject-code ?code1 .
+	
+			OPTIONAL {
+				?f1 geo:hasGeometry ?g1 .
+				?g1 geo:asWKT ?wkt1 .
+			}
+			
+			{
+				# Outgoing Relationship
+				?f1 ?e1 ?f2 .
+				?f2 a ?ft2 .
+				?f2 rdfs:label ?lbl2 .
+				?f2 lpgs:GeoObject-code ?code2 .
+				
+				BIND(geo:Feature as ?gf2) .
+				BIND(?f2 as ?ev1) .
 
-          # Source Object
-          GRAPH lpgv: {
-              ?f1 a ?ft1 .
-              ?f1 rdfs:label ?lbl1 .
-              ?f1 lpgs:GeoObject-code ?code1 .
+				OPTIONAL {
+					?f2 geo:hasGeometry ?g2 .
+					?g2 geo:asWKT ?wkt2 .
+				}
+			}
+			UNION
+			{
+				# Incoming Relationship
+				?f3 ?e2 ?f1 .
+				?f3 a ?ft3 .
+				?f3 rdfs:label ?lbl3 .
+				?f3 lpgs:GeoObject-code ?code3 .
+				
+				BIND(geo:Feature as ?gf3) .
+				BIND(?f3 as ?ev2) .
 
-              OPTIONAL {
-                  ?f1 geo:hasGeometry ?g1 .
-                  ?g1 geo:asWKT ?wkt1 .
-              }
-          }
-          GRAPH lpg: {
-             ?ft1 rdfs:subClassOf  lpgs:GeoObject .
-          }
-
-          {
-            # Outgoing Relationship
-            BIND(geo:Feature as ?gf2) .
-            BIND(?f2 as ?ev1) .
-
-            GRAPH lpgv: {
-                ?f1 ?e1 ?f2 .
-                ?f2 a ?ft2 .
-                ?f2 rdfs:label ?lbl2 .
-                ?f2 lpgs:GeoObject-code ?code2 .
-
-                OPTIONAL {
-                    ?f2 geo:hasGeometry ?g2 .
-                    ?g2 geo:asWKT ?wkt2 .
-                }
-            }
-
-            GRAPH lpg: {
-                ?ft2 rdfs:subClassOf  lpgs:GeoObject .
-            }
-          }
-          UNION
-          {
-              # Incoming Relationship
-              BIND(geo:Feature as ?gf3) .
-              BIND(?f3 as ?ev2) .
-
-              GRAPH lpgv: {
-                  ?f3 ?e2 ?f1 .
-                  ?f3 a ?ft3 .
-                  ?f3 rdfs:label ?lbl3 .
-                  ?f3 lpgs:GeoObject-code ?code3 .
-
-                  OPTIONAL {
-                      ?f3 geo:hasGeometry ?g3 .
-                      ?g3 geo:asWKT ?wkt3 .
-                  }
-              }
-
-              GRAPH lpg: {
-                  ?ft3 rdfs:subClassOf  lpgs:GeoObject .
-              }
-          }
-        }
-        LIMIT 50
-      """;
+				OPTIONAL {
+					?f3 geo:hasGeometry ?g3 .
+					?g3 geo:asWKT ?wkt3 .
+				}
+			}
+		}
+		LIMIT 50
+""";
   
   public static String FULL_TEXT_LOOKUP = PREFIXES + """
   		PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
