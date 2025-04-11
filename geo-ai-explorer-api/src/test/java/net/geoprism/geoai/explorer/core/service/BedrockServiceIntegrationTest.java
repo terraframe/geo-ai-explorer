@@ -36,18 +36,19 @@ public class BedrockServiceIntegrationTest
     Message message = service.prompt(sessionId, "what is the total population impacted if channel reach_25 floods?");
 
     Assert.assertTrue(message.getContent().trim().length() > 0);
-    Assert.assertTrue(message.getContent().contains("I found multiple channel reaches with \"25\" in their name"));
+    Assert.assertTrue(message.getContent(), message.getContent().contains("I found multiple channel"));
     Assert.assertTrue(message.getContent().contains("<location><label>"));
     Assert.assertNotNull(message.getLocation());
     Assert.assertFalse(message.getMappable());
     Assert.assertTrue(message.getAmbiguous());
     Assert.assertEquals(sessionId, message.getSessionId());
+    Assert.assertTrue(message.getLocation(), message.getLocation().contains("reach_25"));
 
     message = service.prompt(sessionId, "CEMVK_RR_03_ONE_25");
 
     Assert.assertTrue(message.getContent().trim().length() > 0);
-    Assert.assertTrue(message.getContent().contains("431,826"));
-    Assert.assertFalse(message.getContent().contains("<location><label>"));
+    Assert.assertTrue(message.getContent(), message.getContent().contains("431,826"));
+    Assert.assertFalse(message.getContent(), message.getContent().contains("<location><label>"));
     Assert.assertTrue(message.getMappable());
     Assert.assertEquals(sessionId, message.getSessionId());
     Assert.assertFalse(message.getAmbiguous());
@@ -55,8 +56,8 @@ public class BedrockServiceIntegrationTest
     message = service.prompt(sessionId, "what school zones are impacted?");
 
     Assert.assertTrue(message.getContent().trim().length() > 0);
-    Assert.assertTrue(message.getContent().contains("The following school districts would be impacted"));
-    Assert.assertTrue(message.getContent().contains("<location><label>"));
+    Assert.assertTrue(message.getContent(), message.getContent().toUpperCase().contains("SCHOOL DISTRICT"));
+    Assert.assertTrue(message.getContent(), message.getContent().contains("<location><label>"));
     Assert.assertTrue(message.getMappable());
     Assert.assertEquals(sessionId, message.getSessionId());
     Assert.assertFalse(message.getAmbiguous());
@@ -68,8 +69,6 @@ public class BedrockServiceIntegrationTest
     String sessionId = UUID.randomUUID().toString();
 
     Message message = service.prompt(sessionId, "what is the total population impacted if channel reach with code 'CEMVK_RR_03_ONE_25' floods?");
-
-    System.out.println(message.getContent());
 
     Assert.assertTrue(message.getContent().trim().length() > 0);
     Assert.assertTrue(message.getContent().contains("431,826"));

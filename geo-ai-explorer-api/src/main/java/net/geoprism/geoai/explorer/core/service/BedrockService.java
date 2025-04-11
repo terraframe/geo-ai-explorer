@@ -114,11 +114,13 @@ public class BedrockService
 
     try (BedrockAgentRuntimeAsyncClient client = getClient())
     {
+      String text = history.toText();
+
       InvokeAgentRequest request = InvokeAgentRequest.builder() //
           .agentId(properties.getSparqlAgentId()) //
           .agentAliasId(properties.getSparqlAgentAliasId()) //
           .sessionId(UUID.randomUUID().toString()) //
-          .inputText(history.toText()) //
+          .inputText(text) //
           .enableTrace(false) //
           // .sessionState(SessionState.builder()
           // .sessionAttributes(Map.of("Authorization", authToken))
@@ -145,7 +147,17 @@ public class BedrockService
       future.get(MAX_TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
-    return content.toString();
+    String text = content.toString();
+
+    int index = text.toUpperCase().indexOf("PREFIX");
+
+    // Cut out any reasoning from the text
+    if (index != -1)
+    {
+      return text.substring(index);
+    }
+
+    return text;
   }
 
   private BedrockAgentRuntimeAsyncClient getClient() {

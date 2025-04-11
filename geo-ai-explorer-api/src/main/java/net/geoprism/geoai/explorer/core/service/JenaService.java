@@ -205,7 +205,6 @@ public class JenaService
 
       conn.querySelect(sparql, (qs) -> {
         String uri = qs.getResource("uri").getURI();
-        
         String type = readString(qs, "type");
         String code = readString(qs, "code");
         String label = readString(qs, "label");
@@ -221,20 +220,24 @@ public class JenaService
       return results;
     }
   }
-  
+
   private String readString(QuerySolution qs, String name)
   {
-	  if (qs.contains(name))
-	  {
-		  var got = qs.get(name);
-		  
-		  if (got.isLiteral())
-			  return got.asLiteral().getString();
-		  else
-			  return got.asResource().getURI();
-	  }
-	  
-	  return "";
+    if (qs.contains(name))
+    {
+      RDFNode node = qs.get(name);
+
+      if (node.isLiteral())
+      {
+        return node.asLiteral().getString();
+      }
+      else
+      {
+        return node.asResource().getURI();
+      }
+    }
+
+    return "";
   }
 
   public Long getCount(String statement)
@@ -248,11 +251,20 @@ public class JenaService
 
     int selectIndex = statement.toUpperCase().indexOf("SELECT");
     int fromIndex = statement.toUpperCase().indexOf("FROM");
+    int groupByIndex = statement.toUpperCase().indexOf("GROUP BY");
 
     // Prefix section
     sparql.append(statement.substring(0, selectIndex));
     sparql.append("SELECT (COUNT(distinct ?uri) AS ?count)\n");
-    sparql.append(statement.substring(fromIndex));
+
+    if (groupByIndex != -1)
+    {
+      sparql.append(statement.substring(fromIndex, groupByIndex));
+    }
+    else
+    {
+      sparql.append(statement.substring(fromIndex));
+    }
 
     try (RDFConnection conn = builder.build())
     {
@@ -266,10 +278,10 @@ public class JenaService
 
   public Location getAttributes(final String uri, boolean includeGeometry)
   {
-//    if (uri.startsWith("<") && uri.endsWith(">"))
-//    {
-//      uri = uri.substring(1, uri.length() - 1);
-//    }
+    // if (uri.startsWith("<") && uri.endsWith(">"))
+    // {
+    // uri = uri.substring(1, uri.length() - 1);
+    // }
 
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
         .destination(properties.getJenaUrl());
@@ -373,45 +385,46 @@ public class JenaService
 
     return results;
   }
-  
+
   public LocationPage fullTextLookup(String query, int offset, int limit)
   {
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create().destination(properties.getJenaUrl());
-    
+
     List<Location> results = new ArrayList<Location>();
 
     try (RDFConnection conn = builder.build())
     {
       var sparql = FULL_TEXT_LOOKUP;
       sparql += " LIMIT " + limit + " OFFSET " + offset;
-    	
+
       // Use ParameterizedSparqlString to inject the URI safely
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText(sparql);
-      
+
       pss.setLiteral("query", query);
-            
+
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {
         ResultSet rs = qe.execSelect();
-        
-        while (rs.hasNext()) {
-            QuerySolution qs = rs.next();
-            
-	        String uri = qs.getResource("uri").getURI();
-	        String type = qs.getResource("type").getURI();
-	        String code = qs.getLiteral("code").getString();
-	        String label = qs.getLiteral("label").getString();
-	        String wkt = qs.getLiteral("wkt").getString();
-	
-	        WKTReader reader = WKTReader.extract(wkt);
-	        Geometry geometry = reader.getGeometry();
-	
-	        results.add(new Location(uri, type, code, label, geometry));
+
+        while (rs.hasNext())
+        {
+          QuerySolution qs = rs.next();
+
+          String uri = qs.getResource("uri").getURI();
+          String type = qs.getResource("type").getURI();
+          String code = qs.getLiteral("code").getString();
+          String label = qs.getLiteral("label").getString();
+          String wkt = qs.getLiteral("wkt").getString();
+
+          WKTReader reader = WKTReader.extract(wkt);
+          Geometry geometry = reader.getGeometry();
+
+          results.add(new Location(uri, type, code, label, geometry));
         }
       }
     }
-    
+
     LocationPage page = new LocationPage();
     page.setLocations(results);
     page.setCount(results.size());
