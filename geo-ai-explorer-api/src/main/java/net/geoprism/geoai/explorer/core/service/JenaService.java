@@ -212,13 +212,11 @@ public class JenaService
       LinkedList<Location> results = new LinkedList<>();
 
       conn.querySelect(sparql, (qs) -> {
-        RDFNode typeNode = qs.get("type");
-
         String uri = qs.getResource("uri").getURI();
-        String type = typeNode.isResource() ? typeNode.asResource().getURI() : typeNode.asLiteral().getString();
-        String code = qs.getLiteral("code").getString();
-        String label = qs.getLiteral("label").getString();
-        String wkt = qs.getLiteral("wkt").getString();
+        String type = readString(qs, "type");
+        String code = readString(qs, "code");
+        String label = readString(qs, "label");
+        String wkt = readString(qs, "wkt");
 
         WKTReader reader = WKTReader.extract(wkt);
         Geometry geometry = reader.getGeometry();
@@ -229,6 +227,21 @@ public class JenaService
 
       return results;
     }
+  }
+  
+  private String readString(QuerySolution qs, String name)
+  {
+	  if (qs.contains(name))
+	  {
+		  var got = qs.get(name);
+		  
+		  if (got.isLiteral())
+			  return got.asLiteral().getString();
+		  else
+			  return got.asResource().getURI();
+	  }
+	  
+	  return "";
   }
 
   public Long getCount(String statement)

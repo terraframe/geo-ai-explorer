@@ -16,7 +16,6 @@
 package net.geoprism.geoai.explorer.core.service;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,16 +33,17 @@ import net.geoprism.geoai.explorer.core.config.AppProperties;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.Message;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials.Builder;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.bedrockagentruntime.BedrockAgentRuntimeAsyncClient;
-import software.amazon.awssdk.services.bedrockagentruntime.BedrockAgentRuntimeAsyncClientBuilder;
 import software.amazon.awssdk.services.bedrockagentruntime.model.InvokeAgentRequest;
 import software.amazon.awssdk.services.bedrockagentruntime.model.InvokeAgentResponseHandler;
 
 @Service
 public class BedrockService
 {
+  private static final int MAX_TIMEOUT_MINUTES = 5;
+	
   private static final Logger log = LoggerFactory.getLogger(BedrockService.class);
 
   @Autowired
@@ -83,7 +83,7 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      future.get(2, TimeUnit.MINUTES);
+      future.get(MAX_TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
     String value = content.toString();
@@ -144,7 +144,7 @@ public class BedrockService
 
       CompletableFuture<Void> future = client.invokeAgent(request, handler);
 
-      future.get(2, TimeUnit.MINUTES);
+      future.get(MAX_TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
     String text = content.toString();
@@ -160,23 +160,28 @@ public class BedrockService
     return text;
   }
 
-  private BedrockAgentRuntimeAsyncClient getClient()
-  {
-    final Duration timeout = Duration.of(2, ChronoUnit.MINUTES);
+  private BedrockAgentRuntimeAsyncClient getClient() {
+	    final Duration sdkTimeout = Duration.ofMinutes(MAX_TIMEOUT_MINUTES);
+	    final Duration nettyReadTimeout = Duration.ofMinutes(MAX_TIMEOUT_MINUTES);
 
-    Builder credentials = AwsBasicCredentials.builder() //
-        .accessKeyId(properties.getAccessKeyId()) //
-        .secretAccessKey(properties.getSecretAccessKey());
+	    AwsBasicCredentials credentials = AwsBasicCredentials.create(
+	        properties.getAccessKeyId(),
+	        properties.getSecretAccessKey()
+	    );
 
-    BedrockAgentRuntimeAsyncClientBuilder builder = BedrockAgentRuntimeAsyncClient.builder() //
-        .overrideConfiguration((c) -> {
-          c.apiCallTimeout(timeout);
-          c.apiCallAttemptTimeout(timeout);
-        }) //
-        .region(properties.getRegion()) //
-        .credentialsProvider(StaticCredentialsProvider.create(credentials.build()));
+	    return BedrockAgentRuntimeAsyncClient.builder()
+	        .region(properties.getRegion())
+	        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+	        .httpClientBuilder(
+	            NettyNioAsyncHttpClient.builder()
+	                .readTimeout(nettyReadTimeout)
+	        )
+	        .overrideConfiguration(cfg -> {
+	            cfg.apiCallTimeout(sdkTimeout);
+	            cfg.apiCallAttemptTimeout(sdkTimeout);
+	        })
+	        .build();
+	}
 
-    return builder.build();
-  }
 
 }
