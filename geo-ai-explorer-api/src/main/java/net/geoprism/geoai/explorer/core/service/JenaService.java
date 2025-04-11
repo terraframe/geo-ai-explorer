@@ -228,20 +228,24 @@ public class JenaService
       return results;
     }
   }
-  
+
   private String readString(QuerySolution qs, String name)
   {
-	  if (qs.contains(name))
-	  {
-		  var got = qs.get(name);
-		  
-		  if (got.isLiteral())
-			  return got.asLiteral().getString();
-		  else
-			  return got.asResource().getURI();
-	  }
-	  
-	  return "";
+    if (qs.contains(name))
+    {
+      RDFNode node = qs.get(name);
+
+      if (node.isLiteral())
+      {
+        return node.asLiteral().getString();
+      }
+      else
+      {
+        return node.asResource().getURI();
+      }
+    }
+
+    return "";
   }
 
   public Long getCount(String statement)
