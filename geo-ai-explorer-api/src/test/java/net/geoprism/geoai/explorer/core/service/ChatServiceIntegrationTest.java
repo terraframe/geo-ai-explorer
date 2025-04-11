@@ -31,20 +31,12 @@ public class ChatServiceIntegrationTest
   private ChatService service;
 
   @Test
-  public void test()
-  {
-    // Placeholder
-  }
-
-  @Test
-  @Ignore
   public void testGetLocations() throws IOException
   {
     History history = new History();
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "what is the total population impacted if channel reach_25 floods?"));
     history.addMessage(new HistoryMessage(HistoryMessageType.AI, "I found multiple channel reaches with \"25\" in their name. Could you please specify which one you're interested in? Here are some examples of the different reaches (showing first few):\n1. CEMVK_LM_09_LPM_25\n2. CEMVM_LM_26_HIK_25\n3. CEMVK_BR_01_FUL_25\n4. CELRN_TN_ND_PW2_25\n5. CELRN_TN_ND_GU1_25\n...and many more."));
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "CEMVK_RR_03_ONE_25"));
-    history.addMessage(new HistoryMessage(HistoryMessageType.AI, "The total population that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 431,826 people."));
 
     LocationPage page = service.getLocations(history);
 
@@ -61,8 +53,6 @@ public class ChatServiceIntegrationTest
         mapper.writeValue(writer, location);
 
         String value = writer.toString();
-
-        System.out.println(value);
 
         Assert.assertTrue(value.length() > 0);
       }

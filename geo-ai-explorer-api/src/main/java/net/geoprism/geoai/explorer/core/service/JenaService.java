@@ -159,27 +159,27 @@ public class JenaService
         }
         LIMIT 50
       """;
-  
-  public static String FULL_TEXT_LOOKUP = PREFIXES + """
-  		PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX text: <http://jena.apache.org/text#>
-        PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-        
-        SELECT ?uri ?type ?code ?label ?wkt
-        FROM <https://localhost:4200/lpg/graph_801104/0#>
-        WHERE {{
-          (?uri ?score) text:query (rdfs:label ?query) .
-          ?uri lpgs:GeoObject-code ?code .
-          ?uri rdfs:label ?label .
-          ?uri a ?type .
-          OPTIONAL {
-              ?uri geo:hasGeometry ?g .
-              ?g geo:asWKT ?wkt .
-          }
-        }}
-        ORDER BY DESC(?score)
-  """;
+
+  public static String       FULL_TEXT_LOOKUP               = PREFIXES + """
+      		PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX text: <http://jena.apache.org/text#>
+            PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+
+            SELECT ?uri ?type ?code ?label ?wkt
+            FROM <https://localhost:4200/lpg/graph_801104/0#>
+            WHERE {{
+              (?uri ?score) text:query (rdfs:label ?query) .
+              ?uri lpgs:GeoObject-code ?code .
+              ?uri rdfs:label ?label .
+              ?uri a ?type .
+              OPTIONAL {
+                  ?uri geo:hasGeometry ?g .
+                  ?g geo:asWKT ?wkt .
+              }
+            }}
+            ORDER BY DESC(?score)
+      """;
 
   @Autowired
   private AppProperties      properties;
@@ -212,8 +212,10 @@ public class JenaService
       LinkedList<Location> results = new LinkedList<>();
 
       conn.querySelect(sparql, (qs) -> {
+        RDFNode typeNode = qs.get("type");
+
         String uri = qs.getResource("uri").getURI();
-        String type = qs.getResource("type").getURI();
+        String type = typeNode.isResource() ? typeNode.asResource().getURI() : typeNode.asLiteral().getString();
         String code = qs.getLiteral("code").getString();
         String label = qs.getLiteral("label").getString();
         String wkt = qs.getLiteral("wkt").getString();
@@ -240,11 +242,20 @@ public class JenaService
 
     int selectIndex = statement.toUpperCase().indexOf("SELECT");
     int fromIndex = statement.toUpperCase().indexOf("FROM");
+    int groupByIndex = statement.toUpperCase().indexOf("GROUP BY");
 
     // Prefix section
     sparql.append(statement.substring(0, selectIndex));
     sparql.append("SELECT (COUNT(distinct ?uri) AS ?count)\n");
-    sparql.append(statement.substring(fromIndex));
+
+    if (groupByIndex != -1)
+    {
+      sparql.append(statement.substring(fromIndex, groupByIndex));
+    }
+    else
+    {
+      sparql.append(statement.substring(fromIndex));
+    }
 
     try (RDFConnection conn = builder.build())
     {
@@ -258,10 +269,10 @@ public class JenaService
 
   public Location getAttributes(final String uri, boolean includeGeometry)
   {
-//    if (uri.startsWith("<") && uri.endsWith(">"))
-//    {
-//      uri = uri.substring(1, uri.length() - 1);
-//    }
+    // if (uri.startsWith("<") && uri.endsWith(">"))
+    // {
+    // uri = uri.substring(1, uri.length() - 1);
+    // }
 
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
         .destination(properties.getJenaUrl());
@@ -365,45 +376,46 @@ public class JenaService
 
     return results;
   }
-  
+
   public LocationPage fullTextLookup(String query, int offset, int limit)
   {
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create().destination(properties.getJenaUrl());
-    
+
     List<Location> results = new ArrayList<Location>();
 
     try (RDFConnection conn = builder.build())
     {
       var sparql = FULL_TEXT_LOOKUP;
       sparql += " LIMIT " + limit + " OFFSET " + offset;
-    	
+
       // Use ParameterizedSparqlString to inject the URI safely
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText(sparql);
-      
+
       pss.setLiteral("query", query);
-            
+
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {
         ResultSet rs = qe.execSelect();
-        
-        while (rs.hasNext()) {
-            QuerySolution qs = rs.next();
-            
-	        String uri = qs.getResource("uri").getURI();
-	        String type = qs.getResource("type").getURI();
-	        String code = qs.getLiteral("code").getString();
-	        String label = qs.getLiteral("label").getString();
-	        String wkt = qs.getLiteral("wkt").getString();
-	
-	        WKTReader reader = WKTReader.extract(wkt);
-	        Geometry geometry = reader.getGeometry();
-	
-	        results.add(new Location(uri, type, code, label, geometry));
+
+        while (rs.hasNext())
+        {
+          QuerySolution qs = rs.next();
+
+          String uri = qs.getResource("uri").getURI();
+          String type = qs.getResource("type").getURI();
+          String code = qs.getLiteral("code").getString();
+          String label = qs.getLiteral("label").getString();
+          String wkt = qs.getLiteral("wkt").getString();
+
+          WKTReader reader = WKTReader.extract(wkt);
+          Geometry geometry = reader.getGeometry();
+
+          results.add(new Location(uri, type, code, label, geometry));
         }
       }
     }
-    
+
     LocationPage page = new LocationPage();
     page.setLocations(results);
     page.setCount(results.size());
