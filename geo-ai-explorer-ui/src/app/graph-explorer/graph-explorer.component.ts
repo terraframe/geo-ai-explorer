@@ -192,15 +192,17 @@ export class GraphExplorerComponent implements OnDestroy {
     };
 
     graph.nodes.forEach(go => {
-      let node = {
-        label: (go.properties.label != null && go.properties.label !== "")
-          ? go.properties.label
-          : go.properties.uri.substring(go.properties.uri.lastIndexOf("#") + 1),
-        id: this.uriToId(go.properties.uri),
-        relation: graph.edges.some(edge => edge.source === go.properties.uri) ? "PARENT" : "CHILD",
-        type: go.properties.type
-      };
-      data.nodes.push(node);
+      if (!data.nodes.some((n:any) => this.idToUri(n.id) === go.properties.uri)) {
+        let node = {
+          label: (go.properties.label != null && go.properties.label !== "")
+            ? go.properties.label
+            : go.properties.uri.substring(go.properties.uri.lastIndexOf("#") + 1),
+          id: this.uriToId(go.properties.uri),
+          relation: graph.edges.some(edge => edge.source === go.properties.uri) ? "PARENT" : "CHILD",
+          type: go.properties.type
+        };
+        data.nodes.push(node);
+      }
     });
 
     graph.edges.forEach(edge => {
