@@ -46,7 +46,7 @@ public class ChatService
     {
       log.error("Error invoking a remote service: ", e);
 
-      throw new GenericRestException("The chat agent was unable to generate a response", e);
+      throw new GenericRestException("The chat agent was unable to generate a response. If your chat history is not relevant to the current request, you can try clearing your chat history and sending your message again.", e);
     }
   }
 

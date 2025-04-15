@@ -6,26 +6,42 @@ load_dotenv()
 
 # Fulltext index query
 def execute(statement: str) -> str:
+    MAX_ERROR_LENGTH = 1000
+
     try:
-        response = requests.post(os.getenv('JENA_URL'), data={'query': statement})
-    
-        json = response.json()
+        response = requests.post(
+            os.getenv('JENA_URL'),
+            data={'query': statement},
+            timeout=240
+        )
+
+        response.raise_for_status()
+
+        try:
+            json = response.json()
+        except ValueError:
+            return f"[ERROR] Received non-JSON response from Jena:\n{response.text[:MAX_ERROR_LENGTH]}"
+
+        keys = json.get('head', {}).get('vars', [])
         results = ""
+        for i, r in enumerate(json.get('results', {}).get('bindings', [])):
+            if i < 100:
+                results += ",".join([str(r.get(key, {}).get('value', '')) for key in keys]) + "\n"
 
-        print(json)
-        keys = json.get('head').get('vars')
-        
-        i = 0
-    
-        for r in json.get('results').get('bindings'):   
-            if i < 100:         
-                results = results + (",".join([str(r.get(key, {}).get('value', '')) for key in keys]) + "\n")
-            i = i + 1
+        return results or "(No results)"
 
-        return results    
+    except requests.exceptions.HTTPError as e:
+        error_detail = response.text[:MAX_ERROR_LENGTH] if response is not None else "No response body"
+        return f"[ERROR] HTTP error: {str(e)}\nDetails: {error_detail}"
+
+    except requests.exceptions.RequestException as e:
+        # Handle network-level issues like timeouts, DNS failures, etc.
+        return f"[ERROR] Network error while contacting Jena: {str(e)}"
+
     except Exception as e:
-        print('An exception was caused by the following statement: ' + statement)
-        raise e
+        return f"[ERROR] An unexpected exception occurred: {str(e)}"
+
+
 
 def lambda_handler(event, context):
     agent = event['agent']
@@ -33,25 +49,22 @@ def lambda_handler(event, context):
     function = event['function']
     parameters = event.get('parameters', [])
 
-    # Execute your business logic here. For more information, refer to: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html
-    
-    result = execute(parameters[0]["value"])
+    statement = parameters[0].get("value", "")
+    result = execute(statement)
 
-    responseBody =  {
+    responseBody = {
         "TEXT": {
-            "body": str(result)
+            "body": result
         }
     }
 
-    action_response = {
-        'actionGroup': actionGroup,
-        'function': function,
-        'functionResponse': {
-            'responseBody': responseBody
-        }
-
+    return {
+        'response': {
+            'actionGroup': actionGroup,
+            'function': function,
+            'functionResponse': {
+                'responseBody': responseBody
+            }
+        },
+        'messageVersion': event['messageVersion']
     }
-
-    dummy_function_response = {'response': action_response, 'messageVersion': event['messageVersion']}
-
-    return dummy_function_response
