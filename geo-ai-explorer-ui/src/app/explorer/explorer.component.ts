@@ -893,6 +893,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         const mapConfig: any = {
             container: "map",
+            bounds: [[-125.0011, 24.9493], [-66.9326, 49.5904] ], // USA
+            fitBoundsOptions: { padding: 100 },
             style: {
                 version: 8,
                 name: layer.name,
