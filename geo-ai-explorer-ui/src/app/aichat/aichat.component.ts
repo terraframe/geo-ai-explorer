@@ -166,6 +166,8 @@ export class AichatComponent {
 
         this.chatService.getLocations(history, 0, 100).then((page) => {
 
+          this.store.dispatch(ExplorerActions.selectGeoObject(null));
+
           this.store.dispatch(ExplorerActions.setPage({
             page,
             zoomMap: true
