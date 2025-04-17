@@ -26,6 +26,9 @@
 
           <ngx-graph #graph class="chart-container" [links]="data!.edges"
             [nodes]="data!.nodes" [animate]="false" [autoZoom]="true" [autoCenter]="true" [draggingEnabled]="false"
+            [panningEnabled]="true"
+            (stateChange)="onGraphStateChange($event)"
+            (zoomChange)="onZoomChanged($event)"
           >
             <!--
             [view]="[svgWidth!, svgHeight!]"

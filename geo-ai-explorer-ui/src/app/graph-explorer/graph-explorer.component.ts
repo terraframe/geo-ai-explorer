@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
-import { Edge, Node, GraphComponent, GraphModule } from '@swimlane/ngx-graph';
+import { Edge, Node, GraphComponent, GraphModule, NgxGraphStates, NgxGraphStateChangeEvent } from '@swimlane/ngx-graph';
 import { SELECTED_COLOR } from '../explorer/defaultQueries';
 import { ExplorerService } from '../service/explorer.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -353,5 +353,79 @@ export class GraphExplorerComponent implements OnDestroy {
     this.graph.panToNodeId(this.uriToId(uri));
   }
 
+  readonly PAN_LIMIT = 500;
+  private ignoreRecursive: boolean = false;
+
+  private zoomJustChanged = false;
+
+  onZoomChanged(newZoom: number) {
+    // this.zoomJustChanged = true;
+  
+    // setTimeout(() => {
+    //   this.zoomJustChanged = false;
+    // }, 100);
+  }
+
+  onGraphStateChange(event: NgxGraphStateChangeEvent) {
+    if (!this.ignoreRecursive && this.graph && event.state === NgxGraphStates.Transform) {
+      // // if we’re coming out of a zoom, defer until the next frame…
+      // if (this.zoomJustChanged) {
+      //   setTimeout(() => this.enforceBounds(),0);
+      // }
+      // // …otherwise (i.e. on a pan) run it *right now*
+      // else {
+      //   // this.enforceBounds();
+      //   setTimeout(() => this.enforceBounds(),0);
+      // }
+
+      setTimeout(() => this.enforceBounds(),0);
+    }
+  }
+  
+  private enforceBounds() {
+    this.graph.updateGraphDims();
+    const zoom = this.graph.zoomLevel;
+    const viewW = this.graph.dims.width;
+    const viewH = this.graph.dims.height;
+  
+    const graphW = this.graph.graphDims.width * zoom;
+    const graphH = this.graph.graphDims.height * zoom;
+  
+    const centerX = graphW <= viewW;
+    const centerY = graphH <= viewH;
+  
+    let clampedX = this.graph.panOffsetX;
+    let clampedY = this.graph.panOffsetY;
+  
+    if (!centerX) {
+      clampedX = this.clamp(clampedX, viewW - graphW, 0);
+    }
+    if (!centerY) {
+      clampedY = this.clamp(clampedY, viewH - graphH, 0);
+    }
+  
+    if (clampedX !== this.graph.panOffsetX || clampedY !== this.graph.panOffsetY || centerX || centerY) {
+      this.ignoreRecursive = true;
+  
+      const worldX = centerX
+        ? this.graph.graphDims.width / 2
+        : (viewW / 2 - clampedX) / zoom;
+      const worldY = centerY
+        ? this.graph.graphDims.height / 2
+        : (viewH / 2 - clampedY) / zoom;
+  
+      // still wrap the *panTo* in its own RAF
+      // requestAnimationFrame(() => {
+        this.graph.panTo(worldX, worldY);
+        this.ignoreRecursive = false;
+        this.graph.updateGraphDims();
+      // });
+    }
+  }
+
+  clamp(val: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, val));
+  }
+  
 }
 
