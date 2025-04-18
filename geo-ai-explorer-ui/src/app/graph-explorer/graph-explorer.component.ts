@@ -228,7 +228,7 @@ export class GraphExplorerComponent implements OnDestroy {
       window.setTimeout(() => {
         this.zoomToUri(this.selectedObject!.properties.uri);
         // this.graph.zoomLevel = 4;
-      }, 100);
+      }, 300);
   }
 
 
