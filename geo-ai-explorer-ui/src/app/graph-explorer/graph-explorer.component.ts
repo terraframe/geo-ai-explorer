@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnDestroy, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ExplorerComponent } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule, NgxGraphStates, NgxGraphStateChangeEvent } from '@swimlane/ngx-graph';
@@ -173,7 +173,7 @@ export class GraphExplorerComponent implements OnDestroy {
     // this.renderGeoObjects(explorer, this.geoObjects);
 
     let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
-      this.renderGraph(graph);
+      this.renderGraph(graph, true);
 
       // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
     }).catch(error => this.errorService.handleError(error))
@@ -225,7 +225,10 @@ export class GraphExplorerComponent implements OnDestroy {
     this.resizeDimensions();
 
     if (zoom)
-      window.setTimeout(() => { this.zoomToUri(this.selectedObject!.properties.uri); }, 100);
+      window.setTimeout(() => {
+        this.zoomToUri(this.selectedObject!.properties.uri);
+        // this.graph.zoomLevel = 4;
+      }, 100);
   }
 
 
@@ -346,7 +349,7 @@ export class GraphExplorerComponent implements OnDestroy {
   }
 
   public zoomToUri(uri: string) {
-    const desiredZoomLevel = 1.1;
+    const desiredZoomLevel = 0.6;
 
     this.graph.zoom(desiredZoomLevel / this.graph.zoomLevel);
 
@@ -358,27 +361,34 @@ export class GraphExplorerComponent implements OnDestroy {
 
   private zoomJustChanged = false;
 
-  onZoomChanged(newZoom: number) {
-    // this.zoomJustChanged = true;
+  // @HostListener('window:scroll', [])
+  // onWindowScroll(): void {
+  // onZoomChanged(newZoom: number) {
+  //   this.zoomJustChanged = true;
+  //   console.log("Zoom changed");
   
-    // setTimeout(() => {
-    //   this.zoomJustChanged = false;
-    // }, 100);
-  }
+  //   setTimeout(() => {
+  //     this.zoomJustChanged = false;
+  //   }, 100);
+  // }
 
   onGraphStateChange(event: NgxGraphStateChangeEvent) {
     if (!this.ignoreRecursive && this.graph && event.state === NgxGraphStates.Transform) {
-      // // if we’re coming out of a zoom, defer until the next frame…
-      // if (this.zoomJustChanged) {
-      //   setTimeout(() => this.enforceBounds(),0);
-      // }
-      // // …otherwise (i.e. on a pan) run it *right now*
-      // else {
-      //   // this.enforceBounds();
-      //   setTimeout(() => this.enforceBounds(),0);
-      // }
+      // if we’re coming out of a zoom, defer until the next frame…
+      
+      if (!this.graph.isPanning) {
+        setTimeout(() => this.enforceBounds(),0);
+      }
+      // …otherwise (i.e. on a pan) run it *right now*
+      else {
+        this.enforceBounds();
+        // setTimeout(() => this.enforceBounds(),0);
+      }
 
-      setTimeout(() => this.enforceBounds(),0);
+
+
+      // setTimeout(() => this.enforceBounds(),0);
+      // this.enforceBounds()
     }
   }
   
