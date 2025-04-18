@@ -90,7 +90,7 @@ export class GraphExplorerComponent implements OnDestroy {
 
   public SELECTED_NODE_COLOR = SELECTED_COLOR;
 
-  public loading: boolean = false;
+  public loading: boolean = true;
 
   public svgHeight: number | null = null;
   public svgWidth: number | null = null;
@@ -176,13 +176,11 @@ export class GraphExplorerComponent implements OnDestroy {
       this.renderGraph(graph, true);
 
       // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
-    }).catch(error => this.errorService.handleError(error))
-      .finally(() => {
-        this.loading = false;
-      });
+    }).catch(error => { this.errorService.handleError(error); this.loading = false; });
   }
 
   public renderGraph(graph: GprGraph, zoom: boolean = false) {
+    this.loading = true;
     this.gprGraph = graph;
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
 
@@ -215,20 +213,23 @@ export class GraphExplorerComponent implements OnDestroy {
       data.edges.push(formattedEdge);
     });
 
-    window.setTimeout(() => {
+    // window.setTimeout(() => {
       this.data = data;
-      this.resizeDimensions();
+      // this.resizeDimensions();
       // this.calculateTypeLegend(this.data.relatedTypes);
       // this.addLayers(this.data.relatedTypes);
-    }, 100);
+    // }, 100);
 
     this.resizeDimensions();
 
     if (zoom)
       window.setTimeout(() => {
         this.zoomToUri(this.selectedObject!.properties.uri);
+        window.setTimeout(() => { this.loading = false; },5);
         // this.graph.zoomLevel = 4;
-      }, 300);
+      }, 500);
+    else
+      this.loading = false;
   }
 
 
@@ -424,12 +425,9 @@ export class GraphExplorerComponent implements OnDestroy {
         ? this.graph.graphDims.height / 2
         : (viewH / 2 - clampedY) / zoom;
   
-      // still wrap the *panTo* in its own RAF
-      // requestAnimationFrame(() => {
-        this.graph.panTo(worldX, worldY);
-        this.ignoreRecursive = false;
-        this.graph.updateGraphDims();
-      // });
+      this.graph.panTo(worldX, worldY);
+      this.ignoreRecursive = false;
+      this.graph.updateGraphDims();
     }
   }
 

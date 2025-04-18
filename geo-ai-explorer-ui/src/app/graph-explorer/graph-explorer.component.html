@@ -22,7 +22,7 @@
 
     <div *ngIf="data">
       <div class="hierarchy-content">
-        <div id="graph-container">
+        <div id="graph-container" [class]="{'graph-hidden': loading}">
 
           <ngx-graph #graph class="chart-container" [links]="data!.edges"
             [nodes]="data!.nodes" [animate]="false" [autoZoom]="true" [autoCenter]="true" [draggingEnabled]="false"
