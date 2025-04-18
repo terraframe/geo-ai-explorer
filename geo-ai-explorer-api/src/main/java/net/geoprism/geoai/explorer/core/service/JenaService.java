@@ -149,8 +149,44 @@ public class JenaService
 				}
 			}
 		}
-		LIMIT 50
+		LIMIT 100
 """;
+  
+  public static String NEIGHBOR_METADATA_QUERY = PREFIXES + """
+  		PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+		PREFIX lpg: <https://localhost:4200/lpg#>
+		PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+		PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+		PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+		PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+		
+		SELECT ?type (COUNT(DISTINCT ?obj) AS ?count)
+		FROM lpgv:
+		WHERE {
+		  {
+		    # Type of source object
+		    BIND(?uri AS ?obj)
+		    ?obj a ?type .
+		    ?obj lpgs:GeoObject-code ?code .
+		  }
+		  UNION
+		  {
+		    # Outgoing object types
+		    ?uri ?p1 ?obj .
+		    ?obj a ?type .
+		    ?obj lpgs:GeoObject-code ?code .
+		  }
+		  UNION
+		  {
+		    # Incoming object types
+		    ?obj ?p2 ?uri .
+		    ?obj a ?type .
+		    ?obj lpgs:GeoObject-code ?code .
+		  }
+		}
+		GROUP BY ?type
+		ORDER BY DESC(?count)
+  		""";
   
   public static String FULL_TEXT_LOOKUP = PREFIXES + """
   		PREFIX   ex: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
@@ -202,6 +238,9 @@ public class JenaService
     try (RDFConnection conn = builder.build())
     {
       LinkedList<Location> results = new LinkedList<>();
+      
+      System.out.println("JenaService.query - EXECUTING QUERY");
+      System.out.println(sparql);
 
       conn.querySelect(sparql, (qs) -> {
         String uri = qs.getResource("uri").getURI();
@@ -358,28 +397,37 @@ public class JenaService
       uri = uri.substring(1, uri.length() - 1);
     }
 
-    Graph results = null;
+    final Graph results = new Graph();
 
+    // Grab the metadata
     try (RDFConnection conn = builder.build())
     {
-      // Use ParameterizedSparqlString to inject the URI safely
+      ParameterizedSparqlString pss = new ParameterizedSparqlString();
+      pss.setCommandText(NEIGHBOR_METADATA_QUERY);
+      pss.setIri("uri", uri);
+      
+      conn.querySelect(pss.asQuery(), (qs) -> {
+    	  results.getTypeCount().put(readString(qs, "type"), qs.getLiteral("count").getInt());
+      });
+    }
+    
+    // Grab the data
+    try (RDFConnection conn = builder.build())
+    {
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText(NEIGHBOR_QUERY);
-
-      // Inject the URI properly
       pss.setIri("uri", uri);
 
       try (QueryExecution qe = conn.query(pss.asQuery()))
       {
         ResultSet rs = qe.execSelect();
-        results = SparqlGraphConverter.convert(rs);
+        SparqlGraphConverter.convert(results, rs);
       }
     }
 
     // The object has no neighbors
-    if (results == null)
+    if (results.getNodes().size() == 0)
     {
-      results = new Graph();
       results.setNodes(Arrays.asList(this.getAttributes(uri, true)));
     }
 

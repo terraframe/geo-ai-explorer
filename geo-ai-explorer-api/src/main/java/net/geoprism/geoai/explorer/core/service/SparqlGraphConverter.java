@@ -14,12 +14,11 @@ import net.geoprism.geoai.explorer.core.model.Graph;
 import net.geoprism.geoai.explorer.core.model.Location;
 
 public class SparqlGraphConverter {
-	public static Graph convert(ResultSet rs) {
-        Graph graph = new Graph();
+	public static void convert(Graph graph, ResultSet rs) {
         Map<String, Location> locationMap = new HashMap<>();
         
         if (!rs.hasNext()) {
-          return null;
+          return;
         }
 
         while (rs.hasNext()) {
@@ -56,8 +55,6 @@ public class SparqlGraphConverter {
 	            graph.getEdges().add(edge);
             }
         }
-
-        return graph;
     }
 
     private static Location createLocation(QuerySolution qs, String uriVar, String typeVar, String wktVar, String labelVar, String codeVar) {

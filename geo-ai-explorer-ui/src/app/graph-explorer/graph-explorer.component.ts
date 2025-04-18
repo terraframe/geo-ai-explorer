@@ -41,6 +41,7 @@ import { ErrorService } from '../service/error-service.service';
 // }
 
 export interface GprGraph {
+  typeCount: { [key: string]: number },
   nodes: GeoObject[],
   edges: { source: string, target: string, type: string }[]
 }
@@ -226,8 +227,8 @@ export class GraphExplorerComponent implements OnDestroy {
       window.setTimeout(() => {
         this.zoomToUri(this.selectedObject!.properties.uri);
         window.setTimeout(() => { this.loading = false; },5);
-        // this.graph.zoomLevel = 4;
-      }, 500);
+        console.log(this.gprGraph?.typeCount);
+      }, 1000); // We're very much guessing how long the graph can take to render here. On very slow computers it's possible this might not be long enough. Unfortunately ngx-graph does not provide a callback to listen to when the graph is finished.
     else
       this.loading = false;
   }
