@@ -149,7 +149,7 @@ public class JenaService
 				}
 			}
 		}
-		LIMIT 100
+		LIMIT 1000
 """;
   
   public static String NEIGHBOR_METADATA_QUERY = PREFIXES + """

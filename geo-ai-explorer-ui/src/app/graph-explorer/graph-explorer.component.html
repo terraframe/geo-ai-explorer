@@ -1,7 +1,8 @@
-<div id="graph-main">
-  <div *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
+<div class="stretch" id="graph-main">
+  <div class="stretch" *ngIf="loading" class="spinner-overlay"><p-progress-spinner ariaLabel="loading" /></div>
 
-    <!-- <select *ngIf="relationships" id="relationshipId" name="relationshipId" class="select-area" [(ngModel)]="graphOid"
+  <!--
+    <select *ngIf="relationships" id="relationshipId" name="relationshipId" class="select-area" [(ngModel)]="graphOid"
       (change)="onSelectRelationship()" required style="margin:10px;width:auto;min-width:200px;">
       <option *ngIf="relationships.length === 0"></option>
       <option *ngFor="let loopRel of relationships" [value]="loopRel.oid">{{loopRel.label.localizedValue}}</option>
@@ -10,19 +11,19 @@
     <div style="padding-top: 20px;">
       <boolean-field [(value)]="restrictToMapBounds" (change)="fetchData()" localizeLabelKey="graph.visualizer.restrictToMapBounds"></boolean-field>
     </div>
-
+  -->
     
-    <div class="legend">
-      <div class="legend-item" *ngFor="let item of typeLegend | keyvalue">
-        <div class="square" [ngStyle]="{ background: item.value.color }"></div>
-        
-        <label>{{ item.value.label }}</label>
-      </div>
-    </div> -->
+    <div class="stretch" *ngIf="data">
+      <div class="hierarchy-content stretch">
+        <div class="stretch" id="graph-container" [class]="{'graph-hidden': loading}">
 
-    <div *ngIf="data">
-      <div class="hierarchy-content">
-        <div id="graph-container" [class]="{'graph-hidden': loading}">
+          <div class="legend">
+            <div class="legend-item horizontal-layout" *ngFor="let item of getTypeLegend() | keyvalue">
+              <div class="square" [ngStyle]="{ background: item.value.color }"></div>
+              
+              <label>{{ item.value.label }}</label>
+            </div>
+          </div>
 
           <ngx-graph #graph class="chart-container" [links]="data!.edges"
             [nodes]="data!.nodes" [animate]="false" [autoZoom]="true" [autoCenter]="true" [draggingEnabled]="false"
