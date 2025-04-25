@@ -1,6 +1,6 @@
 [
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22fdacd27d-737b-4f8f-bfa7-35d64c000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%2236773132-92af-45e4-b309-33dd78000630%22%7D",
     "label":"Project",
     "color": "#6C92C7",
     "order": 0,
@@ -12,7 +12,7 @@
     "geometryType" : "Polygon"
   },
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22ff1a83a2-860f-490e-ad1f-6a3d72000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%220e5744ef-cdab-43e0-8b75-664fe7000630%22%7D",
     "label":"Census Tract",
     "color": "#60A561",
     "order": 1,
@@ -24,7 +24,7 @@
     "geometryType" : "Polygon"
   },
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22fb16f586-35f8-435f-b386-32d18f000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22907a16c8-868e-434b-bcbc-9222de000630%22%7D",
     "label":"Channel Area",
     "color": "#B2A198",
     "order": 2,
@@ -36,7 +36,7 @@
     "geometryType" : "Line"
   },  
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22b152a88c-d584-418e-bcab-7f40d3000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%2241b0cb6c-053e-4502-974c-f7e043000630%22%7D",
     "label":"Levee",
     "color": "#F7B2BD",
     "order": 3,
@@ -48,7 +48,7 @@
     "geometryType" : "Line"
   },
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x=258&y=406&z=10&config=%7B%22oid%22%3A%22519cc394-8377-4b7c-babb-769c33000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x=258&y=406&z=10&config=%7B%22oid%22%3A%22d9d445c3-ecaf-419a-bf68-39a084000630%22%7D",
     "label":"School",
     "color": "#E34A6F",
     "order": 4,
