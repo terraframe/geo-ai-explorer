@@ -214,14 +214,15 @@ export class AichatComponent {
   }
 
   select(event: Event, uri: string): void {
-    console.log(event)
-
     event.stopPropagation();
+    this.mapLoading = true;
 
     this.explorerService.getAttributes(uri, true)
       .then(geoObject => {
         this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: true }));
       })
-      .catch(error => this.errorService.handleError(error))
+      .catch(error => this.errorService.handleError(error)).finally(() => {
+        this.mapLoading = false;
+      })
   }
 }

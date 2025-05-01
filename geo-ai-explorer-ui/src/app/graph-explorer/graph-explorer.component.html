@@ -19,6 +19,7 @@
 
           <div class="legend">
             <div class="legend-item horizontal-layout" *ngFor="let item of getTypeLegend() | keyvalue">
+              <div class="square" style="margin-right:3px;"><p-checkbox [(ngModel)]="item.value.included" [binary]="true" size="small" (change)="legendCheckboxChange($event)"/></div>
               <div class="square" [ngStyle]="{ background: item.value.color }"></div>
               
               <label>{{ item.value.label }}</label>

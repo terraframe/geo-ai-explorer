@@ -43,7 +43,12 @@ export class ExplorerService {
     });
   }
 
-  neighborQuery(uri: string): Promise<GprGraph> {
+  neighborQuery(uri: string, excludedTypes: string[] | undefined = undefined): Promise<GprGraph> {
+    let sExcludedTypes = null;
+    if (excludedTypes != undefined) {
+        sExcludedTypes = excludedTypes.join(",");
+    }
+
     // return new Promise<GprGraph>((resolve) => {
     //     setTimeout(() => {
     //         resolve(MockUtil.explorerInit);
@@ -51,7 +56,7 @@ export class ExplorerService {
     // });
 
     // Uncomment below to make a real HTTP request
-    return firstValueFrom(this.http.post<GprGraph>(environment.apiUrl + 'api/neighbors', { uri: uri }));
+    return firstValueFrom(this.http.post<GprGraph>(environment.apiUrl + 'api/neighbors', { uri: uri, excludedTypes: sExcludedTypes }));
   }
 
   fullTextLookup(query: string): Promise<LocationPage> {

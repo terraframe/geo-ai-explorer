@@ -32,6 +32,7 @@ import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ButtonModule } from 'primeng/button';
 
+export interface TypeLegend { [key: string]: { label: string, color: string, visible: boolean, included: boolean } }
 
 @Component({
     selector: 'app-explorer',
@@ -109,7 +110,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public loading: boolean = false;
 
-    public typeLegend: { [key: string]: { label: string, color: string, enabled: boolean } } = {};
+    public typeLegend: TypeLegend = {};
 
     public selectedObject?: GeoObject;
 
@@ -272,13 +273,14 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.typeLegend[type] = {
                 label: this.labelForType(type),
                 color: this.resolvedStyles[type].color,
-                enabled: (oldTypeLegend[type] == null ? true : oldTypeLegend[type].enabled)
+                visible: (oldTypeLegend[type] == null ? true : oldTypeLegend[type].visible),
+                included: (oldTypeLegend[type] == null ? true : oldTypeLegend[type].included)
             }
         });
     }
 
     toggleTypeLegend(legend: any): void {
-        legend.enabled = !legend.enabled;
+        legend.visible = !legend.visible;
         this.render();
     }
 
@@ -462,7 +464,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             if (geoObjects.length == 0) continue;
             if (geoObjects[0].geometry == null) continue; // TODO : Find this out at the type level...
-            if (!this.typeLegend[type].enabled) continue;
+            if (!this.typeLegend[type].visible) continue;
 
             let geojson: any = {
                 type: "FeatureCollection",

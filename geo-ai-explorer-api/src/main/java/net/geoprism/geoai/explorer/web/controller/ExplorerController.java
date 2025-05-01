@@ -15,6 +15,8 @@
  */
 package net.geoprism.geoai.explorer.web.controller;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -52,8 +54,14 @@ public class ExplorerController
     {
       return ResponseEntity.badRequest().build();
     }
+    
+    String sExclude = request.get("excludedTypes");
+    List<String> exclude = new ArrayList<String>();
+    if (!StringUtils.isBlank(sExclude)) {
+    	exclude = Arrays.asList(sExclude.split(","));
+    }
 
-    Graph graph = this.jena.neighbors(uri);
+    Graph graph = this.jena.neighbors(uri, exclude);
 
     return new ResponseEntity<Graph>(graph, HttpStatus.OK);
   }

@@ -1,5 +1,5 @@
 import { Component, HostListener, inject, Input, OnDestroy, ViewChild } from '@angular/core';
-import { ExplorerComponent } from '../explorer/explorer.component';
+import { ExplorerComponent, TypeLegend } from '../explorer/explorer.component';
 import { CommonModule } from '@angular/common';
 import { Edge, Node, GraphComponent, GraphModule, NgxGraphStates, NgxGraphStateChangeEvent } from '@swimlane/ngx-graph';
 import { SELECTED_COLOR } from '../explorer/defaultQueries';
@@ -12,6 +12,8 @@ import { Store } from '@ngrx/store';
 import { ExplorerActions, getWorkflowStep, getZoomMap, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
 import { Observable, Subscription, withLatestFrom } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule } from '@angular/forms';
 
 
 // export interface Relationship {
@@ -72,7 +74,7 @@ export const DIMENSIONS = {
 
 @Component({
   selector: 'graph-explorer',
-  imports: [CommonModule, GraphModule, ProgressSpinnerModule],
+  imports: [CommonModule, GraphModule, ProgressSpinnerModule, CheckboxModule, FormsModule],
   providers: [],
   templateUrl: './graph-explorer.component.html',
   styleUrl: './graph-explorer.component.scss'
@@ -123,6 +125,8 @@ export class GraphExplorerComponent implements OnDestroy {
 
   private highlightedObject: GeoObject | null = null;
 
+  public typeLegend: TypeLegend = {};
+
   constructor(
     private queryService: ExplorerService,
     private errorService: ErrorService
@@ -155,8 +159,8 @@ export class GraphExplorerComponent implements OnDestroy {
     this.onWorkflowStepChange.unsubscribe();
   }
 
-  public renderGeoObjectAndNeighbors(geoObject: GeoObject) {
-    if (this.selectedObject != null && this.selectedObject.properties.uri === geoObject.properties.uri) return;
+  public renderGeoObjectAndNeighbors(geoObject: GeoObject, forceRefresh: boolean = false) {
+    if (this.selectedObject != null && (this.selectedObject.properties.uri === geoObject.properties.uri && !forceRefresh)) return;
 
     this.loading = true;
 
@@ -173,7 +177,11 @@ export class GraphExplorerComponent implements OnDestroy {
 
     // this.renderGeoObjects(explorer, this.geoObjects);
 
-    let graph = this.queryService.neighborQuery(geoObject.properties.uri).then((graph) => {
+    const excludedTypes = Object.entries(this.getTypeLegend())
+      .filter(([_, value]) => !value.included)
+      .map(([key, _]) => key);
+
+    let graph = this.queryService.neighborQuery(geoObject.properties.uri, excludedTypes).then((graph) => {
       this.renderGraph(graph, true);
 
       // setTimeout(() => { this.zoomToUri(geoObject.properties.uri); }, 500);
@@ -182,8 +190,10 @@ export class GraphExplorerComponent implements OnDestroy {
 
   public renderGraph(graph: GprGraph, zoom: boolean = false) {
     this.loading = true;
-    this.gprGraph = graph;
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
+    this.gprGraph = graph;
+
+    this.calculateTypeLegend();
 
     let data: any = {
       edges: [],
@@ -233,55 +243,26 @@ export class GraphExplorerComponent implements OnDestroy {
       this.loading = false;
   }
 
+  calculateTypeLegend() {
+    var oldTypeLegend = JSON.parse(JSON.stringify(this.typeLegend));
+    this.typeLegend = {};
 
-  // public renderGeoObjects(explorer: ExplorerComponent, geoObjects: GeoObject[]) {
-  //   this.explorer = explorer;
-
-  //   console.log(geoObjects);
-
-  //   this.geoObjects = geoObjects;
-  //   let data: any = {
-  //     edges: [],
-  //     nodes: []
-  //   }
-
-  //   geoObjects.forEach(go => {
-
-  //     let node = {
-  //       label: (go.properties.label != null && go.properties.label != "") ? go.properties.label : go.properties.uri.substring(go.properties.uri.lastIndexOf("#")+1),
-  //       id: this.uriToId(go.properties.uri),
-  //       relation: Object.entries(go.properties.edges).length == 0 ? "CHILD" : "PARENT",
-  //       type: go.properties.type
-  //     };
-  //     data.nodes.push(node);
-
-  //     for (const [key, value] of Object.entries(go.properties.edges)) {
-  //       // if (value === go.properties.uri) { continue; }
-
-  //       value.forEach(v => {
-  //         let edge = {
-  //           id: this.uriToId(Math.random().toString(16).slice(2)),
-  //           source: this.uriToId(go.properties.uri),
-  //           target: this.uriToId(v),
-  //           label: ExplorerComponent.uriToLabel(key)
-  //         };
-  //         data.edges.push(edge);
-  //       });
-  //     }
-  //   });
-
-  //   window.setTimeout(() => {
-  //       this.data = data;
-  //       this.resizeDimensions();
-  //       // this.calculateTypeLegend(this.data.relatedTypes);
-  //       // this.addLayers(this.data.relatedTypes);
-  //   }, 0);
-
-  //   this.resizeDimensions();
-  // }
+    Object.entries(this.gprGraph!.typeCount).forEach(kv => {
+        this.typeLegend[kv[0]] = {
+            label: this.explorer!.labelForType(kv[0]),
+            color: this.explorer!.resolvedStyles[kv[0]].color,
+            visible: (oldTypeLegend[kv[0]] == null ? true : oldTypeLegend[kv[0]].visible),
+            included: (oldTypeLegend[kv[0]] == null ? true : oldTypeLegend[kv[0]].included)
+        }
+    });
+  }
 
   public getTypeLegend() {
-    return this.explorer!.getTypeLegend();
+    return this.typeLegend;
+  }
+
+  public legendCheckboxChange(e: any) {
+    this.renderGeoObjectAndNeighbors(this.selectedObject!, true);
   }
 
   public getColor(node: any) {
