@@ -29,9 +29,9 @@
               <br />
               <p-button (onClick)="mapIt(msg)">View details</p-button>
             </div>
-            <div class="action" *ngIf="msg.ambiguous && last">
+            <div class="action ambiguous" *ngIf="msg.ambiguous && last">
               <br />
-              <span style="margin-right:5px;"><p-button (onClick)="askNewQuestion()">Ask New Question</p-button></span>
+              <span style=""><p-button (onClick)="askNewQuestion()">New Question</p-button></span>
               <p-button (onClick)="setWorkflowStepDisambiguate(msg)">View Options</p-button>
             </div>
           </ng-container>
@@ -40,12 +40,6 @@
     </ng-container>
   </div>
   <div class="input-container">
-    <p-button *ngIf="minimized" severity="secondary" pTooltip="Show Chat History" (onClick)="minimizeChat()">
-      <fa-icon [icon]="upsizeIcon"></fa-icon>
-    </p-button>
-    <p-button *ngIf="!minimized" severity="secondary" pTooltip="Minimize Chat" (onClick)="minimizeChat()">
-      <fa-icon [icon]="minimizeIcon"></fa-icon>
-    </p-button>
     <p-button severity="secondary" pTooltip="Erase conversation" (onClick)="clear()">
       <fa-icon [icon]="icon"></fa-icon>
     </p-button>

@@ -64,7 +64,8 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         if (this.workflowStep == WorkflowStep.DisambiguateObject) {
             return "calc(100vh - 75px)"
         } else if (this.workflowStep === WorkflowStep.MinimizeChat) {
-            return "calc(100vh - 50px)";
+            // return "calc(100vh - 50px)";
+            return "calc(100vh - 108px)";
         } else {
             return "calc(50vh - 3rem)";
         }

@@ -23,14 +23,16 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
 import { environment } from '../../environments/environment';
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight, faDownLeftAndUpRightToCenter, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ButtonModule } from 'primeng/button';
+import { LocationPage } from '../models/chat.model';
+import { TooltipModule } from 'primeng/tooltip';
 
 export interface TypeLegend { [key: string]: { label: string, color: string, visible: boolean, included: boolean } }
 
@@ -50,7 +52,8 @@ export interface TypeLegend { [key: string]: { label: string, color: string, vis
         TabsModule,
         CheckboxModule,
         FontAwesomeModule,
-        ButtonModule
+        ButtonModule,
+        TooltipModule
     ],
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
@@ -59,6 +62,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     public WorkflowStep = WorkflowStep;
     public backIcon = faArrowLeft;
     public forwardIcon = faArrowRight;
+    public minimizeIcon = faDownLeftAndUpRightToCenter;
+    public upsizeIcon = faUpRightAndDownLeftFromCenter;
 
     public static GEO = "http://www.opengis.net/ont/geosparql#";
 
@@ -95,6 +100,10 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
     workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
 
     onWorkflowStepChange: Subscription;
+
+    page$: Observable<LocationPage> = this.store.select(getPage);
+
+    onPageChange: Subscription;
 
     resolvedStyles: StyleConfig = {};
 
@@ -141,6 +150,16 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public activeTab: string = '0';
 
+    public chatMinimized: boolean = false;
+
+    public page: LocationPage = {
+        locations: [],
+        statement: "",
+        limit: 100,
+        offset: 0,
+        count: 0
+    };
+
     constructor(
         private configurationService: ConfigurationService,
         private explorerService: ExplorerService,
@@ -181,6 +200,11 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
             this.workflowStep = step;
+            this.chatMinimized = step == WorkflowStep.MinimizeChat;
+        });
+
+        this.onPageChange = this.page$.subscribe(page => {
+            this.page = page;
         });
     }
 
@@ -217,6 +241,17 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             count: 0
         }, zoomMap: false }));
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults, data: this.selectedObject }));
+    }
+
+    minimizeChat() {
+        if (!this.chatMinimized) {
+            this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
+            this.chatMinimized = true;
+        }
+        else {
+            this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+            this.chatMinimized = false;
+        }
     }
 
     onTabChange(event: any) {

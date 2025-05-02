@@ -27,8 +27,6 @@ import { debounce } from 'lodash';
 })
 export class AichatComponent {
   icon = faEraser;
-  public minimizeIcon = faDownLeftAndUpRightToCenter;
-  public upsizeIcon = faUpRightAndDownLeftFromCenter;
   public messageUserIcon = faUser;
   public messageSenderIcon = faUpRightAndDownLeftFromCenter;
   private store = inject(Store);
@@ -69,6 +67,7 @@ export class AichatComponent {
         this.message = go.properties.uri;
         this.sendMessage();
       }
+      this.minimized = step == WorkflowStep.MinimizeChat;
     });
   }
 
@@ -137,19 +136,19 @@ export class AichatComponent {
     }
   }
 
-  askNewQuestion() {
-    this.clear();
-  }
-
   minimizeChat() {
     if (!this.minimized) {
-      this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
-      this.minimized = true;
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MinimizeChat }));
+        this.minimized = true;
     }
     else {
-      this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
-      this.minimized = false;
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+        this.minimized = false;
     }
+}
+
+  askNewQuestion() {
+    this.clear();
   }
 
   mapIt(message: ChatMessage) {
@@ -203,6 +202,13 @@ export class AichatComponent {
   }
 
   clear(): void {
+    this.store.dispatch(ExplorerActions.setPage({ page: { 
+      locations: [],
+      statement: "",
+      limit: 100,
+      offset: 0,
+      count: 0
+    }, zoomMap: false }));
     this.store.dispatch(ChatActions.setMessageAndSession({ messages: [], sessionId: uuidv4() }));
   }
 

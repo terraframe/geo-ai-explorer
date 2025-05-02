@@ -33,6 +33,24 @@ aichat.small-ai-chat {
   height: 60px;
 }
 
+.min-max-parent {
+  position: relative;
+}
+
+.min-max {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.minimize-chat-icon {
+  position:absolute;
+  left: 7px;
+  top: 7px;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
 results-table {
   flex: 1;
   width: 100%;
@@ -46,12 +64,25 @@ results-table {
 }
 
 .bottom-panel-minichat {
-  height: calc(100vh - 5em)
+  height: calc(100vh - 5em);
+  width: 100%;
 }
 .bottom-panel-disambig {
-  height: calc(100vh - 7em)
+  height: calc(100vh - 7em);
+  width: 100%;
 }
 .bottom-panel-half {
+  height: 50vh;
+  width: 100%;
+}
+
+.bottom-panel-minichat p-tabs {
+  height: calc(100vh - 5em);
+}
+.bottom-panel-disambig p-tabs {
+  height: calc(100vh - 7em);
+}
+.bottom-panel-half p-tabs {
   height: 50vh;
 }
 

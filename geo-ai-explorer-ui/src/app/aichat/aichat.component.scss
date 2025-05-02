@@ -15,12 +15,8 @@
   box-sizing: border-box; /* Ensures the border is included in the width/height calculations */
 }
 
-.minimize-chat-icon {
-  position:absolute;
-  left: 7px;
-  top: 7px;
-  border-right: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+::ng-deep .ambiguous button {
+  margin: 2px;
 }
 
 .messages {

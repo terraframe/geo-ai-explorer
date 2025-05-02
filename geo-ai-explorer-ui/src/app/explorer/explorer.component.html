@@ -22,26 +22,38 @@
 			
 			<!-- <input type="text" style="height: 40px; width: 96% !important; margin: 10px;" placeholder="Search for an object"> -->
 
-			<results-table *ngIf="selectedObject == null"></results-table>
+			<div *ngIf="selectedObject != null || page.locations.length > 0" [class]="{'bottom-panel-half' : workflowStep == WorkflowStep.AiChatAndResults, 'bottom-panel-disambig': workflowStep == WorkflowStep.DisambiguateObject, 'bottom-panel-minichat': workflowStep == WorkflowStep.MinimizeChat}">
+				<!--Minimize / Maximize button-->
+				<div class="min-max-parent"><div class="min-max">
+					<p-button *ngIf="chatMinimized" severity="secondary" pTooltip="Minimize" (onClick)="minimizeChat()">
+						<fa-icon [icon]="minimizeIcon"></fa-icon>
+					</p-button>
+					<p-button *ngIf="!chatMinimized" severity="secondary" pTooltip="Maximize" (onClick)="minimizeChat()">
+						<fa-icon [icon]="upsizeIcon"></fa-icon>
+					</p-button>
+				</div></div>
 
-			<div *ngIf="selectedObject" id="graphExplorerContainer" [class]="{'bottom-panel-half' : workflowStep == WorkflowStep.AiChatAndResults, 'bottom-panel-disambig': workflowStep == WorkflowStep.DisambiguateObject, 'bottom-panel-minichat': workflowStep == WorkflowStep.MinimizeChat}">
-				<h2 class="inspector-title" style="margin: 10px; text-align: left;">{{selectedObject!.properties.label}}
-				</h2>
+				<results-table *ngIf="selectedObject == null"></results-table>
 
-				<p-tabs [(value)]="activeTab">
-					<p-tablist>
-						<p-tab value="0">Attributes</p-tab>
-						<p-tab value="1">Relationships</p-tab>
-					</p-tablist>
-					<p-tabpanels>
-						<p-tabpanel value="0">
-							<attribute-panel *ngIf="selectedObject"></attribute-panel>
-						</p-tabpanel>
-						<p-tabpanel value="1">
-							<graph-explorer *ngIf="activeTab === '1'" #graphExplorer [explorer]="this"></graph-explorer>
-						</p-tabpanel>
-					</p-tabpanels>
-				</p-tabs>
+				<div *ngIf="selectedObject" id="graphExplorerContainer">
+					<h2 class="inspector-title" style="margin: 10px; text-align: left;">{{selectedObject!.properties.label}}
+					</h2>
+
+					<p-tabs [(value)]="activeTab">
+						<p-tablist>
+							<p-tab value="0">Attributes</p-tab>
+							<p-tab value="1">Relationships</p-tab>
+						</p-tablist>
+						<p-tabpanels>
+							<p-tabpanel value="0">
+								<attribute-panel *ngIf="selectedObject"></attribute-panel>
+							</p-tabpanel>
+							<p-tabpanel value="1">
+								<graph-explorer *ngIf="activeTab === '1'" #graphExplorer [explorer]="this"></graph-explorer>
+							</p-tabpanel>
+						</p-tabpanels>
+					</p-tabs>
+				</div>
 			</div>
 		</div>
 
