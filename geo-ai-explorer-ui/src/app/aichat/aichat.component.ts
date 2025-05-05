@@ -18,6 +18,7 @@ import { ExplorerActions, getWorkflowData, getWorkflowStep, WorkflowStep } from 
 import { ExplorerService } from '../service/explorer.service';
 import { GeoObject } from '../models/geoobject.model';
 import { debounce } from 'lodash';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'aichat',
@@ -52,7 +53,8 @@ export class AichatComponent {
   constructor(
     private chatService: ChatService,
     private explorerService: ExplorerService,
-    private errorService: ErrorService) {
+    private errorService: ErrorService,
+    private messageService: MessageService) {
 
     this.onMessagesChange = this.messages$.subscribe(messages => {
       this.renderedMessages = [...messages].reverse();
@@ -164,6 +166,16 @@ export class AichatComponent {
         this.mapLoading = true;
 
         this.chatService.getLocations(history, 0, 100).then((page) => {
+
+          if (page.count == 0) {
+            this.messageService.add({
+              key: 'explorer',
+              severity: 'info',
+              summary: 'Info',
+              detail: "The query did not return any results!",
+              sticky: true
+            })
+          }
 
           this.store.dispatch(ExplorerActions.selectGeoObject(null));
 
