@@ -224,15 +224,18 @@ public class JenaService {
 				.destination(properties.getJenaUrl());
 
 		String sparql = new String(statement);
+		
+		// Remove existing LIMIT and OFFSET clauses (case-insensitive)
+		sparql = sparql.replaceAll("(?i)LIMIT\\s+\\d+", "");
+		sparql = sparql.replaceAll("(?i)OFFSET\\s+\\d+", "");
 
+		// Append ORDER BY, which must come before the limit
 		if (!sparql.toUpperCase().contains("ORDER BY")) {
 			sparql += " ORDER BY ASC(?label)";
 		}
 
-		// TODO: Remove the existing limit statement if it exists
-		if (!sparql.toUpperCase().contains("LIMIT")) {
-			sparql += " LIMIT " + limit + " OFFSET " + offset;
-		}
+		// Append new LIMIT and OFFSET
+		sparql += " LIMIT " + limit + " OFFSET " + offset;
 
 		try (RDFConnection conn = builder.build()) {
 			LinkedList<Location> results = new LinkedList<>();
