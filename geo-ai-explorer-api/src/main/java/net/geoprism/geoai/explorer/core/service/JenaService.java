@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.jena.geosparql.implementation.parsers.wkt.WKTReader;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -33,6 +32,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
+import org.apache.jena.sparql.util.FmtUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -462,7 +462,7 @@ public class JenaService {
 		page.setCount(results.size());
 		page.setLimit(100);
 		page.setOffset(0);
-		page.setStatement(FULL_TEXT_LOOKUP);
+		page.setStatement(FULL_TEXT_LOOKUP.replace("?query", FmtUtils.stringForString(query)));
 
 		return page;
 	}
