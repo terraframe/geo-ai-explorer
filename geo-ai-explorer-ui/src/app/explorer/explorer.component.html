@@ -9,7 +9,7 @@
 
 			<aichat *ngIf="workflowStep != WorkflowStep.DisambiguateObject" [class]="{'small-ai-chat' : workflowStep === WorkflowStep.MinimizeChat}"></aichat>
 			<div id="disambiguate-header" class="horizontal-layout" *ngIf="workflowStep === WorkflowStep.DisambiguateObject">
-				<p-button severity="secondary" pTooltip="Erase conversation" (onClick)="cancelDisambiguation()">
+				<p-button severity="secondary" pTooltip="Back to Explorer" (onClick)="cancelDisambiguation()">
 					<fa-icon [icon]="backIcon"></fa-icon>
 					<label>Cancel</label>
 				</p-button>
