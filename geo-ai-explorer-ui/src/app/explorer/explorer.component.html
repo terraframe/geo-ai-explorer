@@ -24,7 +24,7 @@
 
 			<div *ngIf="selectedObject != null || page.locations.length > 0" [class]="{'bottom-panel-half' : workflowStep == WorkflowStep.AiChatAndResults, 'bottom-panel-disambig': workflowStep == WorkflowStep.DisambiguateObject, 'bottom-panel-minichat': workflowStep == WorkflowStep.MinimizeChat}">
 				<!--Minimize / Maximize button-->
-				<div class="min-max-parent"><div class="min-max">
+				<div *ngIf="workflowStep != WorkflowStep.DisambiguateObject" class="min-max-parent"><div class="min-max">
 					<p-button *ngIf="chatMinimized" severity="secondary" pTooltip="Minimize" (onClick)="minimizeChat()">
 						<fa-icon [icon]="minimizeIcon"></fa-icon>
 					</p-button>
