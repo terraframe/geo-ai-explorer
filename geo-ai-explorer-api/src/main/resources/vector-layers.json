@@ -36,7 +36,7 @@
     "geometryType" : "Line"
   },  
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22f7952022-fa0c-423a-b435-7bbd30000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%22c4f07631-d072-4f20-bc16-5f7f19000630%22%7D",
     "label":"Levee",
     "color": "#F7B2BD",
     "order": 3,
