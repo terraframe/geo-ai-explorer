@@ -58,5 +58,17 @@
     "enabled":false,
     "sourceLayer":"context",
     "geometryType" : "Point"
+  },
+  {
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x=258&y=406&z=10&config=%7B%22oid%22%3A%2275fd79af-3f01-4c86-8b23-f02e53000630%22%7D",
+    "label":"Dam",
+    "color": "#33cccc",
+    "order": 5,
+    "labelProperty":"label",
+    "codeProperty":"ascode",
+    "prefix":"https://localhost:4200/lpg/graph_801104/0#Dam-",
+    "enabled":false,
+    "sourceLayer":"context",
+    "geometryType" : "Point"
   }
 ]
