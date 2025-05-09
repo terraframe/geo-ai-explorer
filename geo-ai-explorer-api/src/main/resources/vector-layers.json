@@ -48,7 +48,7 @@
     "geometryType" : "Line"
   },
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x=258&y=406&z=10&config=%7B%22oid%22%3A%2260771dd9-73e3-4e6d-b56b-0f4d72000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%2260771dd9-73e3-4e6d-b56b-0f4d72000630%22%7D",
     "label":"School",
     "color": "#E34A6F",
     "order": 4,
@@ -60,7 +60,7 @@
     "geometryType" : "Point"
   },
   {
-    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x=258&y=406&z=10&config=%7B%22oid%22%3A%2275fd79af-3f01-4c86-8b23-f02e53000630%22%7D",
+    "url":"https://dev-georegistry.geoprism.net/api/list-type/tile?x={x}&y={y}&z={z}&config=%7B%22oid%22%3A%2275fd79af-3f01-4c86-8b23-f02e53000630%22%7D",
     "label":"Dam",
     "color": "#33cccc",
     "order": 5,
