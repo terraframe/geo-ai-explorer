@@ -10,7 +10,7 @@ bedrock.sparql.agent.alias.id=
 bedrock.region=
 
 # URL of the JENA instance and dataset
-jena.url=http://example.com/jena:3030/flood/
+jena.url=http://example.com/jena:3030/inundation/
 
 # User name and password able to log into the geo-ai-explorer server
 spring.security.user.name=
