@@ -7,6 +7,7 @@ import { Style, StyleConfig } from '../models/style.model';
 import { VectorLayer } from "../models/vector-layer.model";
 import { Configuration } from "../models/configuration.model";
 import { LocationPage } from "../models/chat.model";
+import { defaultStyles } from "../explorer/defaultQueries";
 
 export const ExplorerActions = createActionGroup({
     source: 'explorer',
@@ -82,10 +83,11 @@ const resolveMissingStyles = (styles: StyleConfig, objects: GeoObject[]) => {
 
         types.forEach(type => {
             if (newStyles[type] == null) {
+                const defaultStyle = defaultStyles[type];
                 newStyles[type] = {
-                    order: 0,
+                    order: defaultStyle?.order ?? 10,
                     color: ColorGen().hexString()
-                }
+                };
             }
         })
 
