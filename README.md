@@ -1,9 +1,9 @@
-# geo-ai-explorer
+# Kaleidoscope (formerly the geo-ai-explorer)
 
-This project helps to visualize and explore geospatially-enabled RDF datasets as both a map and a graph. Context-specific usecases are enabled via easily embedded SPARQL queries. This widget is designed to be a re-usable piece of technology which can be embedded into existing geospatial data managers.
+Kaleidoscope is a reference implementation interface for building Geo-AI tools on Geospatial Knowledge Infrastructures (GKI). 
 
-This project was developed by TerraFrame and funded by the U.S. Army Core of Engineers (USACE) and is made available to the public free of charge and licensed under MIT.
+## Organizations Involved
+This project is being developed by TerraFrame and funded by the U.S. Army Core of Engineers (USACE).
 
-Demo available here:
-
-http://rdf-explorer.s3-website-us-west-2.amazonaws.com/
+## Tickets
+<a href="https://github.com/orgs/terraframe/projects/8" target="_blank">Ticket Board</a>
