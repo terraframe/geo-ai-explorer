@@ -1,0 +1,127 @@
+
+======
+1. Wipe any existing data
+======
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+
+DELETE {
+  GRAPH ?g1 {
+    ?rem_proj cwbi:ProjectCost ?cost .
+  }
+}
+WHERE {
+  GRAPH ?g1 {
+    ?rem_proj a cwbi:Remis_Project ;
+              cwbi:ProjectCost ?cost .
+  }
+}
+
+=
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+
+DELETE {
+  GRAPH ?g1 {
+    ?program cwbi:ProgramBudget ?budget .
+  }
+}
+WHERE {
+  GRAPH ?g1 {
+    ?program a cwbi:Program ;
+              cwbi:ProgramBudget ?budget .
+  }
+}
+
+
+======
+2. Generate new project costing data
+======
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpg: <https://localhost:4200/lpg#>
+PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+INSERT {
+  GRAPH ?g1 {
+    ?rem_proj cwbi:ProjectCost ?cost .
+  }
+}
+WHERE {
+  GRAPH ?g1 {
+    ?rem_proj a cwbi:Remis_Project .
+  }
+
+  # random integer in [5,000, 15,000), mean ≈ 10,000
+  BIND(xsd:integer(5000 + FLOOR(RAND() * (15000 - 5000))) AS ?cost)
+}
+
+=====
+3. Generate new program budget data
+=====
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+INSERT {
+  GRAPH ?g1 {
+    ?program cwbi:ProgramBudget ?budget .
+  }
+}
+WHERE {
+  {
+    SELECT ?g1 ?program (SUM(xsd:decimal(?cost)) AS ?totalCost)
+    WHERE {
+      GRAPH ?g1 {
+        ?rem_proj a cwbi:Remis_Project ;
+                  cwbi:Program ?program ;
+                  cwbi:ProjectCost ?cost .
+      }
+    }
+    GROUP BY ?g1 ?program
+  }
+
+  # percent in [-0.10 .. +0.10]
+  BIND( ((RAND()*2.0) - 1.0) * 0.10 AS ?pct )
+
+  # decimal math throughout; round to integer (or cents, see notes)
+  BIND( xsd:decimal(?totalCost) * (1.0 + ?pct) AS ?rawBudget )
+  BIND( xsd:integer(ROUND(?rawBudget)) AS ?budget )
+}
+
+=====
+4. Query and verify
+=====
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT
+  ?program
+  (SAMPLE(?progLabel) AS ?programLabel)
+  (SAMPLE(?bdg) AS ?budget)
+  (COUNT(DISTINCT ?rem_proj) AS ?projectCount)
+  (SUM(xsd:decimal(?cost))   AS ?totalCost)
+  (AVG(xsd:decimal(?cost))   AS ?avgCost)
+  (MIN(xsd:decimal(?cost))   AS ?minCost)
+  (MAX(xsd:decimal(?cost))   AS ?maxCost)
+  ( xsd:decimal(COALESCE(SAMPLE(?bdg), 0)) - SUM(xsd:decimal(?cost)) AS ?remainingBudget )
+WHERE {
+  GRAPH ?g1 {
+    ?rem_proj a cwbi:Remis_Project ;
+              cwbi:Program ?program ;
+              cwbi:ProjectCost ?cost .
+    OPTIONAL {
+      ?program skos:prefLabel|skos:altLabel ?progLabel ;
+               cwbi:ProgramBudget ?bdg
+    }
+  }
+}
+GROUP BY ?program
+ORDER BY DESC(?totalCost)
+

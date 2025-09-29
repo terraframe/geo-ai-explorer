@@ -53,6 +53,10 @@ export class MockUtil {
 - Dams: <location><label>James W. Trimble Lock and Dam</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-AR00163</uri></location>, <location><label>New Spiro</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-OK10058</uri></location>, <location><label>Ozark-Jetta Taylor Lock and Dam</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-AR00164</uri></location> 
 - Recreation Areas: <location><label>CLEAR CREEK</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_2448</uri></location>, <location><label>COWLINGTON POINT</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_1375</uri></location>, <location><label>OZARK CITY PARK</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_2449</uri></location> 
 As well as numerous census tracts, real properties, and other infrastructure.`, mappable: true, purpose: 'standard' },
+    { id: '15', sender: 'user', text: 'How much was spent on a program with code \'000510\'?', mappable: false, purpose: 'standard' },
+    { id: '16', sender: 'system', text: 'The program with code \'000510\' has a total expenditure of $596,906.00 across 60 projects.', mappable: true, purpose: 'standard' },
+    { id: '17', sender: 'user', text: 'What was the budget?', mappable: false, purpose: 'standard' },
+    { id: '18', sender: 'system', text: 'The program had a budget of $568,266.00, resulting in a budget deficit of $28,640.00. The average cost per project is $9,948.43, with project costs ranging from $5,287.00 to $14,471.00.', mappable: true, purpose: 'standard' },
   ];
 
   public static explorerInit: ExplorerInit = {

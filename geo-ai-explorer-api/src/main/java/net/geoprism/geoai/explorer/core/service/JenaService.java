@@ -220,6 +220,9 @@ public class JenaService {
 	}
 
 	public List<Location> query(String statement, int offset, int limit) {
+	    // The agent sometimes includes formatting text. Just remove it...
+	    statement = statement.replaceAll("```", "");
+	  
 		RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
 				.destination(properties.getJenaUrl());
 
@@ -285,6 +288,7 @@ public class JenaService {
 
 		int selectIndex = statement.toUpperCase().indexOf("SELECT");
 		int fromIndex = statement.toUpperCase().indexOf("FROM");
+		int whereIndex = statement.toUpperCase().indexOf("WHERE");
 		int groupByIndex = statement.toUpperCase().indexOf("GROUP BY");
 
 		// Prefix section
@@ -293,9 +297,11 @@ public class JenaService {
 
 		if (groupByIndex != -1) {
 			sparql.append(statement.substring(fromIndex, groupByIndex));
-		} else {
+		} else if (fromIndex != -1) {
 			sparql.append(statement.substring(fromIndex));
-		}
+		} else {
+          sparql.append(statement.substring(whereIndex));
+      }
 
 		try (RDFConnection conn = builder.build()) {
 			conn.querySelect(sparql.toString(), (qs) -> {

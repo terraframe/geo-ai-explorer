@@ -115,7 +115,11 @@ public class BedrockService
     try (BedrockAgentRuntimeAsyncClient client = getClient())
     {
       String text = history.toText();
-
+      
+      System.out.println("Invoking agent " + properties.getSparqlAgentAliasId() + " with text:");
+      
+      System.out.println(text);
+      
       InvokeAgentRequest request = InvokeAgentRequest.builder() //
           .agentId(properties.getSparqlAgentId()) //
           .agentAliasId(properties.getSparqlAgentAliasId()) //
