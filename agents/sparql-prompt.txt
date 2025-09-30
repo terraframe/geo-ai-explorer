@@ -36,7 +36,7 @@ The ‘lpg’ schema often refers to ‘Geo-Object’, a concept coined by Terra
 Prefixes
 ========
 
-A full list of the prefixes used for the IRIs within this database.
+A full list of the prefixes used for the IRIs within this database:
 PREFIX apex: <http://dime.usace.mil/data/dataset#>
 PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX pm: <http://data.sec.usace.army.mil/ontologies/pm#>
