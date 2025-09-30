@@ -406,28 +406,53 @@ A: Budgetary information is stored at the program level and costing (actuals) da
 PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT
   ?program
-  (SAMPLE(?progLabel) AS ?programLabel)
-  (SAMPLE(?bdg) AS ?budget)
-  (COUNT(DISTINCT ?rem_proj) AS ?projectCount)
-  (SUM(xsd:decimal(?cost))   AS ?totalCost)
-  (AVG(xsd:decimal(?cost))   AS ?avgCost)
-  (MIN(xsd:decimal(?cost))   AS ?minCost)
-  (MAX(xsd:decimal(?cost))   AS ?maxCost)
-  ( xsd:decimal(COALESCE(SAMPLE(?bdg), 0)) - SUM(xsd:decimal(?cost)) AS ?remainingBudget )
+  ("000510" AS ?programCode)
+  ?programLabel
+  ?budget
+  ?projectCount
+  ?totalCost
+  ?avgCost
+  ?minCost
+  ?maxCost
+  ( xsd:decimal(COALESCE(?budget, 0)) - ?totalCost AS ?remainingBudget )
 WHERE {
-  GRAPH ?g1 {
-    ?rem_proj a cwbi:Remis_Project ;
-              cwbi:Program ?program ;
-              cwbi:ProjectCost ?cost .
-    ?program skos:prefLabel|skos:altLabel ?progLabel ;
-             skos:altLabel "000510" ;
-             cwbi:ProgramBudget ?bdg
+  # 1) Aggregate projects & costs (no labels here)
+  {
+    SELECT
+      ?program
+      ?budget
+      (COUNT(DISTINCT ?rem_proj) AS ?projectCount)
+      (SUM(xsd:decimal(?cost))   AS ?totalCost)
+      (AVG(xsd:decimal(?cost))   AS ?avgCost)
+      (MIN(xsd:decimal(?cost))   AS ?minCost)
+      (MAX(xsd:decimal(?cost))   AS ?maxCost)
+    WHERE {
+      GRAPH ?g1 {
+        ?rem_proj a cwbi:Remis_Project ;
+                  cwbi:Program ?program ;
+                  cwbi:ProjectCost ?cost .
+        ?program  skos:altLabel "000510" ;
+        		  cwbi:ProgramBudget ?budget .
+      }
+    }
+    GROUP BY ?program ?budget
+  }
+
+  # 2) Label is in a different graph g2. We also don't want it to screw up the aggregation results (by introducing cross products)
+  OPTIONAL {
+    SELECT ?program (SAMPLE(?lbl) AS ?programLabel)
+    WHERE {
+      GRAPH ?g2 {
+        ?program rdfs:label ?lbl .
+      }
+    }
+    GROUP BY ?program
   }
 }
-GROUP BY ?program
 ORDER BY DESC(?totalCost)
 
 ===

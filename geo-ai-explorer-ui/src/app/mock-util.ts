@@ -53,10 +53,10 @@ export class MockUtil {
 - Dams: <location><label>James W. Trimble Lock and Dam</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-AR00163</uri></location>, <location><label>New Spiro</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-OK10058</uri></location>, <location><label>Ozark-Jetta Taylor Lock and Dam</label><uri>https://localhost:4200/lpg/graph_801104/0#Dam-AR00164</uri></location> 
 - Recreation Areas: <location><label>CLEAR CREEK</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_2448</uri></location>, <location><label>COWLINGTON POINT</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_1375</uri></location>, <location><label>OZARK CITY PARK</label><uri>https://localhost:4200/lpg/graph_801104/0#UsaceRecreationArea-RAR_ID_2449</uri></location> 
 As well as numerous census tracts, real properties, and other infrastructure.`, mappable: true, purpose: 'standard' },
-    { id: '15', sender: 'user', text: 'How much was spent on a program with code \'000510\'?', mappable: false, purpose: 'standard' },
-    { id: '16', sender: 'system', text: 'The program with code \'000510\' has a total expenditure of $5,557,670 across 60 projects.', mappable: true, purpose: 'standard' },
+    { id: '15', sender: 'user', text: 'How much was spent on the McClellan-Kerr Arkansas River Navigation program?', mappable: false, purpose: 'standard' },
+    { id: '16', sender: 'system', text: 'The McClellan-Kerr Arkansas River Navigation System program (code 000510) has spent a total of $6,018,379 across 60 projects.', mappable: true, purpose: 'standard' },
     { id: '17', sender: 'user', text: 'What was the budget?', mappable: false, purpose: 'standard' },
-    { id: '18', sender: 'system', text: 'The program has a budget of $5,728,432 with $170,762 remaining. The average project cost is $92,628, with project costs ranging from $50,558 to $148,414.', mappable: true, purpose: 'standard' },
+    { id: '18', sender: 'system', text: 'The program has a total budget of $6,048,365 with $6,018,379 spent across 60 projects. The average project cost is $100,306.32, with project costs ranging from $51,156 to $149,765. There is $29,986 remaining in the budget.', mappable: true, purpose: 'standard' },
   ];
 
   public static explorerInit: ExplorerInit = {

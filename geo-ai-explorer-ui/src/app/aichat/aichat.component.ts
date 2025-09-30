@@ -160,7 +160,6 @@ export class AichatComponent {
 
       if (index !== -1) {
         let history = [...messages];
-        history.splice(index);
         history = history.filter(m => m.purpose === 'standard');
 
         this.mapLoading = true;
