@@ -442,7 +442,7 @@ WHERE {
     GROUP BY ?program ?budget
   }
 
-  # 2) Label is in a different graph g2. We also don't want it to screw up the aggregation results (by introducing cross products)
+  # 2) IMPORTANT: Notice how this label query happens in a separate query from the aggregate query above. If we were to include this inside the query above, it would screw up the aggregation results by introducing cross products.
   OPTIONAL {
     SELECT ?program (SAMPLE(?lbl) AS ?programLabel)
     WHERE {
@@ -455,4 +455,3 @@ WHERE {
 }
 ORDER BY DESC(?totalCost)
 
-===

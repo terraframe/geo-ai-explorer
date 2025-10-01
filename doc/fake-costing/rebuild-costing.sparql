@@ -33,6 +33,37 @@ WHERE {
   }
 }
 
+=
+
+PREFIX apex: http://dime.usace.mil/data/dataset#
+PREFIX cwbi: http://dime.usace.mil/ontologies/cwbi-concept#
+PREFIX pm: http://data.sec.usace.army.mil/ontologies/pm#
+PREFIX pmcommon: http://data.sec.usace.army.mil/common/ont/pm#
+PREFIX sdsfie: http://dime.usace.org/taxonomy/sdsfie/
+PREFIX lpgs: https://localhost:4200/lpg/rdfs#
+PREFIX lpg: https://localhost:4200/lpg#
+PREFIX lpgv: https://localhost:4200/lpg/graph_801104/0#
+PREFIX lpgvs: https://localhost:4200/lpg/graph_801104/0/rdfs#
+PREFIX skos: http://www.w3.org/2004/02/skos/core#
+PREFIX rdfs: http://www.w3.org/2000/01/rdf-schema#
+PREFIX dct: http://purl.org/dc/terms/
+PREFIX geo: http://www.opengis.net/ont/geosparql#
+PREFIX xsd: http://www.w3.org/2001/XMLSchema#
+
+DELETE {
+	GRAPH https://localhost:4200/lpg/graph_801104/0#
+	{
+		?proj cwbi:ProjectCost ?cost .
+	}
+}
+WHERE {
+	GRAPH https://localhost:4200/lpg/graph_801104/0#
+	{
+		?proj a lpgvs:Project ;
+		cwbi:ProjectCost ?cost .
+	}
+}
+
 
 ======
 2. Generate new project costing data
@@ -59,6 +90,37 @@ WHERE {
   # random integer in [50,000, 150,000), mean ≈ 100,000
   BIND(xsd:integer(50000 + FLOOR(RAND() * (150000 - 50000))) AS ?cost)
 }
+
+==
+Add it to lpgvs:Project too so we can find it when we do attributes
+==
+
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpg: <https://localhost:4200/lpg#>
+PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+INSERT {
+	GRAPH <https://localhost:4200/lpg/graph_801104/0#> {
+		?proj cwbi:ProjectCost ?cost .
+	}
+}
+WHERE {
+	GRAPH <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> {
+		?rem_proj a cwbi:Remis_Project ;
+			skos:altLabel ?projCode ;
+			cwbi:ProjectCost ?cost .
+	}
+	
+	GRAPH <https://localhost:4200/lpg/graph_801104/0#> {
+		?proj a lpgvs:Project ;
+			lpgs:GeoObject-code ?projCode .
+	}
+}
+
 
 =====
 3. Generate new program budget data
@@ -124,4 +186,26 @@ WHERE {
 }
 GROUP BY ?program
 ORDER BY DESC(?totalCost)
+
+==
+Verify that the lpgv:Project data matches the cwbi data
+==
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?proj ?projCode ?label ?costDecimal
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {
+  ?proj a lpgvs:Project ;
+        lpgs:GeoObject-code ?projCode ;
+        rdfs:label ?label ;
+        cwbi:ProjectCost ?cost .
+  BIND(xsd:decimal(?cost) AS ?costDecimal)
+}
+ORDER BY ?projCode
+LIMIT 200
 
