@@ -12,6 +12,8 @@ bedrock.region=
 # URL of the JENA instance and dataset
 jena.url=http://example.com/jena:3030/inundation/
 
+management.endpoints.web.exposure.include=health,info
+
 # User name and password able to log into the geo-ai-explorer server
 spring.security.user.name=
 spring.security.user.password=
