@@ -34,7 +34,7 @@ public class ChatService
   private BedrockService      bedrock;
 
   @Autowired
-  private JenaService         jena;
+  private GraphQueryService   graph;
 
   public Message prompt(String sessionId, String inputText)
   {
@@ -71,8 +71,8 @@ public class ChatService
     try
     {
       LocationPage page = new LocationPage();
-      page.setLocations(this.jena.query(statement, offset, limit));
-      page.setCount(this.jena.getCount(statement));
+      page.setLocations(this.graph.query(statement, offset, limit));
+      page.setCount(this.graph.getCount(statement));
       page.setLimit(limit);
       page.setOffset(offset);
       page.setStatement(statement);

@@ -109,15 +109,15 @@ public class JenaRDFBuilderIntegrationTest
   private AppProperties            properties;
 
   @Autowired
-  private JenaService              service;
+  private GraphQueryService        service;
 
   // @Test
   public void exportTrigFile() throws FileNotFoundException, IOException
   {
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
-        .destination(properties.getJenaUrl());
+        .destination(properties.getSparqlUrl());
 
-    System.out.println(properties.getJenaUrl());
+    System.out.println(properties.getSparqlUrl());
 
     // Create the list of subject objects to export
     Set<String> subjects = new TreeSet<>();
@@ -236,9 +236,9 @@ public class JenaRDFBuilderIntegrationTest
   public void exportShapefiles() throws FileNotFoundException, IOException
   {
     RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
-        .destination(properties.getJenaUrl());
+        .destination(properties.getSparqlUrl());
 
-    System.out.println(properties.getJenaUrl());
+    System.out.println(properties.getSparqlUrl());
 
     TypeInfo channel = new TypeInfo("ChannelReach", "MultiPolygon");
 

@@ -34,7 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 import net.geoprism.geoai.explorer.core.model.Graph;
 import net.geoprism.geoai.explorer.core.model.Location;
 import net.geoprism.geoai.explorer.core.model.LocationPage;
-import net.geoprism.geoai.explorer.core.service.JenaService;
+import net.geoprism.geoai.explorer.core.service.GraphQueryService;
+import net.geoprism.geoai.explorer.core.service.search.BasicSearchService;
 import software.amazon.awssdk.utils.StringUtils;
 
 @RestController
@@ -42,7 +43,10 @@ import software.amazon.awssdk.utils.StringUtils;
 public class ExplorerController
 {
   @Autowired
-  private JenaService jena;
+  private GraphQueryService graph;
+  
+  @Autowired
+  private BasicSearchService search;
 
   @PostMapping("/api/neighbors")
   @ResponseBody
@@ -61,7 +65,7 @@ public class ExplorerController
     	exclude = Arrays.asList(sExclude.split(","));
     }
 
-    Graph graph = this.jena.neighbors(uri, exclude);
+    Graph graph = this.graph.neighbors(uri, exclude);
 
     return new ResponseEntity<Graph>(graph, HttpStatus.OK);
   }
@@ -77,7 +81,7 @@ public class ExplorerController
       return ResponseEntity.badRequest().build();
     }
     
-    LocationPage locations = this.jena.fullTextLookup(query, parseRequestInt(request, "offset", 0), parseRequestInt(request, "limit", 1000));
+    LocationPage locations = this.search.fullTextLookup(query, parseRequestInt(request, "offset", 0), parseRequestInt(request, "limit", 1000));
 
     return new ResponseEntity<LocationPage>(locations, HttpStatus.OK);
   }
@@ -100,9 +104,9 @@ public class ExplorerController
       @RequestParam(name = "includeGeometry", required = false, defaultValue = "false") Boolean includeGeometry, 
       @RequestParam(name = "hasPrefix", required = false, defaultValue = "true") Boolean hasPrefix)
   {
-    uri = hasPrefix ? uri : JenaService.OBJECT_PRFIX + uri;
+    uri = hasPrefix ? uri : GraphQueryService.OBJECT_PREFIX + uri;
     
-    Location location = this.jena.getAttributes(uri, includeGeometry);
+    Location location = this.graph.getAttributes(uri, includeGeometry);
 
     return new ResponseEntity<Location>(location, HttpStatus.OK);
   }

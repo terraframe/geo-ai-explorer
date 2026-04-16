@@ -4,7 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 @Service
 public class AppProperties
@@ -32,24 +39,53 @@ public class AppProperties
     return env.getProperty("bedrock.sparql.agent.alias.id");
   }
 
-  public Region getRegion()
+  public Region getBedrockRegion()
   {
-    return Region.of(env.getProperty("bedrock.region"));
+    String configured = env.getProperty("bedrock.region");
+
+    if (configured != null && !configured.isBlank())
+    {
+      return Region.of(configured);
+    }
+
+    return DefaultAwsRegionProviderChain.builder().build().getRegion();
   }
 
-  public String getAccessKeyId()
+  public Region getNeptuneRegion()
   {
-    return env.getProperty("access.key.id");
+    String configured = env.getProperty("neptune.region");
+
+    if (configured != null && !configured.isBlank())
+    {
+      return Region.of(configured);
+    }
+
+    return DefaultAwsRegionProviderChain.builder().build().getRegion();
   }
 
-  public String getSecretAccessKey()
+  public String getSparqlUrl()
   {
-    return env.getProperty("secret.access.key");
+    return env.getProperty("sparql.url");
+  }
+  
+  public String getOpenSearchScheme()
+  {
+    return env.getProperty("opensearch.scheme");
   }
 
-  public String getJenaUrl()
+  public String getOpenSearchHost()
   {
-    return env.getProperty("jena.url");
+    return env.getProperty("opensearch.host");
+  }
+
+  public int getOpenSearchPort()
+  {
+    return Integer.parseInt(env.getProperty("opensearch.port"));
+  }
+
+  public String getOpenSearchIndex()
+  {
+    return env.getProperty("opensearch.index");
   }
 
 }

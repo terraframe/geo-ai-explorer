@@ -21,7 +21,7 @@ public class JenaServiceIntegrationTest
 {
 
   @Autowired
-  private JenaService service;
+  private GraphQueryService service;
 
   // write test cases here
   @Test
