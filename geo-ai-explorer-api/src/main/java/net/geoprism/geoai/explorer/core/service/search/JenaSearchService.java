@@ -57,11 +57,9 @@ public class JenaSearchService extends BasicSearchService
 
   public LocationPage fullTextLookup(String query, int offset, int limit)
   {
-    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create().destination(properties.getSparqlUrl());
-
     List<Location> results = new ArrayList<Location>();
 
-    try (RDFConnection conn = builder.build())
+    try (RDFConnection conn = graph.createConnection())
     {
       var sparql = JENA_FULL_TEXT_LOOKUP;
       sparql += " LIMIT " + limit + " OFFSET " + offset;

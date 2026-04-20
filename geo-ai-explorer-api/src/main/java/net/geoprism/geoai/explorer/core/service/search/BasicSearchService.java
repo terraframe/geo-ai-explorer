@@ -45,7 +45,7 @@ public class BasicSearchService
       """;
 
   @Autowired
-  private GraphQueryService  graph;
+  protected GraphQueryService  graph;
 
   public LocationPage fullTextLookup(String query, int offset, int limit)
   {
