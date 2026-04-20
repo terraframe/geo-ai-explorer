@@ -70,7 +70,7 @@ public class AppProperties
   
   public String getOpenSearchScheme()
   {
-    return env.getProperty("opensearch.scheme");
+    return env.getProperty("opensearch.scheme", "https");
   }
 
   public String getOpenSearchHost()
