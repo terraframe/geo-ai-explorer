@@ -20,7 +20,8 @@ import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.service.GraphQueryService;
 
 /**
- * This class basically provides a SPARQL basic text comparison lookup functionality.
+ * This class basically provides a SPARQL basic text comparison lookup
+ * functionality.
  */
 @Service
 public class BasicSearchService
@@ -44,48 +45,48 @@ public class BasicSearchService
       """;
 
   @Autowired
-  private AppProperties      properties;
+  private GraphQueryService  graph;
 
   public LocationPage fullTextLookup(String query, int offset, int limit)
   {
-    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create().destination(properties.getSparqlUrl());
-
     List<Location> results = new ArrayList<>();
 
-    try (RDFConnection conn = builder.build())
+    try (RDFConnection conn = graph.createConnection())
     {
-      String sparql = BASIC_TEXT_SEARCH + " LIMIT " + limit + " OFFSET " + offset;
-
-      ParameterizedSparqlString pss = new ParameterizedSparqlString();
-      pss.setCommandText(sparql);
-      pss.setLiteral("query", query);
-
-      try (QueryExecution qe = conn.query(pss.asQuery()))
       {
-        ResultSet rs = qe.execSelect();
+        String sparql = BASIC_TEXT_SEARCH + " LIMIT " + limit + " OFFSET " + offset;
 
-        while (rs.hasNext())
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(sparql);
+        pss.setLiteral("query", query);
+
+        try (QueryExecution qe = conn.query(pss.asQuery()))
         {
-          QuerySolution qs = rs.next();
+          ResultSet rs = qe.execSelect();
 
-          String uri = GraphQueryService.getResourceUri(qs, "uri");
-          String type = GraphQueryService.readString(qs, "type");
-          String code = GraphQueryService.readString(qs, "code");
-          String label = GraphQueryService.readString(qs, "label");
-          String wkt = GraphQueryService.readString(qs, "wkt");
+          while (rs.hasNext())
+          {
+            QuerySolution qs = rs.next();
 
-          results.add(new Location(uri, type, code, label, GraphQueryService.parseGeometry(wkt)));
+            String uri = GraphQueryService.getResourceUri(qs, "uri");
+            String type = GraphQueryService.readString(qs, "type");
+            String code = GraphQueryService.readString(qs, "code");
+            String label = GraphQueryService.readString(qs, "label");
+            String wkt = GraphQueryService.readString(qs, "wkt");
+
+            results.add(new Location(uri, type, code, label, GraphQueryService.parseGeometry(wkt)));
+          }
         }
       }
+
+      LocationPage page = new LocationPage();
+      page.setLocations(results);
+      page.setCount(results.size());
+      page.setLimit(limit);
+      page.setOffset(offset);
+      page.setStatement(BASIC_TEXT_SEARCH.replace("?query", FmtUtils.stringForString(query)));
+
+      return page;
     }
-
-    LocationPage page = new LocationPage();
-    page.setLocations(results);
-    page.setCount(results.size());
-    page.setLimit(limit);
-    page.setOffset(offset);
-    page.setStatement(BASIC_TEXT_SEARCH.replace("?query", FmtUtils.stringForString(query)));
-
-    return page;
   }
 }

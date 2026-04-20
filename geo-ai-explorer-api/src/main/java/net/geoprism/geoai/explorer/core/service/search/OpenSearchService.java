@@ -10,6 +10,8 @@ import org.opensearch.client.opensearch._types.query_dsl.Operator;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.aws.AwsSdk2Transport;
+import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,6 +22,9 @@ import net.geoprism.geoai.explorer.core.config.AppProperties;
 import net.geoprism.geoai.explorer.core.model.Location;
 import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.service.GraphQueryService;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.regions.Region;
 
 @Service
 @Primary
@@ -34,16 +39,7 @@ public class OpenSearchService extends BasicSearchService
   {
     List<Location> results = new ArrayList<>();
 
-    HttpHost host = new HttpHost(
-      properties.getOpenSearchScheme(),   // e.g. "http" or "https"
-      properties.getOpenSearchHost(),     // e.g. "localhost"
-      properties.getOpenSearchPort()      // e.g. 9200
-    );
-
-    ApacheHttpClient5TransportBuilder builder =
-      ApacheHttpClient5TransportBuilder.builder(host);
-
-    try (OpenSearchTransport transport = builder.build())
+    try (OpenSearchTransport transport = buildTransport())
     {
       OpenSearchClient client = new OpenSearchClient(transport);
 
@@ -91,8 +87,40 @@ public class OpenSearchService extends BasicSearchService
     }
     catch (IOException e)
     {
-      throw new RuntimeException("Failed to execute OpenSearch query", e);
+      throw new RuntimeException(
+        "Failed to execute OpenSearch query against "
+          + properties.getOpenSearchScheme() + "://"
+          + properties.getOpenSearchHost() + ":"
+          + properties.getOpenSearchPort()
+          + "/" + properties.getOpenSearchIndex()
+          + " (iam=" + properties.isOpenSearchIam() + ")",
+        e
+      );
     }
+  }
+
+  private OpenSearchTransport buildTransport()
+  {
+    if (properties.isOpenSearchIam())
+    {
+      return new AwsSdk2Transport(
+        ApacheHttpClient.builder().build(),
+        properties.getOpenSearchHost(),
+        "es",
+        properties.getOpenSearchRegion(),
+        AwsSdk2TransportOptions.builder()
+          .setCredentials(DefaultCredentialsProvider.create())
+          .build()
+      );
+    }
+
+    HttpHost host = new HttpHost(
+      properties.getOpenSearchScheme(),
+      properties.getOpenSearchHost(),
+      properties.getOpenSearchPort()
+    );
+
+    return ApacheHttpClient5TransportBuilder.builder(host).build();
   }
 
   private String buildDebugStatement(String query, int offset, int limit)

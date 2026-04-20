@@ -53,7 +53,7 @@ public class AppProperties
 
   public Region getNeptuneRegion()
   {
-    String configured = env.getProperty("neptune.region");
+    String configured = env.getProperty("neptune.region", env.getProperty("bedrock.region"));
 
     if (configured != null && !configured.isBlank())
     {
@@ -80,12 +80,29 @@ public class AppProperties
 
   public int getOpenSearchPort()
   {
-    return Integer.parseInt(env.getProperty("opensearch.port"));
+    return Integer.parseInt(env.getProperty("opensearch.port", "443"));
   }
 
   public String getOpenSearchIndex()
   {
     return env.getProperty("opensearch.index");
+  }
+  
+  public boolean isOpenSearchIam()
+  {
+    return Boolean.parseBoolean(env.getProperty("opensearch.iam", "false"));
+  }
+  
+  public Region getOpenSearchRegion()
+  {
+    String configured = env.getProperty("opensearch.region", env.getProperty("bedrock.region"));
+
+    if (configured != null && !configured.isBlank())
+    {
+      return Region.of(configured);
+    }
+
+    return DefaultAwsRegionProviderChain.builder().build().getRegion();
   }
 
 }

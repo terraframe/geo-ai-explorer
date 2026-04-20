@@ -194,7 +194,7 @@ public class GraphQueryService {
     @Autowired
     protected AppProperties properties;
 
-    protected RDFConnection createConnection() {
+    public RDFConnection createConnection() {
         RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
                 .destination(properties.getSparqlUrl());
 

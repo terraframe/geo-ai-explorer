@@ -20,7 +20,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 public class NeptuneQueryService extends GraphQueryService
 {
   @Override
-  protected RDFConnection createConnection()
+  public RDFConnection createConnection()
   {
     final AwsCredentialsProvider awsCredentialsProvider = DefaultCredentialsProvider.create();
 
