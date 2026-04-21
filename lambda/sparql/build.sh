@@ -1,7 +1,7 @@
-pip install --target ./package requests python-dotenv
+pip install --target ./package requests
 
 cd package
-zip -r ../my_deployment_package.zip .
+zip -r ../function.zip .
 
 cd ..
-zip my_deployment_package.zip dummy_lambda.py .env
+zip function.zip lambda_function.py
