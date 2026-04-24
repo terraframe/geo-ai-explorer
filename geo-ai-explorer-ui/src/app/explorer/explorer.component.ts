@@ -942,7 +942,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
                     mapbox: {
                         'type': 'raster',
                         'tiles': [
-                            'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=' + "pk.eyJ1IjoianVzdGlubGV3aXMiLCJhIjoiY2l0YnlpdWRkMDlkNjJ5bzZuMTR3MHZ3YyJ9.Ad0fQd8onRSYR9QZP6VyUw"
+                            environment.apiUrl + "api/mapbox/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90"
                         ],
                         'tileSize': 512
                     }
