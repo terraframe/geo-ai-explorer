@@ -299,6 +299,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
     }
 
+    goBack() {
+        this.store.dispatch(ExplorerActions.backWorkflowStep());
+        this.store.dispatch(ExplorerActions.selectGeoObject(null));
+    }
+
     disambiguate() {
         this.store.dispatch(ExplorerActions.setPage({ page: { 
             locations: [],
@@ -1147,6 +1152,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                                 this.map!.setFeatureState({ source: layer.id, sourceLayer: layer.sourceLayer, id: feature.properties[layer.codeProperty] }, { selected: true });
 
                                 this.selectedObject = geoObject;
+                                this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: geoObject }));
                                 this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: false }));
                             })
                             .catch(error => this.errorService.handleError(error))
@@ -1158,6 +1164,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                     const uri = feature?.properties["uri"];
 
                     let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
+                    this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: selectedObject }));
                     this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
                 }
             } else {

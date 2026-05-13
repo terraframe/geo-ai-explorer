@@ -74,6 +74,11 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
     }
 
+    goBack() {
+        this.store.dispatch(ExplorerActions.backWorkflowStep());
+        this.store.dispatch(ExplorerActions.selectGeoObject(null));
+    }
+
     calculateScrollHeight(): string {
         if (this.workflowStep == WorkflowStep.DisambiguateObject) {
             return "calc(100vh - 75px)"
@@ -86,7 +91,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     }
 
     onClick(obj: GeoObject): void {
-        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.InspectObject, data: obj }));
+        this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: obj }));
         this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj, zoomMap: true }));
     }
 

@@ -3,10 +3,10 @@
         <ng-container *ngIf="page.count > 0">
             <div class="horizontal-layout" *ngIf="workflowStep !== WorkflowStep.DisambiguateObject">
                 <p-button severity="secondary"
-                            pTooltip="Back to AI Chat"
-                            (onClick)="navigateToChat()">
+                            pTooltip="Go Back"
+                            (onClick)="goBack()">
                     <fa-icon [icon]="backIcon"></fa-icon>
-                    <label style="cursor: pointer;">Back to Chat</label>
+                    <label style="cursor: pointer;">Back</label>
                 </p-button>
             </div>
 

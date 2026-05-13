@@ -1,4 +1,4 @@
-import { createActionGroup, props, createReducer, on, createFeatureSelector, createSelector } from "@ngrx/store";
+import { createActionGroup, props, emptyProps, createReducer, on, createFeatureSelector, createSelector } from "@ngrx/store";
 // @ts-ignore
 import ColorGen from "color-generator";
 
@@ -25,9 +25,17 @@ export const ExplorerActions = createActionGroup({
         'Set Styles': props<{ styles: StyleConfig }>(),
         'Set Vector Layer': props<{ layer: VectorLayer }>(),
         'Set Configuration': props<Configuration>(),
-        'Set Workflow Step': props<{ step: WorkflowStep, data?: any }>()
+        'Set Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
+        'Append Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
+        'Back Workflow Step': emptyProps(),
+        'Clear Workflow History': emptyProps()
     },
 });
+
+export interface WorkflowState {
+    step: WorkflowStep;
+    data?: any;
+}
 
 export enum WorkflowStep {
     FullScreenChat = "FullScreenChat",
@@ -49,6 +57,7 @@ export interface ExplorerStateModel {
     page: LocationPage;
     workflowStep: WorkflowStep;
     workflowData?: any;
+    workflowHistory: WorkflowState[];
 }
 
 export const initialState: ExplorerStateModel = {
@@ -59,6 +68,7 @@ export const initialState: ExplorerStateModel = {
     highlightedObject: null,
     vectorLayers: [],
     workflowStep: WorkflowStep.FullScreenChat,
+    workflowHistory: [],
     page: { 
         locations: [],
         statement: "",
@@ -199,11 +209,53 @@ export const explorerReducer = createReducer(
         styles: styles
     })),
 
-    // Set Workflow Step
+    // Replace Workflow Step
     on(ExplorerActions.setWorkflowStep, (state, { step, data }) => ({
         ...state,
         workflowStep: step,
         workflowData: data
+    })),
+
+    // Append Workflow Step
+    on(ExplorerActions.appendWorkflowStep, (state, { step, data }) => {
+        const current: WorkflowState = {
+            step: state.workflowStep,
+            data: state.workflowData
+        };
+
+        return {
+            ...state,
+            workflowStep: step,
+            workflowData: data,
+            workflowHistory: [...state.workflowHistory, current]
+        };
+    }),
+
+    // Back Workflow Step
+    on(ExplorerActions.backWorkflowStep, (state) => {
+        if (state.workflowHistory.length === 0) {
+            return {
+                ...state,
+                workflowStep: WorkflowStep.FullScreenChat,
+                workflowData: undefined
+            };
+        }
+
+        const workflowHistory = [...state.workflowHistory];
+        const previous = workflowHistory.pop()!;
+
+        return {
+            ...state,
+            workflowStep: previous.step,
+            workflowData: previous.data,
+            workflowHistory
+        };
+    }),
+
+    // Clear Workflow History
+    on(ExplorerActions.clearWorkflowHistory, (state) => ({
+        ...state,
+        workflowHistory: []
     })),
     
 );
@@ -251,3 +303,5 @@ export const getWorkflowState = createSelector(selector, (s) => ({
   step: s.workflowStep,
   data: s.workflowData
 }));
+
+export const getWorkflowHistory = createSelector(selector, (s) => s.workflowHistory);
