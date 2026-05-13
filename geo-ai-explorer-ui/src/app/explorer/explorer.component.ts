@@ -23,7 +23,7 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage, getWorkflowState } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -58,7 +58,7 @@ export interface TypeLegend { [key: string]: { label: string, color: string, vis
     templateUrl: './explorer.component.html',
     styleUrl: './explorer.component.scss'
 })
-export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
+export class ExplorerComponent implements OnInit, OnDestroy {
     public WorkflowStep = WorkflowStep;
     public backIcon = faArrowLeft;
     public forwardIcon = faArrowRight;
@@ -97,7 +97,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onHighlightedObjectChange: Subscription;
 
-    workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+    workflowState$: Observable<{step: WorkflowStep, data: any}> = this.store.select(getWorkflowState);
 
     onWorkflowStepChange: Subscription;
 
@@ -125,6 +125,8 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     public highlightedObject: GeoObject | null | undefined;
 
+    private mapInitialized = false;
+
     baseLayers: any[] = [
         {
             name: "Satellite",
@@ -144,7 +146,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
     onVectorLayersChange: Subscription;
 
-    public workflowStep: WorkflowStep = WorkflowStep.AiChatAndResults;
+    public workflowStep: WorkflowStep = WorkflowStep.FullScreenChat;
 
     private zoomMap: boolean = false;
 
@@ -189,21 +191,41 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.selectObject(object, zoomMap);
 
             // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
-            setTimeout(() => {
-                this.map?.resize();
-            }, 0);
+            // setTimeout(() => {
+            //     this.map?.resize();
+            // }, 0);
         });
 
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
             this.highlightObject(object == null ? undefined : object.properties.uri);
         });
 
-        this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
+        this.onWorkflowStepChange = this.workflowState$.subscribe(({step, data}) => {
             this.workflowStep = step;
             this.chatMinimized = step == WorkflowStep.MinimizeChat;
+
+            if (
+                step === WorkflowStep.MapAndResults ||
+                step === WorkflowStep.DisambiguateObject ||
+                step === WorkflowStep.MinimizeChat ||
+                step === WorkflowStep.InspectObject ||
+                step === WorkflowStep.ViewNeighbors
+            ) {
+                this.ensureMapInitialized();
+
+                if (step === WorkflowStep.InspectObject && data) {
+                    this.selectObject(data, true);
+                } else {
+                    this.selectObject(null);
+                }
+            } else {
+                this.destroyMap();
+            }
         });
 
         this.onPageChange = this.page$.subscribe(page => {
+            this.ensureMapInitialized();
+
             this.page = page;
         });
     }
@@ -221,6 +243,51 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.onHighlightedObjectChange.unsubscribe();
     }
 
+    private destroyMap(): void {
+        if (this.map) {
+            this.map.remove();
+            this.map = undefined;
+        }
+
+        this.mapInitialized = false;
+        this.initialized = false;
+        this.renderedObjects = [];
+    }
+
+    private runWhenMapReady(callback: () => void, maxFrames = 120): void {
+        this.ensureMapInitialized();
+
+        let frames = 0;
+
+        const check = () => {
+            frames++;
+
+            const mapReady =
+                !!this.map &&
+                this.initialized &&
+                !!this.map.getStyle();
+
+            if (mapReady) {
+                callback();
+                return;
+            }
+
+            if (frames >= maxFrames) {
+                console.warn('Map was not ready after waiting.', {
+                    hasMap: !!this.map,
+                    initialized: this.initialized,
+                    loaded: this.map?.loaded(),
+                    style: this.map?.getStyle()
+                });
+                return;
+            }
+
+            requestAnimationFrame(check);
+        };
+
+        requestAnimationFrame(check);
+    }
+
     cancelDisambiguation() {
         this.store.dispatch(ExplorerActions.setPage({ page: { 
             locations: [],
@@ -229,7 +296,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             offset: 0,
             count: 0
         }, zoomMap: false }));
-        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
     }
 
     disambiguate() {
@@ -240,7 +307,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             offset: 0,
             count: 0
         }, zoomMap: false }));
-        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults, data: this.selectedObject }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat, data: this.selectedObject }));
     }
 
     minimizeChat() {
@@ -249,7 +316,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
             this.chatMinimized = true;
         }
         else {
-            this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.AiChatAndResults }));
+            this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MapAndResults }));
             this.chatMinimized = false;
         }
     }
@@ -258,8 +325,29 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
         this.activeTab = event;
     }
 
-    ngAfterViewInit() {
-        this.initializeMap();
+    private ensureMapInitialized(): void {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const el = document.getElementById('map');
+
+                if (!el) return;
+
+                const rect = el.getBoundingClientRect();
+
+                if (rect.width === 0 || rect.height === 0) {
+                    console.warn('Map container has zero size. Skipping map init.', rect);
+                    return;
+                }
+
+                if (!this.mapInitialized || !this.map) {
+                    this.initializeMap();
+                    this.mapInitialized = true;
+                    return;
+                }
+
+                this.map.resize();
+            });
+        });
     }
 
     render(): void {
@@ -971,6 +1059,7 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.initialized = true;
 
+            this.render();
             this.renderVectorLayers();
         });
 
@@ -1124,10 +1213,18 @@ export class ExplorerComponent implements OnInit, OnDestroy, AfterViewInit {
 
             // The geo object does exist on the map
             // if (go != null) {
-                if (zoomTo)
-                    this.zoomTo(this.selectedObject.properties.uri);
-
-                this.renderHighlights();
+                if (zoomTo) {
+                    this.runWhenMapReady(() => {
+                        this.render();
+                        this.zoomTo(geoObject!.properties.uri);
+                        this.renderHighlights();
+                    });
+                } else {
+                    this.runWhenMapReady(() => {
+                        this.render();
+                        this.renderHighlights();
+                    });
+                }
             // }
         } else {
             this.selectedObject = undefined;

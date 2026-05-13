@@ -24,6 +24,7 @@ export interface ServerChatResponse {
   sessionId: string;
   mappable: boolean;
   ambiguous: boolean;
+  conversationTitle?: string;
   location?: string;
 }
 

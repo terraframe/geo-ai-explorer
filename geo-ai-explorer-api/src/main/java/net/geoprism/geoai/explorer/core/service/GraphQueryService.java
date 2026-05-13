@@ -15,14 +15,16 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.geosparql.implementation.parsers.wkt.WKTReader;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -32,7 +34,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
-import org.apache.jena.sparql.util.FmtUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -236,8 +237,11 @@ public class GraphQueryService {
                 String label = readString(qs, "label");
                 String wkt = readString(qs, "wkt");
 
-                WKTReader reader = WKTReader.extract(wkt);
-                Geometry geometry = reader.getGeometry();
+                Geometry geometry = null;
+                if (StringUtils.isNotBlank(wkt)) {
+                  WKTReader reader = WKTReader.extract(wkt);
+                  geometry = reader.getGeometry();
+                }
 
                 results.add(new Location(uri, type, code, label, geometry));
 
@@ -377,6 +381,95 @@ public class GraphQueryService {
         }
 
         return results;
+    }
+    
+    public void injectGeometries(LocationPage locations)
+    {
+      if (locations == null || locations.getLocations() == null)
+      {
+        return;
+      }
+
+      List<Location> missingGeometry = locations.getLocations().stream()
+          .filter(location -> location.getGeometry() == null)
+          .filter(location -> location.getId() != null && !location.getId().isBlank())
+          .toList();
+
+      if (missingGeometry.isEmpty())
+      {
+        return;
+      }
+
+      Map<String, Location> locationsById = locations.getLocations().stream()
+          .filter(location -> location.getId() != null)
+          .collect(Collectors.toMap(
+              Location::getId,
+              Function.identity(),
+              (a, b) -> a
+          ));
+
+      int batchSize = 5;
+
+      for (int i = 0; i < missingGeometry.size(); i += batchSize)
+      {
+        int end = Math.min(i + batchSize, missingGeometry.size());
+        List<Location> batch = missingGeometry.subList(i, end);
+
+        String sparql = buildGeometryLookupQuery(batch);
+
+        for (Location location : this.query(sparql))
+        {
+          Location match = locationsById.get(location.getId());
+
+          if (match != null && location.getGeometry() != null)
+          {
+            match.setGeometry(location.getGeometry());
+          }
+        }
+      }
+    }
+
+    private String buildGeometryLookupQuery(List<Location> locations)
+    {
+      StringBuilder sparql = new StringBuilder();
+
+      sparql.append("""
+          PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+          SELECT ?uri ?wkt
+          WHERE {
+            VALUES ?uri {
+          """);
+
+      for (Location location : locations)
+      {
+        sparql.append("          <")
+            .append(escapeSparqlIri(location.getId()))
+            .append(">\n");
+      }
+
+      sparql.append("""
+            }
+
+            {
+              ?uri geo:hasGeometry ?geometry .
+              ?geometry geo:asWKT ?wkt .
+            }
+            UNION
+            {
+              ?uri geo:asWKT ?wkt .
+            }
+          }
+          """);
+
+      return sparql.toString();
+    }
+
+    private static String escapeSparqlIri(String iri)
+    {
+      return iri
+          .replace("\\", "\\\\")
+          .replace(">", "%3E");
     }
 
     private static String exclusionFor(String varName, List<String> excludedTypes) {

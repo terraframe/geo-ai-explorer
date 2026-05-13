@@ -11,18 +11,21 @@ import { Store } from '@ngrx/store';
 import { ExplorerActions, getPage, getWorkflowStep, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
-import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
     selector: 'results-table',
-    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule],
+    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule, ButtonModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss',
 })
 export class ResultsTableComponent implements OnInit, OnDestroy {
     public WorkflowStep = WorkflowStep;
     private store = inject(Store);
+
+    public backIcon = faArrowLeft;
 
     page$: Observable<LocationPage> = this.store.select(getPage);
 
@@ -38,7 +41,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     
     onWorkflowStepChange: Subscription;
 
-    public workflowStep: WorkflowStep = WorkflowStep.AiChatAndResults;
+    public workflowStep: WorkflowStep = WorkflowStep.MapAndResults;
 
     constructor(
         private chatService: ChatService
@@ -60,6 +63,17 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     }
 
+    navigateToChat() {
+        this.store.dispatch(ExplorerActions.setPage({ page: { 
+            locations: [],
+            statement: "",
+            limit: 100,
+            offset: 0,
+            count: 0
+        }, zoomMap: false }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
+    }
+
     calculateScrollHeight(): string {
         if (this.workflowStep == WorkflowStep.DisambiguateObject) {
             return "calc(100vh - 75px)"
@@ -72,6 +86,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     }
 
     onClick(obj: GeoObject): void {
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.InspectObject, data: obj }));
         this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj, zoomMap: true }));
     }
 

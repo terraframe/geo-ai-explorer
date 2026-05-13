@@ -30,7 +30,9 @@ export const ExplorerActions = createActionGroup({
 });
 
 export enum WorkflowStep {
-    AiChatAndResults = 'AiChatAndResults',
+    FullScreenChat = "FullScreenChat",
+    AiChatAndResults = "AiChatAndResults",
+    MapAndResults = 'MapAndResults',
     DisambiguateObject = 'DisambiguateObject',
     ViewNeighbors = 'ViewNeighbors',
     InspectObject = 'InspectObject',
@@ -56,7 +58,7 @@ export const initialState: ExplorerStateModel = {
     zoomMap: false,
     highlightedObject: null,
     vectorLayers: [],
-    workflowStep: WorkflowStep.AiChatAndResults,
+    workflowStep: WorkflowStep.FullScreenChat,
     page: { 
         locations: [],
         statement: "",
@@ -244,3 +246,8 @@ export const getVectorLayers = createSelector(selector, (s) => {
 export const getWorkflowStep = createSelector(selector, (s) => s.workflowStep);
 
 export const getWorkflowData = createSelector(selector, (s) => s.workflowData);
+
+export const getWorkflowState = createSelector(selector, (s) => ({
+  step: s.workflowStep,
+  data: s.workflowData
+}));

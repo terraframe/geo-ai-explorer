@@ -51,6 +51,7 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
   {
     this.httpClient = ApacheHttpClient.builder()
         .connectionTimeout(Duration.ofSeconds(20))
+        .socketTimeout(Duration.ofMinutes(30))
         .build();
 
     this.credentialsProvider = DefaultCredentialsProvider.create();
@@ -69,19 +70,32 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
     String neptune = required(params, "neptune");
     String opensearch = required(params, "opensearch");
     String index = params.getOrDefault("index", "geo_objects");
-    int batchSize = Integer.parseInt(params.getOrDefault("batchSize", "500"));
+    int batchSize = Integer.parseInt(params.getOrDefault("batchSize", "50"));
     Region region = Region.of(required(params, "region"));
 
     String sparql = params.getOrDefault("sparql", """
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
-        SELECT ?uri ?type ?code ?label
+        SELECT ?uri ?type ?code ?label ?geometryWkt
         WHERE {
           ?uri lpgs:GeoObject-code ?code .
           ?uri rdfs:label ?label .
           ?uri a ?type .
+
+          OPTIONAL {
+            ?uri geo:hasGeometry ?geometry .
+            ?geometry geo:asWKT ?wktViaGeometry .
+          }
+
+          OPTIONAL {
+            ?uri geo:asWKT ?directWkt .
+          }
+
+          BIND(COALESCE(?wktViaGeometry, ?directWkt) AS ?geometryWkt)
         }
+        ORDER BY ?uri
         """);
 
     try (NeptuneToOpenSearchSync app = new NeptuneToOpenSearchSync(neptune, opensearch, index, region))
@@ -94,20 +108,50 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
 
   public int syncQueryToOpenSearch(String sparql, int batchSize) throws Exception
   {
-    List<Map<String, Object>> docs = fetchDocumentsFromNeptune(sparql);
-    System.out.println("Fetched " + docs.size() + " rows from Neptune");
-
     int indexed = 0;
-    for (int i = 0; i < docs.size(); i += batchSize)
+    int offset = 0;
+
+    while (true)
     {
-      int end = Math.min(i + batchSize, docs.size());
-      List<Map<String, Object>> batch = docs.subList(i, end);
-      bulkIndex(batch);
-      indexed += batch.size();
-      System.out.println("Indexed " + indexed + " / " + docs.size());
+      String pagedSparql = addLimitOffset(sparql, batchSize, offset);
+
+      List<Map<String, Object>> docs = fetchDocumentsFromNeptune(pagedSparql);
+
+      if (docs.isEmpty())
+      {
+        break;
+      }
+
+      bulkIndex(docs);
+
+      indexed += docs.size();
+
+      long withGeometry = docs.stream()
+          .filter(doc -> Boolean.TRUE.equals(doc.get("hasGeometry")))
+          .count();
+
+      System.out.println("Indexed " + indexed
+          + " total; page size=" + docs.size()
+          + "; with geometry=" + withGeometry
+          + "; offset=" + offset);
+
+      if (docs.size() < batchSize)
+      {
+        break;
+      }
+
+      offset += batchSize;
     }
 
     return indexed;
+  }
+  
+  private static String addLimitOffset(String sparql, int limit, int offset)
+  {
+    String trimmed = sparql.trim();
+
+    // Keep this simple: assume the base query does not already contain LIMIT/OFFSET.
+    return trimmed + "\nLIMIT " + limit + "\nOFFSET " + offset;
   }
 
   public void ensureIndex() throws Exception
@@ -140,7 +184,16 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
               "uri":   { "type": "keyword" },
               "label": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
               "code":  { "type": "keyword" },
-              "type":  { "type": "keyword" }
+              "type":  { "type": "keyword" },
+
+              "geometryWkt": {
+                "type": "text",
+                "index": false
+              },
+
+              "hasGeometry": {
+                "type": "boolean"
+              }
             }
           }
         }
@@ -197,6 +250,7 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
       String label = sparqlValue(row, "label");
       String code = sparqlValue(row, "code");
       String typeUri = sparqlValue(row, "type");
+      String geometryWkt = sparqlValue(row, "geometryWkt");
 
       if (uri == null || label == null || code == null || typeUri == null)
       {
@@ -209,10 +263,41 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
       doc.put("code", code);
       doc.put("type", shortenType(typeUri));
 
+      if (geometryWkt != null && !geometryWkt.isBlank())
+      {
+        doc.put("geometryWkt", normalizeWktLiteral(geometryWkt));
+        doc.put("hasGeometry", true);
+      }
+      else
+      {
+        doc.put("hasGeometry", false);
+      }
+
       docs.add(doc);
     }
 
     return docs;
+  }
+  
+  private static String normalizeWktLiteral(String value)
+  {
+    if (value == null)
+    {
+      return null;
+    }
+
+    String trimmed = value.trim();
+
+    // GeoSPARQL WKT literals may include an SRID prefix, e.g.:
+    // <http://www.opengis.net/def/crs/EPSG/0/4326> POLYGON(...)
+    int gt = trimmed.indexOf(">");
+
+    if (trimmed.startsWith("<") && gt >= 0 && gt + 1 < trimmed.length())
+    {
+      return trimmed.substring(gt + 1).trim();
+    }
+
+    return trimmed;
   }
 
   public void bulkIndex(List<Map<String, Object>> docs) throws Exception
@@ -257,7 +342,37 @@ public class NeptuneToOpenSearchSync implements AutoCloseable
 
     if (errors)
     {
-      throw new RuntimeException("Bulk index returned item errors: " + response.body);
+      int failures = 0;
+      StringBuilder message = new StringBuilder("Bulk index returned item errors:\n");
+
+      for (JsonNode item : root.path("items"))
+      {
+        JsonNode index = item.path("index");
+        JsonNode error = index.path("error");
+
+        if (!error.isMissingNode())
+        {
+          failures++;
+
+          message.append(" - id=")
+              .append(index.path("_id").asText())
+              .append(", status=")
+              .append(index.path("status").asInt())
+              .append(", type=")
+              .append(error.path("type").asText())
+              .append(", reason=")
+              .append(error.path("reason").asText())
+              .append("\n");
+
+          if (failures >= 20)
+          {
+            message.append(" - ... more failures omitted\n");
+            break;
+          }
+        }
+      }
+
+      throw new RuntimeException(message.toString());
     }
   }
 

@@ -39,7 +39,7 @@ The dataset contains interconnected information about:
 Key relationships include flood risk assessment, water flow patterns, and population impact analysis, all connected through a robust spatial data structure.
 `;
 
-const parseText = (m: ChatMessage): ChatMessage => {
+export function parseText(m: ChatMessage): ChatMessage {
 
     const message = { ...m }
     message.sections = [];

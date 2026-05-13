@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -81,9 +83,17 @@ public class ExplorerController
       return ResponseEntity.badRequest().build();
     }
     
-    LocationPage locations = this.search.fullTextLookup(query, parseRequestInt(request, "offset", 0), parseRequestInt(request, "limit", 1000));
+    LocationPage locations = this.search.fullTextLookup(query, parseRequestInt(request, "offset", 0), parseRequestInt(request, "limit", 100));
+    
+    this.graph.injectGeometries(locations);
 
     return new ResponseEntity<LocationPage>(locations, HttpStatus.OK);
+  }
+  
+  private static String escapeUri(String uri)
+  {
+    return uri.replace("\\", "\\\\")
+        .replace(">", "%3E");
   }
   
   private int parseRequestInt(Map<String, String> request, String param, int defaultValue)

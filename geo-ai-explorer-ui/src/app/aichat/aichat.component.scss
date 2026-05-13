@@ -1,28 +1,143 @@
 .clickable {
-  cursor: pointer; /* Changes the cursor to a pointer when hovering over the span */
-  color: blue; /* Optional: Change text color to indicate it's clickable */
-  text-decoration: underline; /* Optional: Add underline to make it look like a link */
+  cursor: pointer;
+  color: blue;
+  text-decoration: underline;
 }
 
 .chat-container {
   position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  border: 2px solid #ccc; /* Border around the entire chat component */
-  padding: 5px;
-  box-sizing: border-box; /* Ensures the border is included in the width/height calculations */
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  border: 2px solid #ccc;
+  box-sizing: border-box;
+  background: #fff;
+  overflow: hidden;
 }
 
-::ng-deep .ambiguous button {
-  margin: 2px;
+.chat-container.minimized {
+  display: flex;
+  flex-direction: row;
+  height: 60px;
+}
+
+/*
+ * Left conversation sidebar
+ */
+
+.conversation-sidebar {
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid #ccc;
+  background: #fafafa;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.conversation-sidebar-title {
+  flex: 0 0 auto;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+  padding: 4px 6px;
+}
+
+.conversation-tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.conversation-tab {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #f7f7f7;
+  padding: 7px 8px;
+  margin: 0;
+
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.conversation-tab:hover {
+  background: #f0f0f0;
+}
+
+.conversation-tab.active {
+  background: #e0f2f1;
+  border-color: #004d40;
+}
+
+.conversation-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-loading {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: #9880ff;
+}
+
+.conversation-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+}
+
+.conversation-close:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .new-conversation-button {
+  width: 100%;
+  justify-content: center;
+}
+
+/*
+ * Main chat area
+ */
+
+.chat-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .messages {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  border: 1px solid #ccc; /* Border around messages */
+  border: 1px solid #ccc;
   padding: 10px;
   margin: 3px;
 
@@ -31,46 +146,9 @@
   gap: 10px;
 }
 
-.sender-icon {
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  margin-right: 20px;
-  background-color: rgb(138, 138, 138, 0.5);
-  border-radius: 18px;
-}
-
-.message .action {
-  text-align: center;
-  width: 100%;
-}
-
-.message fa-icon {
-  color: white;
-}
-
-.message.system .sender-icon {
-  margin-right: 0px;
-  margin-left: 20px;
-}
-
-.sender-icon .icon {
-  display: block;
-  height:100%;
-  width: 100%;
-}
-
-.sender-icon img {
-  height: 100%;
-  padding: 20%;
-  padding-left:10%;
-}
-
-::ng-deep .sender-icon .icon svg {
-  height: 60%;
-  width: 60%;
-  padding: 20%;
-}
+/*
+ * Message rows
+ */
 
 .message {
   display: flex;
@@ -82,8 +160,45 @@
 
 .message.system {
   flex-direction: row-reverse;
+  justify-content: flex-start;
   margin-left: 30px;
-  margin-right: 0px;
+  margin-right: 0;
+}
+
+.message.user {
+  justify-content: flex-start;
+}
+
+.message .action {
+  text-align: center;
+  width: 100%;
+}
+
+.message fa-icon {
+  color: white;
+}
+
+.message strong {
+  display: block;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.message label {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+
+  background-color: #e0f2f1;
+  color: #004d40;
+  border-radius: 16px;
+  padding: 10px;
+
+  max-width: min(760px, 75%);
+  box-sizing: border-box;
 }
 
 .message.system label {
@@ -91,63 +206,199 @@
   color: #202124;
 }
 
-.message strong {
-  display: block;
-  text-align: right; /* Align sender text to the right */
-  white-space: nowrap; /* Prevent sender label from wrapping */
-}
+/*
+ * Sender icons
+ * Defensive sizing here prevents SVGs/images from blowing up the chat area.
+ */
 
-.message label {
-  // display: block;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
+.sender-icon {
+  flex: 0 0 40px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  height: 40px;
+  max-height: 40px;
 
-  align-items: flex-start;
+  margin-right: 20px;
+
+  display: flex;
+  align-items: center;
   justify-content: center;
-  flex-direction: column;
-  height: 100%;
 
-  background-color: #e0f2f1;
-  color: #004d40;
-  border-radius: 16px;
-  padding: 10px;
+  background-color: rgba(138, 138, 138, 0.5);
+  border-radius: 18px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
+.message.system .sender-icon {
+  margin-right: 0;
+  margin-left: 20px;
+}
+
+.sender-icon img {
+  display: block;
+  width: 70%;
+  height: 70%;
+  max-width: 70%;
+  max-height: 70%;
+  object-fit: contain;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.sender-icon .icon {
+  display: block;
+  width: 60%;
+  height: 60%;
+}
+
+::ng-deep .sender-icon .icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+/*
+ * Input row
+ */
 
 .input-container {
+  flex: 0 0 auto;
   display: flex;
-  gap: 5px; /* Space between input and button */
-  padding-top: 5px;
+  gap: 5px;
+  padding: 5px;
+  border-top: 1px solid #ddd;
+  box-sizing: border-box;
 }
 
 input {
   flex-grow: 1;
+  min-width: 0;
   padding: 5px;
 }
 
 button {
-  width: 80px; /* Adjust as needed */
   padding: 5px;
-  margin-left: 5px;
   cursor: pointer;
 }
 
-.message.system .dot-pulse-container {
+/*
+ * PrimeNG / action button spacing
+ */
+
+::ng-deep .ambiguous button {
+  margin: 2px;
+}
+
+/*
+ * Markdown rendering
+ */
+
+.markdown-content {
+  display: block;
+}
+
+.markdown-content p {
+  margin: 0 0 0.75rem 0;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.markdown-content li {
+  margin: 0.25rem 0;
+}
+
+.markdown-content code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.1rem 0.25rem;
+  border-radius: 4px;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.75rem;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid #ccc;
+  color: #555;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
   width: 100%;
+  margin: 0.5rem 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #ccc;
+  padding: 0.35rem;
+}
+
+.markdown-content a {
+  color: blue;
+  text-decoration: underline;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+
+/*
+ * Loading overlays
+ */
+
+.spinner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 55%);
+}
+
+/*
+ * Dot pulse loading animation
+ */
+
+.message.system .dot-pulse-container {
+  width: 20px;
   display: flex;
   flex-direction: column-reverse;
-  align-items: flex-end;
+  align-items: center;
 }
-  
 
+.dot-pulse-container {
+  margin-left: 16px;
+  margin-right: 16px;
+}
 
-
-/**
- * ==============================================
- * Dot Pulse
- * ==============================================
- */
- .dot-pulse {
+.dot-pulse {
   position: relative;
   left: -9999px;
   width: 10px;
@@ -159,7 +410,9 @@ button {
   animation: dot-pulse 1.5s infinite linear;
   animation-delay: 0.25s;
 }
-.dot-pulse::before, .dot-pulse::after {
+
+.dot-pulse::before,
+.dot-pulse::after {
   content: "";
   display: inline-block;
   position: absolute;
@@ -170,11 +423,13 @@ button {
   background-color: #9880ff;
   color: #9880ff;
 }
+
 .dot-pulse::before {
   box-shadow: 9984px 0 0 -5px;
   animation: dot-pulse-before 1.5s infinite linear;
   animation-delay: 0s;
 }
+
 .dot-pulse::after {
   box-shadow: 10014px 0 0 -5px;
   animation: dot-pulse-after 1.5s infinite linear;
@@ -185,32 +440,76 @@ button {
   0% {
     box-shadow: 9984px 0 0 -5px;
   }
+
   30% {
     box-shadow: 9984px 0 0 2px;
   }
-  60%, 100% {
+
+  60%,
+  100% {
     box-shadow: 9984px 0 0 -5px;
   }
 }
+
 @keyframes dot-pulse {
   0% {
     box-shadow: 9999px 0 0 -5px;
   }
+
   30% {
     box-shadow: 9999px 0 0 2px;
   }
-  60%, 100% {
+
+  60%,
+  100% {
     box-shadow: 9999px 0 0 -5px;
   }
 }
+
 @keyframes dot-pulse-after {
   0% {
     box-shadow: 10014px 0 0 -5px;
   }
+
   30% {
     box-shadow: 10014px 0 0 2px;
   }
-  60%, 100% {
+
+  60%,
+  100% {
     box-shadow: 10014px 0 0 -5px;
+  }
+}
+
+/*
+ * Narrow responsive fallback
+ */
+
+@media (max-width: 700px) {
+  .chat-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .conversation-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #ccc;
+    max-height: 130px;
+  }
+
+  .conversation-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .conversation-tab {
+    width: auto;
+    min-width: 140px;
+    max-width: 200px;
+  }
+
+  .conversation-sidebar-title {
+    display: none;
   }
 }
