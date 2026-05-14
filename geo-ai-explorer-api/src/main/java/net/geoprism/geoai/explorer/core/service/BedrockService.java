@@ -32,7 +32,9 @@ import org.springframework.stereotype.Service;
 import net.geoprism.geoai.explorer.core.config.AppProperties;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.Message;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.bedrockagentruntime.BedrockAgentRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockagentruntime.model.InvokeAgentRequest;
@@ -169,7 +171,7 @@ public class BedrockService
 
 	    return BedrockAgentRuntimeAsyncClient.builder()
 	        .region(properties.getBedrockRegion())
-	        .credentialsProvider(DefaultCredentialsProvider.create())
+	        .credentialsProvider(properties.getCredentialsProvider())
 	        .httpClientBuilder(
 	            NettyNioAsyncHttpClient.builder()
 	                .readTimeout(nettyReadTimeout)

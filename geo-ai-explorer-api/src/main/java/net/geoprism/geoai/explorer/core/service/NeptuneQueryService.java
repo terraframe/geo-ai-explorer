@@ -22,7 +22,7 @@ public class NeptuneQueryService extends GraphQueryService
   @Override
   public RDFConnection createConnection()
   {
-    final AwsCredentialsProvider awsCredentialsProvider = DefaultCredentialsProvider.create();
+    final AwsCredentialsProvider awsCredentialsProvider = properties.getCredentialsProvider();
 
     HttpClient signingClient = new AwsSigningHttpClient(
         "neptune-db",

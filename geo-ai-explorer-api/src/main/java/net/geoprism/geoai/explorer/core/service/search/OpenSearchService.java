@@ -204,7 +204,7 @@ public class OpenSearchService extends BasicSearchService
         "es",
         properties.getOpenSearchRegion(),
         AwsSdk2TransportOptions.builder()
-          .setCredentials(DefaultCredentialsProvider.create())
+          .setCredentials(properties.getCredentialsProvider())
           .build()
       );
     }

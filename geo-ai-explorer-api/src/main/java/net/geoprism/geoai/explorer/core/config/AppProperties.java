@@ -104,5 +104,69 @@ public class AppProperties
 
     return DefaultAwsRegionProviderChain.builder().build().getRegion();
   }
+  
+  public AwsCredentialsProvider getCredentialsProvider()
+  {
+    String accessKeyId = getFirstNonBlankProperty(
+        "aws.access-key-id",
+        "aws.accessKeyId",
+        "aws.access_key_id"
+    );
+
+    String secretAccessKey = getFirstNonBlankProperty(
+        "aws.secret-access-key",
+        "aws.secretAccessKey",
+        "aws.secret_access_key"
+    );
+
+    String sessionToken = getFirstNonBlankProperty(
+        "aws.session-token",
+        "aws.sessionToken",
+        "aws.session_token"
+    );
+
+    if (isNotBlank(accessKeyId) && isNotBlank(secretAccessKey))
+    {
+      if (isNotBlank(sessionToken))
+      {
+        return StaticCredentialsProvider.create(
+            AwsSessionCredentials.create(
+                accessKeyId.trim(),
+                secretAccessKey.trim(),
+                sessionToken.trim()
+            )
+        );
+      }
+
+      return StaticCredentialsProvider.create(
+          AwsBasicCredentials.create(
+              accessKeyId.trim(),
+              secretAccessKey.trim()
+          )
+      );
+    }
+
+    return DefaultCredentialsProvider.create();
+  }
+
+  private String getFirstNonBlankProperty(String... propertyNames)
+  {
+    for (String propertyName : propertyNames)
+    {
+      String value = env.getProperty(propertyName);
+
+      if (isNotBlank(value))
+      {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  private boolean isNotBlank(String value)
+  {
+    return value != null && !value.isBlank();
+  }
 
 }
