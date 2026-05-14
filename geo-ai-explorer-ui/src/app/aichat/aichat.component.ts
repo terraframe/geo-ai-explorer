@@ -79,6 +79,9 @@ export class AichatComponent {
   public mapLoading: boolean = false;
   public minimized: boolean = false;
 
+  public editingConversationId: string | null = null;
+  public editingConversationTitle = '';
+
   constructor(
     private chatService: ChatService,
     private explorerService: ExplorerService,
@@ -278,6 +281,46 @@ export class AichatComponent {
     }
 
     this.saveConversations();
+  }
+
+  startEditingConversationTitle(event: Event, conversation: ChatConversation): void {
+    event.stopPropagation();
+
+    this.editingConversationId = conversation.id;
+    this.editingConversationTitle = conversation.title;
+  }
+
+  saveConversationTitle(event?: Event): void {
+    event?.stopPropagation();
+
+    if (!this.editingConversationId) {
+      return;
+    }
+
+    const conversation = this.conversations.find(c => c.id === this.editingConversationId);
+
+    if (!conversation) {
+      this.cancelConversationTitleEdit(event);
+      return;
+    }
+
+    const trimmed = this.editingConversationTitle.trim();
+
+    conversation.title = trimmed.length > 0
+      ? trimmed
+      : 'New chat';
+
+    this.editingConversationId = null;
+    this.editingConversationTitle = '';
+
+    this.saveConversations();
+  }
+
+  cancelConversationTitleEdit(event?: Event): void {
+    event?.stopPropagation();
+
+    this.editingConversationId = null;
+    this.editingConversationTitle = '';
   }
 
   private createDefaultMessages(): ChatMessage[] {

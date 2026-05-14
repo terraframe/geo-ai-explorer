@@ -31,8 +31,15 @@
                       pTooltip="Go Back"
                       (onClick)="goBack()">
               <fa-icon [icon]="backIcon"></fa-icon>
-              <label style="cursor: pointer;">Back</label>
+              <label>Back</label>
           </p-button>
+
+          <ng-container *ngIf="(previousWorkflowStep$ | async) !== WorkflowStep.DisambiguateObject">
+            <h2 class="inspector-title">
+              {{ selectedObject.properties.label }}
+            </h2>
+            <div></div>
+          </ng-container>
 
           <ng-container *ngIf="(previousWorkflowStep$ | async) === WorkflowStep.DisambiguateObject">
             <h2>Select An Object</h2>
@@ -67,9 +74,11 @@
       -->
 
     <div id="graphExplorerContainer">
-      <h2 class="inspector-title">
-        {{ selectedObject.properties.label }}
-      </h2>
+      <ng-container *ngIf="(previousWorkflowStep$ | async) === WorkflowStep.DisambiguateObject">
+        <h2 class="inspector-title">
+          {{ selectedObject.properties.label }}
+        </h2>
+      </ng-container>
 
       <p-tabs [(value)]="activeTab">
         <p-tablist>

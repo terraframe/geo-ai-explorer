@@ -79,6 +79,10 @@ p-tabs, p-tabpanels, p-tabpanel, graph-explorer {
   height: 100%;
 }
 
+::ng-deep p-button button label {
+  cursor: pointer;
+}
+
 #map {
   width: 100%;
   height: 100%;

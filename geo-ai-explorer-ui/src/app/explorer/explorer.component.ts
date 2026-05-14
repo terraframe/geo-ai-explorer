@@ -210,6 +210,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                 )
             )
             .subscribe(({ step, data }) => {
+                this.activeTab = "0";
                 this.workflowStep = step;
                 this.chatMinimized = step === WorkflowStep.MinimizeChat;
 
@@ -230,6 +231,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
             });
 
         this.onPageChange = this.page$.subscribe(page => {
+            this.activeTab = "0";
             this.page = page;
         });
     }

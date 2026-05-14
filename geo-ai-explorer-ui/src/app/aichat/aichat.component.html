@@ -14,14 +14,42 @@
         [class.active]="conversation.id === activeConversationId"
         (click)="selectConversation(conversation.id)">
 
-        <span class="conversation-title">{{ conversation.title }}</span>
+        <span
+          *ngIf="editingConversationId !== conversation.id"
+          class="conversation-title"
+          title="Double-click to rename"
+          (dblclick)="startEditingConversationTitle($event, conversation)">
+          {{ conversation.title }}
+        </span>
+
+        <input
+          *ngIf="editingConversationId === conversation.id"
+          class="conversation-title-input"
+          type="text"
+          [(ngModel)]="editingConversationTitle"
+          (click)="$event.stopPropagation()"
+          (keydown.enter)="saveConversationTitle($event)"
+          (keydown.escape)="cancelConversationTitleEdit($event)"
+          (blur)="saveConversationTitle($event)"
+          autofocus />
+
+        <span
+          class="conversation-edit"
+          *ngIf="editingConversationId !== conversation.id"
+          [title]="'Edit conversation name'"
+          (click)="startEditingConversationTitle($event, conversation)">
+          ✎
+        </span>
 
         <span *ngIf="conversation.loading" class="conversation-loading">●</span>
 
         <span
           class="conversation-close"
-          *ngIf="conversations.length > 1"
-          (click)="deleteConversation($event, conversation.id)">
+          *ngIf="conversations.length > 1 || editingConversationId === conversation.id"
+          [title]="editingConversationId === conversation.id ? 'Cancel rename' : 'Delete conversation'"
+          (click)="editingConversationId === conversation.id
+            ? cancelConversationTitleEdit($event)
+            : deleteConversation($event, conversation.id)">
           <fa-icon [icon]="closeConversationIcon"></fa-icon>
         </span>
       </button>

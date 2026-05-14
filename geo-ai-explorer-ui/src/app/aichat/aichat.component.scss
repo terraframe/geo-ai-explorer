@@ -368,6 +368,43 @@ button {
   object-fit: contain;
 }
 
+.conversation-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.conversation-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-title-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--surface-border, #dfe3ea);
+  border-radius: 4px;
+  padding: 0.2rem 0.35rem;
+  font: inherit;
+  background: var(--surface-card, #fff);
+  color: inherit;
+}
+
+.conversation-edit,
+.conversation-close {
+  flex: 0 0 auto;
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.conversation-edit:hover,
+.conversation-close:hover {
+  opacity: 1;
+}
+
 /*
  * Loading overlays
  */
