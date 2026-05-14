@@ -28,7 +28,8 @@ export const ExplorerActions = createActionGroup({
         'Set Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
         'Append Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
         'Back Workflow Step': emptyProps(),
-        'Clear Workflow History': emptyProps()
+        'Clear Workflow History': emptyProps(),
+        'Show Page On Map': props<{ page: LocationPage; zoomMap: boolean; step: WorkflowStep.MapAndResults | WorkflowStep.DisambiguateObject; data?: any; }>(),
     },
 });
 
@@ -209,11 +210,12 @@ export const explorerReducer = createReducer(
         styles: styles
     })),
 
-    // Replace Workflow Step
+    // Forcibly sets the workflow step, clearing all history
     on(ExplorerActions.setWorkflowStep, (state, { step, data }) => ({
         ...state,
         workflowStep: step,
-        workflowData: data
+        workflowData: data,
+        workflowHistory: []
     })),
 
     // Append Workflow Step
@@ -257,6 +259,20 @@ export const explorerReducer = createReducer(
         ...state,
         workflowHistory: []
     })),
+
+    on(ExplorerActions.showPageOnMap, (state, { page, zoomMap, step, data }) => {
+        const styles = resolveMissingStyles(state.styles, page.locations);
+
+        return {
+            ...state,
+            styles: styles != null ? styles : state.styles,
+            page,
+            zoomMap,
+            workflowStep: step,
+            workflowData: data,
+            workflowHistory: []
+        };
+    }),
     
 );
 
@@ -299,9 +315,31 @@ export const getWorkflowStep = createSelector(selector, (s) => s.workflowStep);
 
 export const getWorkflowData = createSelector(selector, (s) => s.workflowData);
 
-export const getWorkflowState = createSelector(selector, (s) => ({
-  step: s.workflowStep,
-  data: s.workflowData
-}));
+export const getWorkflowState = createSelector(
+  getWorkflowStep,
+  getWorkflowData,
+  (step, data): WorkflowState => ({
+    step,
+    data
+  })
+);
 
 export const getWorkflowHistory = createSelector(selector, (s) => s.workflowHistory);
+
+export const getPreviousWorkflowState = createSelector(selector, (s): WorkflowState | undefined => {
+    return s.workflowHistory.length > 0
+        ? s.workflowHistory[s.workflowHistory.length - 1]
+        : undefined;
+});
+
+export const getPreviousWorkflowStep = createSelector(selector, (s): WorkflowStep | undefined => {
+    return s.workflowHistory.length > 0
+        ? s.workflowHistory[s.workflowHistory.length - 1].step
+        : undefined;
+});
+
+export const getPreviousWorkflowData = createSelector(selector, (s): any | undefined => {
+    return s.workflowHistory.length > 0
+        ? s.workflowHistory[s.workflowHistory.length - 1].data
+        : undefined;
+});

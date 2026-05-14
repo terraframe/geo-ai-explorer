@@ -481,17 +481,17 @@ export class AichatComponent {
             sticky: true
           });
         }
+        
+        const step = message.ambiguous
+          ? WorkflowStep.DisambiguateObject
+          : WorkflowStep.MapAndResults;
 
-        this.store.dispatch(ExplorerActions.setPage({
-            page,
-            zoomMap: true
-          }));
-
-        if (message.ambiguous) {
-          this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.DisambiguateObject }));
-        } else {
-          this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.MapAndResults, data: { page: page, zoomMap: true } }));
-        }
+        this.store.dispatch(ExplorerActions.showPageOnMap({
+          page,
+          zoomMap: true,
+          step,
+          data: { page, zoomMap: true }
+        }));
       })
       .catch(error => this.errorService.handleError(error))
       .finally(() => {

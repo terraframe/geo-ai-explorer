@@ -147,7 +147,9 @@ export class GraphExplorerComponent implements OnDestroy {
     });
 
     this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
-      window.setTimeout(() => { if (this.gprGraph != null) this.renderGraph(this.gprGraph, false) }, 100);
+      window.setTimeout(() => {
+        if (this.gprGraph != null && step === WorkflowStep.ViewNeighbors)
+          this.renderGraph(this.gprGraph, false) }, 100);
     });
   }
 

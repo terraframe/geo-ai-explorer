@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.hc.core5.http.HttpHost;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.query_dsl.Operator;
+import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.transport.OpenSearchTransport;
@@ -24,7 +25,6 @@ import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.service.GraphQueryService;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
-import software.amazon.awssdk.regions.Region;
 
 @Service
 @Primary
@@ -43,17 +43,112 @@ public class OpenSearchService extends BasicSearchService
     {
       OpenSearchClient client = new OpenSearchClient(transport);
 
+      List<String> tokens = tokenize(query);
+
       SearchResponse<LocationDocument> response = client.search(s -> s
           .index(properties.getOpenSearchIndex())
           .from(offset)
           .size(limit)
           .query(q -> q
-            .multiMatch(mm -> mm
-              .query(query)
-              .fields("label^3", "code^2", "type")
-              .operator(Operator.And)
-              .fuzziness("AUTO")
-            )
+              .bool(b ->
+              {
+                /*
+                 * Best-case search:
+                 * Prefer documents that match all search terms somewhere across the major fields.
+                 *
+                 * This gives high-quality results for queries like:
+                 *   channel reach_25
+                 *
+                 * But unlike the old implementation, this is no longer the ONLY path.
+                 */
+                b.should(sh -> sh
+                    .multiMatch(mm -> mm
+                        .query(normalizeQuery(query))
+                        .fields("label^5", "code^4", "type^2")
+                        .type(TextQueryType.BestFields)
+                        .operator(Operator.And)
+                        .boost(4.0f)
+                    )
+                );
+
+                /*
+                 * Fallback search:
+                 * Allow partial matches so one extra word does not destroy the entire result set.
+                 *
+                 * This is the important fix for:
+                 *   reach_25          -> many results
+                 *   channel reach_25  -> zero results
+                 *
+                 * With this fallback, reach_25 can still match even if "channel" does not.
+                 */
+                b.should(sh -> sh
+                    .multiMatch(mm -> mm
+                        .query(normalizeQuery(query))
+                        .fields("label^3", "code^3", "type")
+                        .type(TextQueryType.BestFields)
+                        .operator(Operator.Or)
+                        .fuzziness("AUTO")
+                        .minimumShouldMatch("1")
+                        .boost(1.0f)
+                    )
+                );
+
+                /*
+                 * Useful for human-entered labels where the query is the beginning
+                 * of the thing they are looking for.
+                 */
+                b.should(sh -> sh
+                    .matchPhrasePrefix(mpp -> mpp
+                        .field("label")
+                        .query(normalizeQuery(query))
+                        .boost(3.0f)
+                    )
+                );
+
+                /*
+                 * Exact whole-query code match.
+                 *
+                 * This helps if someone searches directly for a code/id.
+                 *
+                 * NOTE:
+                 * If your mapping has code.keyword, prefer code.keyword here.
+                 * If code is only mapped as keyword, use code.
+                 * If code is mapped as text only, this may not work as expected.
+                 */
+                b.should(sh -> sh
+                    .term(t -> t
+                        .field("code")
+                        .value(v -> v.stringValue(normalizeQuery(query)))
+                        .boost(12.0f)
+                    )
+                );
+
+                /*
+                 * Exact per-token code matches.
+                 *
+                 * This is extremely useful for queries like:
+                 *   channel reach_25
+                 *
+                 * Even if "channel" is noise, "reach_25" can hit code exactly.
+                 */
+                for (String token : tokens)
+                {
+                  b.should(sh -> sh
+                      .term(t -> t
+                          .field("code")
+                          .value(v -> v.stringValue(token))
+                          .boost(10.0f)
+                      )
+                  );
+                }
+
+                /*
+                 * At least one should-clause must match.
+                 */
+                b.minimumShouldMatch("1");
+
+                return b;
+              })
           ),
         LocationDocument.class
       );
@@ -123,19 +218,103 @@ public class OpenSearchService extends BasicSearchService
     return ApacheHttpClient5TransportBuilder.builder(host).build();
   }
 
+  private List<String> tokenize(String query)
+  {
+    String normalized = normalizeQuery(query);
+
+    if (normalized.isBlank())
+    {
+      return List.of();
+    }
+
+    return List.of(normalized.split("\\s+"));
+  }
+
+  private String normalizeQuery(String query)
+  {
+    if (query == null)
+    {
+      return "";
+    }
+
+    return query.trim();
+  }
+
   private String buildDebugStatement(String query, int offset, int limit)
   {
+    String normalizedQuery = normalizeQuery(query);
+    List<String> tokens = tokenize(query);
+
+    StringBuilder tokenClauses = new StringBuilder();
+
+    for (String token : tokens)
+    {
+      if (!tokenClauses.isEmpty())
+      {
+        tokenClauses.append(",\n");
+      }
+
+      tokenClauses.append("""
+                {
+                  "term": {
+                    "code": {
+                      "value": "%s",
+                      "boost": 10.0
+                    }
+                  }
+                }""".formatted(escapeJson(token)));
+    }
+
+    String tokenClauseText = tokenClauses.isEmpty()
+      ? ""
+      : ",\n" + tokenClauses;
+
     return """
       {
         "index": "%s",
         "from": %d,
         "size": %d,
         "query": {
-          "multi_match": {
-            "query": "%s",
-            "fields": ["label^3", "code^2", "type"],
-            "operator": "and",
-            "fuzziness": "AUTO"
+          "bool": {
+            "should": [
+              {
+                "multi_match": {
+                  "query": "%s",
+                  "fields": ["label^5", "code^4", "type^2"],
+                  "type": "best_fields",
+                  "operator": "and",
+                  "boost": 4.0
+                }
+              },
+              {
+                "multi_match": {
+                  "query": "%s",
+                  "fields": ["label^3", "code^3", "type"],
+                  "type": "best_fields",
+                  "operator": "or",
+                  "fuzziness": "AUTO",
+                  "minimum_should_match": "1",
+                  "boost": 1.0
+                }
+              },
+              {
+                "match_phrase_prefix": {
+                  "label": {
+                    "query": "%s",
+                    "boost": 3.0
+                  }
+                }
+              },
+              {
+                "term": {
+                  "code": {
+                    "value": "%s",
+                    "boost": 12.0
+                  }
+                }
+              }%s
+            ],
+            "minimum_should_match": "1"
           }
         }
       }
@@ -143,7 +322,11 @@ public class OpenSearchService extends BasicSearchService
         properties.getOpenSearchIndex(),
         offset,
         limit,
-        escapeJson(query)
+        escapeJson(normalizedQuery),
+        escapeJson(normalizedQuery),
+        escapeJson(normalizedQuery),
+        escapeJson(normalizedQuery),
+        tokenClauseText
       );
   }
 

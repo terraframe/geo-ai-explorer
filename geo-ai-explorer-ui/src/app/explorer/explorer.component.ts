@@ -23,7 +23,7 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage, getWorkflowState } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage, getWorkflowState, getPreviousWorkflowStep, WorkflowState } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -97,9 +97,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     onHighlightedObjectChange: Subscription;
 
-    workflowState$: Observable<{step: WorkflowStep, data: any}> = this.store.select(getWorkflowState);
+    workflowState$: Observable<WorkflowState> = this.store.select(getWorkflowState);
 
     onWorkflowStepChange: Subscription;
+
+    previousWorkflowStep$: Observable<WorkflowStep | undefined> = this.store.select(getPreviousWorkflowStep);
 
     page$: Observable<LocationPage> = this.store.select(getPage);
 
@@ -200,32 +202,34 @@ export class ExplorerComponent implements OnInit, OnDestroy {
             this.highlightObject(object == null ? undefined : object.properties.uri);
         });
 
-        this.onWorkflowStepChange = this.workflowState$.subscribe(({step, data}) => {
-            this.workflowStep = step;
-            this.chatMinimized = step == WorkflowStep.MinimizeChat;
+        this.onWorkflowStepChange = this.workflowState$
+            .pipe(
+                distinctUntilChanged((a, b) =>
+                a.step === b.step &&
+                a.data === b.data
+                )
+            )
+            .subscribe(({ step, data }) => {
+                this.workflowStep = step;
+                this.chatMinimized = step === WorkflowStep.MinimizeChat;
 
-            if (
-                step === WorkflowStep.MapAndResults ||
-                step === WorkflowStep.DisambiguateObject ||
-                step === WorkflowStep.MinimizeChat ||
-                step === WorkflowStep.InspectObject ||
-                step === WorkflowStep.ViewNeighbors
-            ) {
-                this.ensureMapInitialized();
+                if (this.isMapWorkflowStep(step)) {
+                    this.ensureMapInitialized();
 
-                if (step === WorkflowStep.InspectObject && data) {
-                    this.selectObject(data, true);
+                    if (step === WorkflowStep.InspectObject && data) {
+                        this.selectObject(data, true);
+                    } else {
+                        this.selectObject(null);
+                    }
+
+                    this.render();
                 } else {
-                    this.selectObject(null);
+                    this.geoObjects = [];
+                    this.destroyMap();
                 }
-            } else {
-                this.destroyMap();
-            }
-        });
+            });
 
         this.onPageChange = this.page$.subscribe(page => {
-            this.ensureMapInitialized();
-
             this.page = page;
         });
     }
@@ -243,6 +247,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         this.onHighlightedObjectChange.unsubscribe();
     }
 
+    private isMapWorkflowStep(step: WorkflowStep): boolean {
+        return step === WorkflowStep.MapAndResults ||
+            step === WorkflowStep.DisambiguateObject ||
+            step === WorkflowStep.MinimizeChat ||
+            step === WorkflowStep.InspectObject ||
+            step === WorkflowStep.ViewNeighbors;
+    }
+
     private destroyMap(): void {
         if (this.map) {
             this.map.remove();
@@ -252,6 +264,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         this.mapInitialized = false;
         this.initialized = false;
         this.renderedObjects = [];
+        this.typeLegend = {};
+        this.orderedTypes = [];
+        this.highlightedObject = null;
+        this.selectedObject = undefined;
     }
 
     private runWhenMapReady(callback: () => void, maxFrames = 120): void {
@@ -300,6 +316,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
 
     goBack() {
+        this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
         this.store.dispatch(ExplorerActions.backWorkflowStep());
         this.store.dispatch(ExplorerActions.selectGeoObject(null));
     }
@@ -429,22 +446,101 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     getTypeLegend() { return this.typeLegend; }
 
-    clearAllMapData() {
+    clearAllMapData(): void {
         if (!this.map) return;
 
-        this.map!.getStyle().layers.forEach(layer => {
-            if (this.map!.getLayer(layer.id) && this.baseLayers[0].id !== layer.id) {
-                if (this.map!.getSource((layer as any).source)?.type !== "vector") {
-                    this.map!.removeLayer(layer.id);
+        const map = this.map;
+        const style = map.getStyle();
+
+        if (!style) return;
+
+        const baseLayerIds = new Set(this.baseLayers.map(layer => layer.id));
+        const baseSourceIds = new Set<string>(['mapbox']);
+
+        /*
+        * Remove layers first.
+        *
+        * Important:
+        * - Remove in reverse order because MapLibre layer ordering can matter.
+        * - Keep base layers.
+        * - Keep vector-source layers, because those are handled separately by clearVectorLayers().
+        * - Remove source-less non-base layers defensively, because they are not tied to vector sources.
+        */
+        const layers = [...(style.layers ?? [])].reverse();
+
+        for (const layer of layers) {
+            if (!map.getLayer(layer.id)) {
+                continue;
+            }
+
+            if (baseLayerIds.has(layer.id)) {
+                continue;
+            }
+
+            const sourceId = (layer as any).source as string | undefined;
+
+            if (sourceId) {
+                const source = map.getSource(sourceId);
+
+                if (source?.type === 'vector') {
+                    continue;
                 }
             }
-        });
 
-        Object.keys(this.map!.getStyle().sources).forEach(source => {
-            if (this.map!.getSource(source) && source !== 'mapbox' && this.map!.getSource(source)?.type !== "vector") {
-                this.map!.removeSource(source);
+            try {
+                map.removeLayer(layer.id);
+            } catch (error) {
+                console.warn('Failed to remove map layer', {
+                    layerId: layer.id,
+                    sourceId,
+                    error
+                });
             }
-        });
+        }
+
+        /*
+        * Remove non-vector sources after their layers are gone.
+        *
+        * Important:
+        * - Sources cannot be removed while layers still reference them.
+        * - Keep base sources.
+        * - Keep vector sources, because vector layer cleanup is separate.
+        */
+        const sourceIds = Object.keys(map.getStyle().sources ?? {});
+
+        for (const sourceId of sourceIds) {
+            if (baseSourceIds.has(sourceId)) {
+                continue;
+            }
+
+            const source = map.getSource(sourceId);
+
+            if (!source) {
+                continue;
+            }
+
+            if (source.type === 'vector') {
+                continue;
+            }
+
+            try {
+                map.removeSource(sourceId);
+            } catch (error) {
+                console.warn('Failed to remove map source', {
+                    sourceId,
+                    sourceType: source.type,
+                    error
+                });
+            }
+        }
+
+        /*
+        * These are render-local bookkeeping values, not NgRx-owned data.
+        * Do not clear this.geoObjects or this.neighbors here.
+        */
+        this.renderedObjects = [];
+        this.orderedTypes = [];
+        this.typeLegend = {};
     }
 
     clearVectorLayers() {
