@@ -135,6 +135,13 @@
 			<version>1.18.36</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<!-- Failsafe allows for easy retry behaviour -->
+		<dependency>
+		    <groupId>dev.failsafe</groupId>
+		    <artifactId>failsafe</artifactId>
+		    <version>3.3.2</version>
+		</dependency>
 
 
 		<!-- Testing -->

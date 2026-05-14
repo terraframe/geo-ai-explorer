@@ -466,7 +466,9 @@ export class AichatComponent {
       return;
     }
 
-    const history = conversation.messages.filter(m => m.purpose === 'standard');
+    const history = conversation.messages
+      .slice(0, index + 1)
+      .filter(m => m.purpose === 'standard');
 
     this.mapLoading = true;
 

@@ -15,11 +15,15 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.LocationPage;
@@ -52,17 +56,82 @@ public class ChatService
 
   public LocationPage getLocations(History history)
   {
+    RetryPolicy<LocationPage> retryPolicy = RetryPolicy.<LocationPage>builder()
+        .handle(Exception.class)
+        .withMaxAttempts(3)
+        .withDelay(Duration.ofMillis(250))
+        .onFailedAttempt(event -> {
+          Throwable failure = event.getLastException();
+
+          if (failure instanceof EmptyLocationPageException)
+          {
+            log.warn(
+                "Location lookup attempt {} returned zero results. Retrying.",
+                event.getAttemptCount()
+            );
+          }
+          else
+          {
+            log.warn(
+                "Location lookup attempt {} failed with exception.",
+                event.getAttemptCount(),
+                failure
+            );
+          }
+        })
+        .build();
+
     try
     {
-      String statement = this.bedrock.getLocationSparql(history);
+      return Failsafe.with(retryPolicy).get(() -> {
+        String statement = this.bedrock.getLocationSparql(history);
 
-      return this.getPage(statement, history.getOffset(), history.getLimit());
+        LocationPage page = this.getPage(
+            statement,
+            history.getOffset(),
+            history.getLimit()
+        );
+
+        if (page == null ||
+            page.getLocations() == null ||
+            page.getLocations().isEmpty())
+        {
+          throw new EmptyLocationPageException(page);
+        }
+
+        return page;
+      });
+    }
+    catch (EmptyLocationPageException e)
+    {
+      log.info("Location lookup returned zero results after retries.");
+
+      return e.getPage();
     }
     catch (Exception e)
     {
-      log.error("Error invoking a bedrock service: ", e);
+      log.error("Error invoking a bedrock service after retries: ", e);
 
-      throw new GenericRestException("Unable to map the locations. An error occurred while generating the response", e);
+      throw new GenericRestException(
+          "Unable to map the locations. An error occurred while generating the response",
+          e
+      );
+    }
+  }
+
+  private static class EmptyLocationPageException extends RuntimeException
+  {
+    private final LocationPage page;
+
+    private EmptyLocationPageException(LocationPage page)
+    {
+      super("Location lookup returned zero results.");
+      this.page = page;
+    }
+
+    public LocationPage getPage()
+    {
+      return page;
     }
   }
 
