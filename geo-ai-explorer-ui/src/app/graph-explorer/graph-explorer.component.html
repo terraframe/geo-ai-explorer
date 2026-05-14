@@ -15,7 +15,7 @@
     
     <div class="stretch" *ngIf="data">
       <div class="hierarchy-content stretch">
-        <div class="stretch" id="graph-container" [class]="{'graph-hidden': loading}">
+        <div class="stretch" id="graph-container" [class.graph-hidden]="loading">
 
           <div class="legend">
             <div class="legend-item horizontal-layout" *ngFor="let item of getTypeLegend() | keyvalue">
