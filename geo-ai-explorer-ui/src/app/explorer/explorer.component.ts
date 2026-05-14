@@ -1266,7 +1266,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                     this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
                 }
             } else {
-                this.store.dispatch(ExplorerActions.selectGeoObject(null));
+                // this.store.dispatch(ExplorerActions.selectGeoObject(null));
             }
         })
     }
