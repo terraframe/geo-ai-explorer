@@ -1,16 +1,18 @@
 <div style="height: 100%; width: 100%;">
     <ng-container *ngrxLet="page$ as page; ">
         <ng-container *ngIf="page.count > 0">
-            <div class="horizontal-layout" *ngIf="workflowStep !== WorkflowStep.DisambiguateObject">
+            <div class="horizontal-layout" style="justify-content: space-between;" *ngIf="workflowStep !== WorkflowStep.DisambiguateObject">
                 <p-button severity="secondary"
                             pTooltip="Go Back"
                             (onClick)="goBack()">
                     <fa-icon [icon]="backIcon"></fa-icon>
                     <label style="cursor: pointer;">Back</label>
                 </p-button>
-            </div>
 
-            <h2 *ngIf="workflowStep !== WorkflowStep.DisambiguateObject" style="margin: 10px;">Results</h2>
+                <h2 style="margin: 10px;">Results</h2>
+
+                <div></div>
+            </div>
 
             <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '30rem', 'height': '100%' }" stripedRows
                 [scrollable]="true" [scrollHeight]="calculateScrollHeight()" [size]="'small'"

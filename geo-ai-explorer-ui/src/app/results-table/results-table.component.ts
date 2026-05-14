@@ -86,7 +86,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
             // return "calc(100vh - 50px)";
             return "calc(100vh - 108px)";
         } else {
-            return "calc(50vh - 3rem)";
+            return "calc(40vh - 3rem)";
         }
     }
 

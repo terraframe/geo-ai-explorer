@@ -480,8 +480,9 @@ export class AichatComponent {
             detail: 'The query did not return any results!',
             sticky: true
           });
+          return;
         }
-        
+
         const step = message.ambiguous
           ? WorkflowStep.DisambiguateObject
           : WorkflowStep.MapAndResults;
