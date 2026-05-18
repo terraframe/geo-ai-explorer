@@ -15,6 +15,8 @@
  */
 package net.geoprism.geoai.explorer.web.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,18 +52,18 @@ public class ChatController
 
   @PostMapping("/api/chat/get-locations")
   @ResponseBody
-  public ResponseEntity<LocationPage> getLocations(@RequestBody History history)
+  public ResponseEntity<List<LocationPage>> getLocations(@RequestBody History history)
   {
-    LocationPage response = this.service.getLocations(history);
+    List<LocationPage> response = this.service.getLocations(history);
 
-    return new ResponseEntity<LocationPage>(response, HttpStatus.OK);
+    return new ResponseEntity<List<LocationPage>>(response, HttpStatus.OK);
   }
 
   @PostMapping("/api/chat/get-page")
   @ResponseBody
   public ResponseEntity<LocationPage> getPage(@RequestBody PageRequest page)
   {
-    LocationPage response = this.service.getPage(page.getStatement(), page.getOffset(), page.getLimit());
+    LocationPage response = this.service.getPage(page.getStatement(), page.getType(), page.getOffset(), page.getLimit());
 
     return new ResponseEntity<LocationPage>(response, HttpStatus.OK);
   }

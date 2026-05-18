@@ -1,55 +1,108 @@
 <div style="height: 100%; width: 100%;">
-    <ng-container *ngrxLet="page$ as page; ">
-        <ng-container *ngIf="page.count > 0">
-            <div class="horizontal-layout" style="justify-content: space-between;" *ngIf="workflowStep !== WorkflowStep.DisambiguateObject">
-                <p-button severity="secondary"
-                            pTooltip="Go Back"
-                            (onClick)="goBack()">
-                    <fa-icon [icon]="backIcon"></fa-icon>
-                    <label style="cursor: pointer;">Back</label>
-                </p-button>
+  <ng-container *ngrxLet="pages$ as pages">
 
-                <h2 style="margin: 10px;">Results</h2>
+    <ng-container *ngIf="pages?.length && hasResults(pages); else zeroResults">
 
-                <div></div>
-            </div>
+        <div
+        class="results-header-row"
+        *ngIf="workflowStep !== WorkflowStep.DisambiguateObject"
+        >
+        <p-button
+            severity="secondary"
+            pTooltip="Go Back"
+            (onClick)="goBack()"
+        >
+            <fa-icon [icon]="backIcon"></fa-icon>
+            <label style="cursor: pointer;">Back</label>
+        </p-button>
 
-            <p-table [value]="page.locations" [tableStyle]="{ 'min-width': '30rem', 'height': '100%' }" stripedRows
-                [scrollable]="true" [scrollHeight]="calculateScrollHeight()" [size]="'small'"
-                (mouseleave)="onMouseLeaveTable()">
-                <ng-template #header>
-                    <tr>
-                        <th>Label</th>
-                        <th>Code</th>
-                        <th>Type</th>
-                        <!-- <th>Uri</th> -->
-                    </tr>
-                </ng-template>
-                <ng-template #body let-object>
-                    <tr class="clickable" [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
-                        (click)="onClick(object)" (mouseenter)="onRowHover(object)">
-                        <td>{{ object.properties.label }}</td>
-                        <td>{{ object.properties.code }}</td>
-                        <td>{{ object.properties.type.split("rdfs#")[1] }}</td>
-                        <!-- <td>{{ object.properties.uri }}</td> -->
+        <h2 class="results-title">Results</h2>
 
-                    </tr>
-                </ng-template>
-
-                <ng-template #footer>
-                    <tr>
-                        <td colspan="3">
-                            <p-paginator (onPageChange)="onPageChange($event)" [first]="page.offset" [rows]="page.limit"
-                                [totalRecords]="page.count" />
-
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
-
-        </ng-container>
-        <div class="vertical-layout" *ngIf="page.count == 0">
-                <label style="margin: 10px;">Zero Results!</label>
+        <p-multiSelect
+            [options]="pageDisplayOptions"
+            [(ngModel)]="selectedPageDisplayKeys"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Visible tables"
+            [maxSelectedLabels]="2"
+            selectedItemsLabel="{0} tables selected"
+            appendTo="body"
+            styleClass="results-page-selector"
+        />
         </div>
+
+        <div class="results-table-columns"
+            [ngClass]="{
+                'single-table': getVisiblePageItems(pages).length === 1,
+                'two-tables': getVisiblePageItems(pages).length === 2,
+                'three-or-more-tables': getVisiblePageItems(pages).length >= 3
+            }"
+            >
+            <ng-container *ngFor="let item of getVisiblePageItems(pages); trackBy: trackByPageItem">
+                <section class="results-table-column" *ngIf="item.page.count > 0">
+                    <h3 class="results-table-title">
+                        {{ shouldShowTypeColumn(item.page) ? 'Results' : getPageTypeLabel(item.page) }}
+                    </h3>
+
+                    <div class="results-table-body">
+                        <p-table
+                        [value]="item.page.locations"
+                        [tableStyle]="{ 'min-width': '100%' }"
+                        stripedRows
+                        [scrollable]="true"
+                        scrollHeight="flex"
+                        [size]="'small'"
+                        (mouseleave)="onMouseLeaveTable()"
+                        >
+                        <ng-template #header>
+                            <tr>
+                            <th>Label</th>
+                            <th>Code</th>
+                            <th *ngIf="shouldShowTypeColumn(item.page)">Type</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #body let-object>
+                            <tr
+                            class="clickable"
+                            [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
+                            (click)="onClick(object)"
+                            (mouseenter)="onRowHover(object)"
+                            >
+                            <td>{{ object.properties.label }}</td>
+                            <td>{{ object.properties.code }}</td>
+
+                            <td *ngIf="shouldShowTypeColumn(item.page)">
+                                {{ getObjectTypeLabel(object) }}
+                            </td>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #footer>
+                            <tr>
+                            <td [attr.colspan]="shouldShowTypeColumn(item.page) ? 3 : 2">
+                                <p-paginator
+                                (onPageChange)="onPageChange($event, item.index)"
+                                [first]="item.page.offset"
+                                [rows]="item.page.limit"
+                                [totalRecords]="item.page.count"
+                                />
+                            </td>
+                            </tr>
+                        </ng-template>
+                        </p-table>
+                    </div>
+                </section>
+            </ng-container>
+        </div>
+
     </ng-container>
+
+    <ng-template #zeroResults>
+      <div class="vertical-layout">
+        <label style="margin: 10px;">Zero Results!</label>
+      </div>
+    </ng-template>
+
+  </ng-container>
 </div>

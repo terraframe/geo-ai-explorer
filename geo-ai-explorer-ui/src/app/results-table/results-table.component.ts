@@ -8,16 +8,18 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, getPage, getWorkflowStep, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
+import { ExplorerActions, getPages, getWorkflowStep, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
 import { faArrowLeft, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ButtonModule } from 'primeng/button';
+import { FormsModule } from '@angular/forms';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 @Component({
     selector: 'results-table',
-    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule, ButtonModule],
+    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule, ButtonModule, FormsModule, MultiSelectModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss',
 })
@@ -27,7 +29,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     public backIcon = faArrowLeft;
 
-    page$: Observable<LocationPage> = this.store.select(getPage);
+    pages$: Observable<LocationPage[]> = this.store.select(getPages);
 
     selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
@@ -42,6 +44,9 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     onWorkflowStepChange: Subscription;
 
     public workflowStep: WorkflowStep = WorkflowStep.MapAndResults;
+
+    pageDisplayOptions: { label: string; value: string }[] = [];
+    selectedPageDisplayKeys: string[] = [];
 
     constructor(
         private chatService: ChatService
@@ -64,13 +69,14 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     }
 
     navigateToChat() {
-        this.store.dispatch(ExplorerActions.setPage({ page: { 
+        this.store.dispatch(ExplorerActions.setPages({ pages: [{ 
             locations: [],
             statement: "",
+            type: "",
             limit: 100,
             offset: 0,
             count: 0
-        }, zoomMap: false }));
+        }], zoomMap: false }));
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
     }
 
@@ -107,16 +113,106 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         this.highlightedObjectUri = uri;
     }
 
-    onPageChange(state: PaginatorState): void {
+    onPageChange(state: PaginatorState, pageIndex: number): void {
+        this.pages$.pipe(take(1)).subscribe(pages => {
+            const currentPage = pages[pageIndex];
 
-        this.page$.pipe(take(1)).subscribe(page => {
-            this.chatService.getPage(page.statement, state.first!, state.rows!).then(page => {
-                this.store.dispatch(ExplorerActions.setPage({
-                    page,
+            if (!currentPage) {
+                return;
+            }
+
+            this.chatService
+                .getPage(currentPage.statement, currentPage.type, state.first ?? 0, state.rows ?? currentPage.limit)
+                .then(nextPage => {
+                    const nextPages = [...pages];
+                    nextPages[pageIndex] = nextPage;
+
+                    this.store.dispatch(ExplorerActions.setPages({
+                    pages: nextPages,
                     zoomMap: true
-                }));
-            })
-        })
+                    }));
+                });
+        });
+    }
 
+    getVisiblePageItems(pages: LocationPage[] | null | undefined): { page: LocationPage; index: number }[] {
+        if (!pages?.length) {
+            return [];
+        }
+
+        this.syncPageDisplayOptions(pages);
+
+        return pages
+            .map((page, index) => ({ page, index }))
+            .filter(item => item.page.count > 0)
+            .filter(item => this.selectedPageDisplayKeys.includes(this.getPageDisplayKey(item.page, item.index)));
+    }
+
+    trackByPageItem = (index: number, item: { page: LocationPage; index: number }): string | number => {
+        return this.getPageDisplayKey(item.page, item.index);
+    }
+
+    private syncPageDisplayOptions(pages: LocationPage[]): void {
+        const nextOptions = pages
+            .map((page, index) => ({
+            label: this.getPageDisplayLabel(page, index),
+            value: this.getPageDisplayKey(page, index)
+            }));
+
+        const nextKeys = nextOptions.map(option => option.value);
+
+        const optionsChanged =
+            this.pageDisplayOptions.length !== nextOptions.length ||
+            this.pageDisplayOptions.some((option, index) => option.value !== nextOptions[index]?.value);
+
+        if (optionsChanged) {
+            this.pageDisplayOptions = nextOptions;
+
+            const stillSelected = this.selectedPageDisplayKeys.filter(key => nextKeys.includes(key));
+
+            this.selectedPageDisplayKeys = stillSelected.length > 0
+            ? stillSelected
+            : nextKeys;
+        }
+    }
+
+    public getPageDisplayKey(page: LocationPage, index: number): string {
+        return page.type?.trim()
+            ? page.type
+            : `page-${index}`;
+    }
+
+    private getPageDisplayLabel(page: LocationPage, index: number): string {
+        const typeLabel = this.getPageTypeLabel(page);
+
+        return typeLabel && typeLabel !== 'Unknown'
+            ? typeLabel
+            : `Results ${index + 1}`;
+    }
+
+    hasResults(pages: LocationPage[] | null | undefined): boolean {
+        return !!pages?.some(page => page.count > 0);
+    }
+
+    shouldShowTypeColumn(page: LocationPage): boolean {
+        return page.type == null || page.type.trim() === '';
+    }
+
+    getPageTypeLabel(page: LocationPage): string {
+        return this.getTypeLabel(page.type);
+    }
+
+    getObjectTypeLabel(object: GeoObject): string {
+        return this.getTypeLabel(object.properties.type);
+    }
+
+    private getTypeLabel(type: string | null | undefined): string {
+        if (type == null || type.trim() === '') {
+            return 'Unknown';
+        }
+
+        return type.includes('rdfs#')
+            ? type.split('rdfs#')[1]
+            : type;
     }
 }

@@ -1,56 +1,113 @@
-You are a chatbot agent tasked with answering a question about location data in a graph database. Your response will be parsed by a downstream system and then displayed to the end user. In the process of answering the end user's question, you may invoke the following tools:
-- sparql-name-resolution: Can be used to perform a full text lookup to fetch the code, uri and type of a location based on its name. If this tool is invoked and its response starts with "No results found" then tell the user a location could not be found and STOP. If there is more than a single location provide a list of the top locations (max of 5) and ask the user which is the correct code, ending your message with a #ambiguous tag.
-- sparql: Allows you to directly execute SPARQL queries against an RDF graph. The schema and data dictionary of this graph will be provided at a later point in this prompt.
 
-In your response, when referencing locations, you shall inform our downstream system of the location's label and uri using the following XML syntax:
-<location><label>HUMAN LABEL</label><uri>URI</uri></location>
+def lambda_handler(event, context):
+    agent = event['agent']
+    actionGroup = event['actionGroup']
+    function = event['function']
+    parameters = event.get('parameters', [])
 
-Additionally, you may end your response with any of the following tags:
-- #ambiguous: When resolving a location name to a concrete uri, if you discover there are many locations which may match the user's provided criteria, ALWAYS include 'name' AND <name>?name</name> to identify the name of the ambiguous location and then list the (max of 5) possible locations (using the XML tags described above) and finally end your message with the #ambiguous tag. Our front-end will detect this tag and ask the user to clarify which location they want.
-- #mapit: Indicates to the front-end UI that your textual response references a result set which can be mapped. Do not use this for a single location (use the location xml tags instead). End your response with this tag if the 'sparql' tool was used when generating your response.
+    schema = """
+The database does NOT include any data in the default graph. When executing queries, you must always specify one or more graphs in the FROM clause, or you may specify a graph wildcard to query all graphs.
 
-Do not EVER invent fake data or fake locations. Your response should be rooted directly in information from this prompt or from information queried from the graph.
+Most of this data is centered around flooding usecases. Questions about population can be answered by utilizing the 'population' attribute on CensusTract. Questions about flooded objects (i.e. hospitals or schools) can usually be answered by navigating to a LeveeArea or a LeveedArea and then navigating the relationship to find the affected objects. Finally, there exists InundationArea, which is the result of a flood water inundation analysis expert system, represented as a polygon. By traversing the 'InundatedObject' edge, you can determine which objects were predicted to be 'inundated' (or flooded) based on the flood water inundation analysis.
 
-When generating and running SPARQL queries, strictly adhere to the following rules:
-- When invoking the 'sparql' tool, the tool input must be only a SPARQL query string
-- Always limit the SPARQL result set to a max of 100
-- If the sparql tool response starts with "No data found" then tell the user that you were unable to find any results for that question and to ask a different question and STOP.
-- Use only the node types and properties provided in the schema.
-- Do not use any node types and properties that are not explicitly provided.
-- Include all necessary prefixes
-- When following relationship paths, always respect the direction of the path (specified in this schema)
-- NEVER query the default graph. When executing queries, you must ALWAYS specify one or more graphs in the FROM clause, or you may specify a graph wildcard to query all graphs.
-- If an edge can repeat along the same source/target type (self-referential), use a property path with * (or +) instead of a single hop. Example: lpgvs:FlowsInto*
+===
+- Self referencing should always generate an edge with *
+===
+// Incorrect
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#> 
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
-The graph contains data for three primary usecases:
-1. A demo 'business data aggregation' scenario designed to showcase AI's ability to aggregate project costing data up to a program. If the user is asking about budget or costing, you know you're in this usecase. Query only <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> and do not join to the lpg graph unless the user explicitly asks for geometry/mapping/connected objects. If the user asks "how much was spent on program", you MUST perform the 'budget aggregate query' (example shown at the end), taking care not to cross product.
-2. Inundated Area: a sample inundation scenario for the Robert S. Kerr Reservoir. This represents an area of predicted flood water inundation based on a flood water analysis performed by a separate expert system, represented as a polygon. Query only <https://localhost:4200/lpg/graph_801104/0#>. By traversing the 'InundatedObject' edge, you can determine which objects were predicted to be 'inundated' (or flooded) based on the flood water inundation analysis.
-3. Questions related to levee areas, school zones, and real property / recreation areas. These questions will come in the form of "what is the total population impacted if channel xyz floods and overflows its levee areas", "what school zones are impacted?", etc. Query only <https://localhost:4200/lpg/graph_801104/0#>. Questions about population can be answered by utilizing the 'population' attribute on CensusTract. Questions about flooded objects (i.e. hospitals or schools) can usually be answered by navigating to a LeveeArea or a LeveedArea and then navigating the relationship to find the affected objects.
+SELECT DISTINCT ?tractCode ?tractLabel
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {    
+ ?parent rdf:type lpgvs:ChannelReach ;
+ lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .    
+ ?parent lpgvs:FlowsInto ?channel .    
+ ?channel lpgvs:ChannelHasLevee ?leveeArea .    
+ ?leveeArea lpgs:GeoObject-code ?leveeAreaCode .    
+}
 
-Your high-level generation script is as follows:
-1. Figure out which usecase this question belongs to.
-2. If the user is asking about a location by name, find the code / uri using the 'sparql-name-resolution' tool to disambiguate it (there are a lot of duplicate names in this database)
-  2a. If there are many locations with that name, follow the #ambiguous tag instructions exactly when formulating your response. Example: "I found multiple locations by the name 'Cape Cod Canal' <name>Cape Cod Canal</name>. Here are some example options: <location><label>HUMAN LABEL</label><uri>URI</uri></location> ... Can you please clarify which one you're referring to? #ambiguous"
-3. Query against graphs valid for the relevant usecase to find information to service their request. Write your response, utilizing XML tags (described previously) where necessary. If your response references a result set which can be mapped (not a singular location), end with #mapit.
+// Correct
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#> 
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
-Rules for your final response:
-- Be as concise as possible.
-- Do not include overly detailed explanations or apologies in your responses.
-- Do not answer questions that do not pertain to data you have been given access to via this prompt or the graph.
+SELECT DISTINCT ?tractCode ?tractLabel
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {    
+ ?parent rdf:type lpgvs:ChannelReach ;
+ lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .    
+ ?parent lpgvs:FlowsInto* ?channel .    
+ ?channel lpgvs:ChannelHasLevee ?leveeArea .    
+ ?leveeArea lpgs:GeoObject-code ?leveeAreaCode .    
+}
 
-=
+===
+- Aggregation functions must always be wrapped in parenthesis with its variable name
+===
+// Incorrect
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+
+SELECT SUM(?population) as ?totalPopulation
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {
+ ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
+ ?censusTract lpgvs:CensusTract-population ?population . 
+}
+
+// Correct
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+
+SELECT (SUM(?population) as ?totalPopulation)
+FROM <https://localhost:4200/lpg/graph_801104/0#>
+WHERE {
+ ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
+ ?censusTract lpgvs:CensusTract-population ?population . 
+}
+===
+Note: Be as concise as possible.
+Do not include any explanations or apologies in your responses.
+Do not include any text except the SPARQL query generated.
+
+======
 Schema
-=
+======
 
 The full schema of the database is provided. For each section, a short description of the schema will be provided, followed by the data. This schema will be used to generate SPARQL queries used to serve end-user requests.
 
 The ‘lpg’ schema often refers to ‘Geo-Object’, a concept coined by TerraFrame. A Geo-Object is a spatial concept, and can be thought of as a more formalized extension of a traditional GIS Feature. A GeoObjectType contains the metadata which defines the concrete GeoObject.
 
-=
-Prefixes
-=
+======
+Graphs
+======
+The database does NOT include any data in the default graph. When executing queries, you must always specify one or more graphs in the FROM clause, or you may specify a graph wildcard to query all graphs.
 
-A full list of the prefixes used for the IRIs within this database:
+There are two separate graphs in this database:
+- <https://localhost:4200/lpg/graph_801104/0#>
+- <http://dime.usace.mil/data/dataset#REMIS_PROJECTS>
+
+Never put lpgv and cwbi triples into the same GRAPH block.
+
+The first graph contains a vast wealth of location data, complete with geometries. If your query requires geometries, you will need to query this graph.
+The second graph is mostly used for joining data against the first, specifically for usage in a 'project' or 'remis project' context.
+The second graph DOES NOT contain project or program labels.
+
+========
+Prefixes
+========
+
+A full list of the prefixes used for the IRIs within this database.
 PREFIX apex: <http://dime.usace.mil/data/dataset#>
 PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX pm: <http://data.sec.usace.army.mil/ontologies/pm#>
@@ -67,24 +124,9 @@ PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
 To be safe, always include all of these prefixes in your queries.
 
-=
-Graphs
-=
-The database does NOT include any data in the default graph. When executing queries, you must always specify one or more graphs in the FROM clause, or you may specify a graph wildcard to query all graphs.
-
-There are two separate graphs in this database:
-- <https://localhost:4200/lpg/graph_801104/0#>
-- <http://dime.usace.mil/data/dataset#REMIS_PROJECTS>
-
-Never put lpgv and cwbi triples into the same GRAPH block.
-
-The first graph contains a vast wealth of location data, complete with geometries. If your query requires geometries, you will need to query this graph.
-The second graph is mostly used for joining data against the first, specifically for usage in a 'project' or 'remis project' context.
-
-
-=
+=====
 Types
-=
+=====
 A CSV list of (graph, type) pairs. This is the full list of rdf:type within the database.
 
 lpgv,lpgvs:Hospital
@@ -107,9 +149,10 @@ lpgv,lpgvs:InundationArea
 apex:REMIS_PROJECTS,cwbi:Program
 
 
-=
+=====
 Edges
-=
+=====
+
 
 A list of relationships between types. The relationship format is described as (SourceType)->[EdgeType]->(TargetType) and is directional from left to right. If a relationship is bi-directional it will be listed twice, one in each direction.
 
@@ -147,9 +190,10 @@ INVALID:
 Why?
 Because you did not respect the order of the relationship!
 
-=
+==========
 Attributes
-=
+==========
+
 
 There are many ‘data’ attributes which exist on these types for which various information can be fetched. These data attributes, for example, may define a display label, a code, or even a ‘population’ which might be required to service a particular user query.
 
@@ -187,9 +231,9 @@ lpgvs:CensusTract, lpgvs:CensusTract-population, Number. Population of the censu
 When answering questions about population, you need to use CensusTract-population unless the user explicitly mentions number of students. Do not query for hospitals and real properties on flood zones to answer this question as it will not be accurate.
 
 
-=
+============
 Joining Data
-=
+============
 The data of type lpgvs:Project is conceptually the same as cwbi:Remis_Project. The only difference is that lpgvs:Project has the geometries whereas Remis_Project does not. Both objects however will have the same code and are conceptually the same:
 ?proj a lpgvs:Project .
 ?proj lpgs:GeoObject-code "30000667" .
@@ -200,56 +244,55 @@ You can therefore start with a cwbi:Program, navigate the cwbi:Program edge to g
 
 All project and program data can be mapped so please return a #mapit it when giving project or program information.
 
-=
-Flood Inundation
-=
+
+============
+Flood Water Inundation
+=============
 If the user asks 'Which objects are inundated', you ONLY need to consider these objects:
 InundationArea -> InundatedObject -> ?object
 
-If the user asks about what Inundation scenarios are available, query InundationArea and return the results (along with #mapit).
+If the user asks about what Inundation scenarios are available, query InundationArea and return the results (along with #mapIt).
 
-=
-SPARQL Query Examples (when generating SPARQL for the 'sparql' query tool)
-=
+========
+Examples
+========
 
-=
-Usecase 3
+===
+Show me all objects which are reachable from a program with code 000510
+===
 
-Aggregation functions must always be wrapped in parenthesis with its variable name
-=
-// Incorrect
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpg: <https://localhost:4200/lpg#>
+PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
 PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT SUM(?population) as ?totalPopulation
-FROM <https://localhost:4200/lpg/graph_801104/0#>
+SELECT ?connected
 WHERE {
- ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
- ?censusTract custom:CensusTract-population ?population . 
+  BIND("000510" AS ?programCode)
+
+  GRAPH <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> {
+    ?program a cwbi:Program ;
+             skos:altLabel ?programCode .
+    ?rem_proj a cwbi:Remis_Project ;
+             cwbi:Program ?program ;
+             skos:altLabel ?projCode .
+  }
+
+  GRAPH <https://localhost:4200/lpg/graph_801104/0#> {
+    ?proj a lpgvs:Project ;
+    	lpgvs:Project-programCode ?programCode ;
+    	lpgs:GeoObject-code ?projCode .
+    ?connected lpgvs:ConnectedTo ?project .
+  }
 }
+LIMIT 100
 
-// Correct
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-
-SELECT (SUM(?population) as ?totalPopulation)
-FROM <https://localhost:4200/lpg/graph_801104/0#>
-WHERE {
- ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
- ?censusTract custom:CensusTract-population ?population . 
-}
-
-=
-Usecase 1: 'budget line item'
-This is useful for listing costing information for individual projects. This query should NOT be used for aggregate program costing data.
-
+===
 Q: "How much was spent on projects associated with a program with code 000510?" 
 A: Costing data for all projects of a specific program can be queried with the following
-=
+===
 
 PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
@@ -274,14 +317,49 @@ WHERE {
 }
 LIMIT 100
 
-=
-Usecase 1: 'budget aggregate query'
+==
+Q: How can I see all the project geometries associated with program '000510'?
+A: Project geometries can be fetched from the localhost lpg graph, joined across the REMIS graph via the programCode edge
+==
 
+PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpg: <https://localhost:4200/lpg#>
+PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+SELECT ?proj ?projCode ?label ?wkt
+WHERE {
+  BIND("000510" AS ?programCode)
+
+  GRAPH <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> {
+    ?program a cwbi:Program ;
+             skos:altLabel ?programCode .
+    ?rem_proj a cwbi:Remis_Project ;
+             cwbi:Program ?program ;
+    		 skos:altLabel ?projCode .
+  }
+
+  GRAPH <https://localhost:4200/lpg/graph_801104/0#> {
+    ?proj a lpgvs:Project ;
+    	lpgs:GeoObject-code ?projCode ;
+    	lpgvs:Project-programCode ?code ;
+    	rdfs:label ?label ;
+    	geo:hasGeometry ?geom .
+    ?geom geo:asWKT ?wkt .
+  }
+}
+LIMIT 100
+
+===
 Q: "How much was spent on a program with code '000510'?"
 Q: "What is the budget for a program with code '000510'?"
 Q: "How much budget is remaining on program '000510'?"
 A: Budgetary information is stored at the program level and costing (actuals) data is stored at the project level. Costing data can be aggregated up to a program and then compared with the program budget data to gather remaining budget.
-=
+===
 
 PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -335,40 +413,24 @@ WHERE {
 }
 ORDER BY DESC(?totalCost)
 
-=
-This example showcases a join between the two graphs, by utilizing the shared 'code' data. Geometries are included in the project data (which only exist in the lpg graph), however they may be optionally included in the query depending on needs.
+    """
 
-Q: Show me all objects which are reachable from a program with code 000510
-=
+    # Execute your business logic here. For more information, refer to: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html
+    responseBody =  {
+        "TEXT": {
+            "body": schema
+        }
+    }
+    
+    action_response = {
+        'actionGroup': actionGroup,
+        'function': function,
+        'functionResponse': {
+            'responseBody': responseBody
+        }
 
-PREFIX cwbi: <http://dime.usace.mil/ontologies/cwbi-concept#>
-PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-PREFIX lpg: <https://localhost:4200/lpg#>
-PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
-PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    }
 
-SELECT ?proj ?projCode ?label ?wkt
-WHERE {
-  BIND("000510" AS ?programCode)
+    dummy_function_response = {'response': action_response, 'messageVersion': event['messageVersion']}
 
-  GRAPH <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> {
-    ?program a cwbi:Program ;
-             skos:altLabel ?programCode .
-    ?rem_proj a cwbi:Remis_Project ;
-             cwbi:Program ?program ;
-    		 skos:altLabel ?projCode .
-  }
-
-  GRAPH <https://localhost:4200/lpg/graph_801104/0#> {
-    ?proj a lpgvs:Project ;
-    	lpgs:GeoObject-code ?projCode ;
-    	lpgvs:Project-programCode ?code ;
-    	rdfs:label ?label ;
-    	geo:hasGeometry ?geom .
-    ?geom geo:asWKT ?wkt .
-  }
-}
-LIMIT 100
+    return dummy_function_response

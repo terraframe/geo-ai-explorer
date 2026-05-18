@@ -516,8 +516,10 @@ export class AichatComponent {
     this.mapLoading = true;
 
     this.chatService.getLocations(history, 0, 100)
-      .then(page => {
-        if (page.count === 0) {
+      .then(pages => {
+        let total = pages.map(p => p.count).reduce((a,b) => a+b, 0);
+
+        if (total === 0) {
           this.messageService.add({
             key: 'explorer',
             severity: 'info',
@@ -532,11 +534,11 @@ export class AichatComponent {
           ? WorkflowStep.DisambiguateObject
           : WorkflowStep.MapAndResults;
 
-        this.store.dispatch(ExplorerActions.showPageOnMap({
-          page,
+        this.store.dispatch(ExplorerActions.showPagesOnMap({
+          pages,
           zoomMap: true,
           step,
-          data: { page, zoomMap: true }
+          data: { pages, zoomMap: true }
         }));
       })
       .catch(error => this.errorService.handleError(error))
@@ -550,8 +552,8 @@ export class AichatComponent {
 
     this.explorerService.fullTextLookup(message.location!)
       .then(page => {
-        this.store.dispatch(ExplorerActions.setPage({
-          page,
+        this.store.dispatch(ExplorerActions.setPages({
+          pages: [page],
           zoomMap: true
         }));
 
@@ -568,14 +570,15 @@ export class AichatComponent {
   clear(): void {
     const conversation = this.activeConversation;
 
-    this.store.dispatch(ExplorerActions.setPage({
-      page: {
+    this.store.dispatch(ExplorerActions.setPages({
+      pages: [{
         locations: [],
         statement: '',
+        type: '',
         limit: 100,
         offset: 0,
         count: 0
-      },
+      }],
       zoomMap: false
     }));
 

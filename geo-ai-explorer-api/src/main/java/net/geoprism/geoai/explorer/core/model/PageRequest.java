@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 public class PageRequest
 {
   private String         statement;
+  
+  private String         type;
 
   private int            offset = 0;
 

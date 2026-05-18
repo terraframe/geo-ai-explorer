@@ -2,9 +2,9 @@ package net.geoprism.geoai.explorer.core.service;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,25 +38,27 @@ public class ChatServiceIntegrationTest
     history.addMessage(new HistoryMessage(HistoryMessageType.AI, "I found multiple channel reaches with \"25\" in their name. Could you please specify which one you're interested in? Here are some examples of the different reaches (showing first few):\n1. CEMVK_LM_09_LPM_25\n2. CEMVM_LM_26_HIK_25\n3. CEMVK_BR_01_FUL_25\n4. CELRN_TN_ND_PW2_25\n5. CELRN_TN_ND_GU1_25\n...and many more."));
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "CEMVK_RR_03_ONE_25"));
 
-    LocationPage page = service.getLocations(history);
+    List<LocationPage> pages = service.getLocations(history);
 
-    Assert.assertTrue(page.getCount() > 0);
+    Assert.assertTrue(pages.size() > 0);
 
     // Test serialization
     ObjectMapper mapper = new ObjectMapper();
 
-    for (Location location : page.getLocations())
-    {
-
-      try (StringWriter writer = new StringWriter())
+    for (LocationPage page : pages) {
+      for (Location location : page.getLocations())
       {
-        mapper.writeValue(writer, location);
-
-        String value = writer.toString();
-
-        Assert.assertTrue(value.length() > 0);
+  
+        try (StringWriter writer = new StringWriter())
+        {
+          mapper.writeValue(writer, location);
+  
+          String value = writer.toString();
+  
+          Assert.assertTrue(value.length() > 0);
+        }
+  
       }
-
     }
 
   }

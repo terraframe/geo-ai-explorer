@@ -215,26 +215,26 @@ Aggregation functions must always be wrapped in parenthesis with its variable na
 // Incorrect
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX obj: <https://localhost:4200/lpg/rdfs#>
-PREFIX custom: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
 
 SELECT SUM(?population) as ?totalPopulation
 FROM <https://localhost:4200/lpg/graph_801104/0#>
 WHERE {
- ?censusTract obj:GeoObject-code "CEMVK_RR_03_ONE_27" .
+ ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
  ?censusTract custom:CensusTract-population ?population . 
 }
 
 // Correct
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX obj: <https://localhost:4200/lpg/rdfs#>
-PREFIX custom: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
 
 SELECT (SUM(?population) as ?totalPopulation)
 FROM <https://localhost:4200/lpg/graph_801104/0#>
 WHERE {
- ?censusTract obj:GeoObject-code "CEMVK_RR_03_ONE_27" .
+ ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
  ?censusTract custom:CensusTract-population ?population . 
 }
 

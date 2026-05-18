@@ -30,6 +30,7 @@ export interface ServerChatResponse {
 
 export interface LocationPage {
   statement: string;
+  type: string,
   locations: GeoObject[];
   limit: number;
   offset: number;

@@ -11,3 +11,107 @@ h2 {
 fa-icon {
     cursor: pointer;
 }
+
+
+.results-table-columns {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 1rem;
+
+  height: calc(100% - 60px);
+  min-height: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 0.75rem;
+}
+
+.results-table-columns.single-table {
+  grid-auto-columns: 1fr;
+}
+
+.results-table-columns.two-tables {
+  grid-auto-columns: minmax(360px, calc((100% - 1rem) / 2));
+}
+
+.results-table-columns.three-or-more-tables {
+  grid-auto-columns: minmax(360px, calc((100% - 2rem) / 3));
+}
+
+.results-table-column {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid var(--surface-border, #dfe3ea);
+  border-radius: 12px;
+  background: var(--surface-card, #fff);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+
+  /*
+    Important: don't use overflow: hidden here while debugging.
+    It can clip PrimeNG's internal scrollbar/paginator.
+  */
+  overflow: visible;
+}
+
+.results-table-title {
+  flex: 0 0 auto;
+
+  margin: 0;
+  padding: 0.75rem 1rem;
+
+  font-size: 1rem;
+  font-weight: 700;
+
+  border-bottom: 1px solid var(--surface-border, #dfe3ea);
+  background: var(--surface-ground, #f6f7f9);
+}
+
+.results-header-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 340px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.results-title {
+  margin: 0;
+  text-align: center;
+}
+
+.results-page-selector {
+  min-width: 260px;
+  max-width: 420px;
+}
+
+.results-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  /*
+    Let PrimeNG's internal p-datatable-wrapper handle vertical scrolling.
+  */
+  overflow: hidden;
+}
+
+.results-table-body ::ng-deep .p-datatable {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.results-table-body ::ng-deep .p-datatable-table-container,
+.results-table-body ::ng-deep .p-datatable-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.results-table-body ::ng-deep .p-datatable-footer {
+  flex: 0 0 auto;
+}

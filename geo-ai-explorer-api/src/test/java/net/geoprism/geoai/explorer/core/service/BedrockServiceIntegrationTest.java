@@ -1,5 +1,6 @@
 package net.geoprism.geoai.explorer.core.service;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -18,6 +19,7 @@ import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.HistoryMessage;
 import net.geoprism.geoai.explorer.core.model.HistoryMessageType;
 import net.geoprism.geoai.explorer.core.model.Message;
+import net.geoprism.geoai.explorer.core.service.BedrockService.TypeAndQuery;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = TestConfiguration.class)
@@ -89,17 +91,21 @@ public class BedrockServiceIntegrationTest
         "I found multiple channel reaches that match your search. Please specify which one you're interested in:\\n\\n<name>reach_25</name>\\n<location><label>CELRN_CL_ND_MEL_25</label><uri>https://localhost:4200/lpg/graph_801104/0#ChannelReach-CELRN_CL_ND_MEL_25</uri></location>\\n<location><label>CELRN_CR_ND_BL1_25</label><uri>https://localhost:4200/lpg/graph_801104/0#ChannelReach-CELRN_CR_ND_BL1_25</uri></location>\\n<location><label>CELRN_CR_ND_CH1_25</label><uri>https://localhost:4200/lpg/graph_801104/0#ChannelReach-CELRN_CR_ND_CH1_25</uri></location>\\n<location><label>CELRN_CR_ND_COR_25</label><uri>https://localhost:4200/lpg/graph_801104/0#ChannelReach-CELRN_CR_ND_COR_25</uri></location>\\n<location><label>CELRN_CR_ND_OLD_25</label><uri>https://localhost:4200/lpg/graph_801104/0#ChannelReach-CELRN_CR_ND_OLD_25</uri></location>"));
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "CEMVK_RR_03_ONE_25"));
 
-    String sparql = service.getLocationSparql(history);
+    List<TypeAndQuery> queryPerType = service.getLocationSparql(history);
+    
+    for (TypeAndQuery tnq : queryPerType) {
+      String sparql = tnq.query();
 
-    Assert.assertTrue(sparql.contains("CEMVK_RR_03_ONE_25"));
-    Assert.assertTrue(sparql.contains("ChannelHasLevee"));
-    Assert.assertTrue(sparql.contains("HasFloodZone"));
-    Assert.assertTrue(sparql.contains("TractAtRisk"));
-    Assert.assertTrue(sparql.contains("hasGeometry"));
-    Assert.assertTrue(sparql.contains("?type"));
-    Assert.assertTrue(sparql.contains("?code"));
-    Assert.assertTrue(sparql.contains("?label"));
-    Assert.assertTrue(sparql.contains("?wkt"));
+      Assert.assertTrue(sparql.contains("CEMVK_RR_03_ONE_25"));
+      Assert.assertTrue(sparql.contains("ChannelHasLevee"));
+      Assert.assertTrue(sparql.contains("HasFloodZone"));
+      Assert.assertTrue(sparql.contains("TractAtRisk"));
+      Assert.assertTrue(sparql.contains("hasGeometry"));
+      Assert.assertTrue(sparql.contains("?type"));
+      Assert.assertTrue(sparql.contains("?code"));
+      Assert.assertTrue(sparql.contains("?label"));
+      Assert.assertTrue(sparql.contains("?wkt"));
+    }
   }
 
   @Test
@@ -114,18 +120,22 @@ public class BedrockServiceIntegrationTest
     history.addMessage(new HistoryMessage(HistoryMessageType.AI, "The total population that would be impacted if channel reach CEMVK_RR_03_ONE_25 floods is 431,826 people."));
     history.addMessage(new HistoryMessage(HistoryMessageType.USER, "what school zones are impacted?"));
 
-    String sparql = service.getLocationSparql(history);
+    List<TypeAndQuery> queryPerType = service.getLocationSparql(history);
+    
+    for (TypeAndQuery tnq : queryPerType) {
+      String sparql = tnq.query();
 
-    Assert.assertTrue(sparql.contains("CEMVK_RR_03_ONE_25"));
-    Assert.assertTrue(sparql.contains("ChannelHasLevee"));
-    Assert.assertTrue(sparql.contains("HasFloodZone"));
-    Assert.assertTrue(sparql.contains("HasFloodRisk"));
-    Assert.assertTrue(sparql.contains("HasSchoolZone"));
-    Assert.assertTrue(sparql.contains("hasGeometry"));
-    Assert.assertTrue(sparql.contains("?type"));
-    Assert.assertTrue(sparql.contains("?code"));
-    Assert.assertTrue(sparql.contains("?label"));
-    Assert.assertTrue(sparql.contains("?wkt"));
+      Assert.assertTrue(sparql.contains("CEMVK_RR_03_ONE_25"));
+      Assert.assertTrue(sparql.contains("ChannelHasLevee"));
+      Assert.assertTrue(sparql.contains("HasFloodZone"));
+      Assert.assertTrue(sparql.contains("HasFloodRisk"));
+      Assert.assertTrue(sparql.contains("HasSchoolZone"));
+      Assert.assertTrue(sparql.contains("hasGeometry"));
+      Assert.assertTrue(sparql.contains("?type"));
+      Assert.assertTrue(sparql.contains("?code"));
+      Assert.assertTrue(sparql.contains("?label"));
+      Assert.assertTrue(sparql.contains("?wkt"));
+    }
   }
 
 }

@@ -23,7 +23,7 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPage, getWorkflowState, getPreviousWorkflowStep, WorkflowState } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPages, getWorkflowState, getPreviousWorkflowStep, WorkflowState } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -103,7 +103,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     previousWorkflowStep$: Observable<WorkflowStep | undefined> = this.store.select(getPreviousWorkflowStep);
 
-    page$: Observable<LocationPage> = this.store.select(getPage);
+    pages$: Observable<LocationPage[]> = this.store.select(getPages);
 
     onPageChange: Subscription;
 
@@ -156,13 +156,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     public chatMinimized: boolean = false;
 
-    public page: LocationPage = {
+    public pages: LocationPage[] = [{
         locations: [],
         statement: "",
+        type: "",
         limit: 100,
         offset: 0,
         count: 0
-    };
+    }];
 
     constructor(
         private configurationService: ConfigurationService,
@@ -230,9 +231,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                 }
             });
 
-        this.onPageChange = this.page$.subscribe(page => {
+        this.onPageChange = this.pages$.subscribe(pages => {
             this.activeTab = "0";
-            this.page = page;
+            this.pages = pages;
         });
     }
 
@@ -307,13 +308,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
 
     cancelDisambiguation() {
-        this.store.dispatch(ExplorerActions.setPage({ page: { 
+        this.store.dispatch(ExplorerActions.setPages({ pages: [{ 
             locations: [],
             statement: "",
+            type: "",
             limit: 100,
             offset: 0,
             count: 0
-        }, zoomMap: false }));
+        }], zoomMap: false }));
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat }));
     }
 
@@ -324,13 +326,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
 
     disambiguate() {
-        this.store.dispatch(ExplorerActions.setPage({ page: { 
+        this.store.dispatch(ExplorerActions.setPages({ pages: [{ 
             locations: [],
             statement: "",
+            type: "",
             limit: 100,
             offset: 0,
             count: 0
-        }, zoomMap: false }));
+        }], zoomMap: false }));
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.FullScreenChat, data: this.selectedObject }));
     }
 

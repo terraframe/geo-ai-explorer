@@ -65,6 +65,7 @@ As well as numerous census tracts, real properties, and other infrastructure.`, 
 
   public static locations: LocationPage = {
     statement: "A list of available locations",
+    type: "School",
     locations: [
       {
         "properties": {

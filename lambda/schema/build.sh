@@ -1,7 +1,16 @@
-pip install --target ./package
+#!/usr/bin/env bash
+set -euo pipefail
 
-cd package
-zip -r ../my_deployment_package.zip .
+OUTPUT="function.zip"
+LAMBDA_FILE="lambda_function.py"
 
-cd ..
-zip my_deployment_package.zip dummy_lambda.py .env
+if [ ! -f "$LAMBDA_FILE" ]; then
+  echo "Error: $LAMBDA_FILE not found"
+  exit 1
+fi
+
+rm -f "$OUTPUT"
+
+zip "$OUTPUT" "$LAMBDA_FILE"
+
+echo "Created $OUTPUT"

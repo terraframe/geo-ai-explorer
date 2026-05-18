@@ -16,6 +16,8 @@
 package net.geoprism.geoai.explorer.core.service;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import net.geoprism.geoai.explorer.core.model.GenericRestException;
 import net.geoprism.geoai.explorer.core.model.History;
 import net.geoprism.geoai.explorer.core.model.LocationPage;
 import net.geoprism.geoai.explorer.core.model.Message;
+import net.geoprism.geoai.explorer.core.service.BedrockService.TypeAndQuery;
 
 @Service
 public class ChatService
@@ -54,9 +57,9 @@ public class ChatService
     }
   }
 
-  public LocationPage getLocations(History history)
+  public List<LocationPage> getLocations(History history)
   {
-    RetryPolicy<LocationPage> retryPolicy = RetryPolicy.<LocationPage>builder()
+    RetryPolicy<List<LocationPage>> retryPolicy = RetryPolicy.<List<LocationPage>>builder()
         .handle(Exception.class)
         .withMaxAttempts(3)
         .withDelay(Duration.ofMillis(250))
@@ -84,29 +87,34 @@ public class ChatService
     try
     {
       return Failsafe.with(retryPolicy).get(() -> {
-        String statement = this.bedrock.getLocationSparql(history);
+        List<TypeAndQuery> queryPerType = this.bedrock.getLocationSparql(history);
 
-        LocationPage page = this.getPage(
-            statement,
-            history.getOffset(),
-            history.getLimit()
-        );
-
-        if (page == null ||
-            page.getLocations() == null ||
-            page.getLocations().isEmpty())
-        {
-          throw new EmptyLocationPageException(page);
+        List<LocationPage> pages = new ArrayList<LocationPage>();
+        
+        for (var tnq : queryPerType) {
+          // Execute the query
+          pages.add(this.getPage(
+              tnq.query(),
+              tnq.type(),
+              history.getOffset(),
+              history.getLimit()
+          ));
         }
 
-        return page;
+        if (pages.size() == 0 ||
+            pages.stream().mapToInt(p -> p.getLocations().size()).sum() == 0)
+        {
+          throw new EmptyLocationPageException(pages);
+        }
+
+        return pages;
       });
     }
     catch (EmptyLocationPageException e)
     {
       log.info("Location lookup returned zero results after retries.");
 
-      return e.getPage();
+      return e.getPages();
     }
     catch (Exception e)
     {
@@ -121,25 +129,25 @@ public class ChatService
 
   private static class EmptyLocationPageException extends RuntimeException
   {
-    private final LocationPage page;
-
-    private EmptyLocationPageException(LocationPage page)
+    List<LocationPage> pages;
+    
+    private EmptyLocationPageException(List<LocationPage> pages)
     {
       super("Location lookup returned zero results.");
-      this.page = page;
+      this.pages = pages;
     }
-
-    public LocationPage getPage()
-    {
-      return page;
+    
+    public List<LocationPage> getPages() {
+      return pages;
     }
   }
 
-  public LocationPage getPage(String statement, int offset, int limit)
+  public LocationPage getPage(String statement, String type, int offset, int limit)
   {
     try
     {
       LocationPage page = new LocationPage();
+      page.setType(type);
       page.setLocations(this.graph.query(statement, offset, limit));
       page.setCount(this.graph.getCount(statement));
       page.setLimit(limit);

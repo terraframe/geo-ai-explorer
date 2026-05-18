@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class LocationPage
 {
   private String         statement;
+  
+  private String         type;
 
   private List<Location> locations;
 

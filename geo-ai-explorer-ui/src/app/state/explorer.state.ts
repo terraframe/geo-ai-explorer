@@ -13,10 +13,7 @@ export const ExplorerActions = createActionGroup({
     source: 'explorer',
     events: {
         'Add GeoObject': props<{ object: GeoObject }>(),
-        'Set Page': props<{
-            page: LocationPage,
-            zoomMap: boolean
-        }>(),
+        'Set Pages': props<{ pages: LocationPage[], zoomMap: boolean }>(),
         'Add Neighbor': props<{ object: GeoObject }>(),
         'Set Neighbors': props<{ objects: GeoObject[], zoomMap: boolean }>(),
         'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
@@ -29,7 +26,7 @@ export const ExplorerActions = createActionGroup({
         'Append Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
         'Back Workflow Step': emptyProps(),
         'Clear Workflow History': emptyProps(),
-        'Show Page On Map': props<{ page: LocationPage; zoomMap: boolean; step: WorkflowStep.MapAndResults | WorkflowStep.DisambiguateObject; data?: any; }>(),
+        'Show Pages On Map': props<{ pages: LocationPage[]; zoomMap: boolean; step: WorkflowStep.MapAndResults | WorkflowStep.DisambiguateObject; data?: any; }>(),
     },
 });
 
@@ -55,7 +52,7 @@ export interface ExplorerStateModel {
     highlightedObject: GeoObject | null;
     zoomMap: boolean;
     vectorLayers: VectorLayer[];
-    page: LocationPage;
+    pages: LocationPage[];
     workflowStep: WorkflowStep;
     workflowData?: any;
     workflowHistory: WorkflowState[];
@@ -70,13 +67,14 @@ export const initialState: ExplorerStateModel = {
     vectorLayers: [],
     workflowStep: WorkflowStep.FullScreenChat,
     workflowHistory: [],
-    page: { 
+    pages: [{ 
         locations: [],
         statement: "",
+        type: "",
         limit: 100,
         offset: 0,
         count: 0
-    }
+    }]
 }
 
 // Helper function for resolving missing styles based on the provided object types
@@ -110,6 +108,22 @@ const resolveMissingStyles = (styles: StyleConfig, objects: GeoObject[]) => {
     return null;
 }
 
+const resolveMissingStylesPages = (styles: StyleConfig, pages: LocationPage[]): StyleConfig | null => {
+  let resolvedStyles = styles;
+  let changed = false;
+
+  pages.forEach(page => {
+    const nextStyles = resolveMissingStyles(resolvedStyles, page.locations);
+
+    if (nextStyles != null) {
+      resolvedStyles = nextStyles;
+      changed = true;
+    }
+  });
+
+  return changed ? resolvedStyles : null;
+};
+
 export const explorerReducer = createReducer(
     initialState,
 
@@ -127,14 +141,14 @@ export const explorerReducer = createReducer(
     }),
 
     // Set all geo objects
-    on(ExplorerActions.setPage, (state, { page, zoomMap }) => {
+    on(ExplorerActions.setPages, (state, { pages, zoomMap }) => {
 
-        const styles = resolveMissingStyles(state.styles, page.locations);
+        const styles = resolveMissingStylesPages(state.styles, pages);
 
         return {
             ...state,
             styles: styles != null ? styles : state.styles,
-            page,
+            pages,
             zoomMap
         };
     }),
@@ -168,13 +182,13 @@ export const explorerReducer = createReducer(
     })),
 
     // Add geo object
-    on(ExplorerActions.addGeoObject, (state, { object }) => ({
-        ...state,
-        page: {
-            ...state.page,
-            locations: [...state.page.locations, object]
-        }
-    })),
+    // on(ExplorerActions.addGeoObject, (state, { object }) => ({
+    //     ...state,
+    //     pages: {
+    //         ...state.page,
+    //         locations: [...state.page.locations, object]
+    //     }
+    // })),
 
     // Add style
     on(ExplorerActions.addStyle, (state, { typeUri, style }) => ({
@@ -260,13 +274,13 @@ export const explorerReducer = createReducer(
         workflowHistory: []
     })),
 
-    on(ExplorerActions.showPageOnMap, (state, { page, zoomMap, step, data }) => {
-        const styles = resolveMissingStyles(state.styles, page.locations);
+    on(ExplorerActions.showPagesOnMap, (state, { pages, zoomMap, step, data }) => {
+        const styles = resolveMissingStylesPages(state.styles, pages);
 
         return {
             ...state,
             styles: styles != null ? styles : state.styles,
-            page,
+            pages,
             zoomMap,
             workflowStep: step,
             workflowData: data,
@@ -279,12 +293,12 @@ export const explorerReducer = createReducer(
 
 const selector = createFeatureSelector<ExplorerStateModel>('explorer');
 
-export const getObjects = createSelector(selector, (s) => {
-    return s.page.locations;
+export const getPages = createSelector(selector, (s) => {
+    return s.pages;
 });
 
-export const getPage = createSelector(selector, (s) => {
-    return s.page;
+export const getObjects = createSelector(getPages, (pages): GeoObject[] => {
+  return pages.flatMap(page => page.locations ?? []);
 });
 
 export const getNeighbors = createSelector(selector, (s) => {

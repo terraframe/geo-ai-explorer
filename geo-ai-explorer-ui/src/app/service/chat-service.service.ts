@@ -49,12 +49,12 @@ export class ChatService {
     }
   }
 
-  getLocations(messages: ChatMessage[], offset: number, limit: number): Promise<LocationPage> {
+  getLocations(messages: ChatMessage[], offset: number, limit: number): Promise<LocationPage[]> {
     if (environment.mockRequests)
     {
-      return new Promise<LocationPage>((resolve) => {
+      return new Promise<LocationPage[]>((resolve) => {
         setTimeout(() => {
-          resolve(MockUtil.locations);
+          resolve([MockUtil.locations]);
         }, 500); // Simulating network delay
       });
     }
@@ -70,11 +70,11 @@ export class ChatService {
         offset
       }
 
-      return firstValueFrom(this.http.post<LocationPage>(environment.apiUrl + 'api/chat/get-locations', params));
+      return firstValueFrom(this.http.post<LocationPage[]>(environment.apiUrl + 'api/chat/get-locations', params));
     }
   }
 
-  getPage(statement: string, offset: number, limit: number): Promise<LocationPage> {
+  getPage(statement: string, type:string, offset: number, limit: number): Promise<LocationPage> {
     if (environment.mockRequests)
     {
       return new Promise<LocationPage>((resolve) => {
@@ -88,6 +88,7 @@ export class ChatService {
       // // // Uncomment below to make a real HTTP request
       const params = {
         statement,
+        type,
         limit,
         offset
       }
