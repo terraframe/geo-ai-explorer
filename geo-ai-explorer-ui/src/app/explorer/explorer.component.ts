@@ -23,7 +23,7 @@ import { defaultQueries, SELECTED_COLOR, HOVER_COLOR } from './defaultQueries';
 import { AllGeoJSON, bbox, bboxPolygon, union } from '@turf/turf';
 import { ExplorerService } from '../service/explorer.service';
 import { ErrorService } from '../service/error-service.service';
-import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, selectedObject, getWorkflowStep, WorkflowStep, getPages, getWorkflowState, getPreviousWorkflowStep, WorkflowState } from '../state/explorer.state';
+import { ExplorerActions, getNeighbors, getObjects, getStyles, getVectorLayers, getZoomMap, highlightedObject, getWorkflowStep, WorkflowStep, getPages, getWorkflowState, getPreviousWorkflowStep, WorkflowState } from '../state/explorer.state';
 import { TabsModule } from 'primeng/tabs';
 import { debounce } from 'lodash';
 import { VectorLayer } from '../models/vector-layer.model';
@@ -88,10 +88,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     neighbors: GeoObject[] = [];
 
     styles$: Observable<StyleConfig> = this.store.select(getStyles);
-
-    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
-
-    onSelectedObjectChange: Subscription;
 
     highlightedObject$: Observable<GeoObject | null> = this.store.select(highlightedObject);
 
@@ -189,16 +185,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
             this.renderVectorLayers();
         });
 
-        this.onSelectedObjectChange = this.selectedObject$.pipe(withLatestFrom(this.zoomMap$, this.styles$)).subscribe(([object, zoomMap, styles]) => {
-            this.resolvedStyles = styles;
-            this.selectObject(object, zoomMap);
-
-            // Selecting or unselecting an object can change the map size. If we don't resize, we can end up with weird white bars on the side when the attribute panel goes away.
-            // setTimeout(() => {
-            //     this.map?.resize();
-            // }, 0);
-        });
-
         this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
             this.highlightObject(object == null ? undefined : object.properties.uri);
         });
@@ -210,9 +196,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                 a.data === b.data
                 )
             )
-            .subscribe(({ step, data }) => {
+            .pipe(withLatestFrom(this.styles$, this.zoomMap$))
+            .subscribe(([{ step, data, }, styles, zoomMap]) => {
                 this.activeTab = "0";
+                this.resolvedStyles = styles;
                 this.workflowStep = step;
+                this.zoomMap = zoomMap;
                 this.chatMinimized = step === WorkflowStep.MinimizeChat;
 
                 if (this.isMapWorkflowStep(step)) {
@@ -231,9 +220,15 @@ export class ExplorerComponent implements OnInit, OnDestroy {
                 }
             });
 
-        this.onPageChange = this.pages$.subscribe(pages => {
+        this.onPageChange = this.pages$
+            .pipe(withLatestFrom(this.styles$, this.zoomMap$))
+            .subscribe(([pages, styles, zoomMap]) => {
             this.activeTab = "0";
+            this.resolvedStyles = styles;
+            this.zoomMap = zoomMap;
             this.pages = pages;
+
+            this.render();
         });
     }
 
@@ -246,7 +241,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.onMapObjectsChange.unsubscribe();
         this.onVectorLayersChange.unsubscribe();
-        this.onSelectedObjectChange.unsubscribe();
         this.onHighlightedObjectChange.unsubscribe();
     }
 
@@ -322,7 +316,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     goBack() {
         this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
         this.store.dispatch(ExplorerActions.backWorkflowStep());
-        this.store.dispatch(ExplorerActions.selectGeoObject(null));
     }
 
     disambiguate() {
@@ -435,7 +428,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
 
     labelForType(typeUri: string): string {
-        if (this.resolvedStyles[typeUri].label) {
+        if (this.resolvedStyles && this.resolvedStyles[typeUri] && this.resolvedStyles[typeUri].label) {
             return this.resolvedStyles[typeUri].label as string;
         } else {
             return ExplorerComponent.uriToLabel(typeUri);
@@ -1254,7 +1247,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
                                 this.selectedObject = geoObject;
                                 this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: geoObject }));
-                                this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: false }));
                             })
                             .catch(error => this.errorService.handleError(error))
                     }
@@ -1266,7 +1258,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
                     let selectedObject = this.allGeoObjects().find(n => n.properties.uri === uri);
                     this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: selectedObject }));
-                    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: false }));
                 }
             } else {
                 // this.store.dispatch(ExplorerActions.selectGeoObject(null));

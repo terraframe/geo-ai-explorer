@@ -4,31 +4,31 @@
     <ng-container *ngIf="pages?.length && hasResults(pages); else zeroResults">
 
         <div
-        class="results-header-row"
-        *ngIf="workflowStep !== WorkflowStep.DisambiguateObject"
-        >
-        <p-button
-            severity="secondary"
-            pTooltip="Go Back"
-            (onClick)="goBack()"
-        >
-            <fa-icon [icon]="backIcon"></fa-icon>
-            <label style="cursor: pointer;">Back</label>
-        </p-button>
+            class="results-header-row"
+            *ngIf="workflowStep !== WorkflowStep.DisambiguateObject"
+            >
+            <p-button
+                severity="secondary"
+                pTooltip="Go Back"
+                (onClick)="goBack()"
+            >
+                <fa-icon [icon]="backIcon"></fa-icon>
+                <label style="cursor: pointer;">Back</label>
+            </p-button>
 
-        <h2 class="results-title">Results</h2>
+            <h2 class="results-title">Results</h2>
 
-        <p-multiSelect
-            [options]="pageDisplayOptions"
-            [(ngModel)]="selectedPageDisplayKeys"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Visible tables"
-            [maxSelectedLabels]="2"
-            selectedItemsLabel="{0} tables selected"
-            appendTo="body"
-            styleClass="results-page-selector"
-        />
+            <p-multiSelect
+                [options]="pageDisplayOptions"
+                [(ngModel)]="selectedPageDisplayKeys"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Visible tables"
+                [maxSelectedLabels]="2"
+                selectedItemsLabel="{0} tables selected"
+                appendTo="body"
+                styleClass="results-page-selector"
+            />
         </div>
 
         <div class="results-table-columns"

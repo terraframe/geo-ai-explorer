@@ -16,14 +16,13 @@ export const ExplorerActions = createActionGroup({
         'Set Pages': props<{ pages: LocationPage[], zoomMap: boolean }>(),
         'Add Neighbor': props<{ object: GeoObject }>(),
         'Set Neighbors': props<{ objects: GeoObject[], zoomMap: boolean }>(),
-        'Select GeoObject': props<{ object: GeoObject, zoomMap: boolean } | null>(),
         'Highlight GeoObject': props<{ object: GeoObject } | null>(),
         'Add Style': props<{ typeUri: string, style: Style }>(),
         'Set Styles': props<{ styles: StyleConfig }>(),
         'Set Vector Layer': props<{ layer: VectorLayer }>(),
         'Set Configuration': props<Configuration>(),
-        'Set Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
-        'Append Workflow Step': props<{ step: WorkflowStep, data?: any }>(),
+        'Set Workflow Step': props<{ step: WorkflowStep, data?: any, zoomMap?: boolean }>(),
+        'Append Workflow Step': props<{ step: WorkflowStep, data?: any, zoomMap?: boolean }>(),
         'Back Workflow Step': emptyProps(),
         'Clear Workflow History': emptyProps(),
         'Show Pages On Map': props<{ pages: LocationPage[]; zoomMap: boolean; step: WorkflowStep.MapAndResults | WorkflowStep.DisambiguateObject; data?: any; }>(),
@@ -33,6 +32,7 @@ export const ExplorerActions = createActionGroup({
 export interface WorkflowState {
     step: WorkflowStep;
     data?: any;
+    zoomMap?: boolean;
 }
 
 export enum WorkflowStep {
@@ -78,50 +78,41 @@ export const initialState: ExplorerStateModel = {
 }
 
 // Helper function for resolving missing styles based on the provided object types
-const resolveMissingStyles = (styles: StyleConfig, objects: GeoObject[]) => {
+const resolveMissingStyles = (styles: StyleConfig, objects: GeoObject[]): StyleConfig => {
+  const types: string[] = objects
+    .map(o => o.properties.type)
+    .filter(t => t != null)
+    .reduce((acc: string[], t: string) => {
+      if (!acc.includes(t)) {
+        acc.push(t);
+      }
+      return acc;
+    }, [])
+    .filter(type => styles[type] == null);
 
-    // Get a list of all the types which do not have styles
-    const types: string[] = objects.map(o => o.properties.type).filter(t => t != null).reduce((acc: string[], t: string) => {
-        if (!acc.some(item => t === item)) {
-            acc.push(t);
-        }
-        return acc;
-    }, []).filter(type => styles[type] == null);
+  if (types.length === 0) {
+    return styles;
+  }
 
+  const newStyles = { ...styles };
 
-    if (types.length > 0) {
-        const newStyles = { ...styles };
+  types.forEach(type => {
+    const defaultStyle = defaultStyles[type];
 
-        types.forEach(type => {
-            if (newStyles[type] == null) {
-                const defaultStyle = defaultStyles[type];
-                newStyles[type] = {
-                    order: defaultStyle?.order ?? 10,
-                    color: ColorGen().hexString()
-                };
-            }
-        })
-
-        return newStyles
-    }
-
-    return null;
-}
-
-const resolveMissingStylesPages = (styles: StyleConfig, pages: LocationPage[]): StyleConfig | null => {
-  let resolvedStyles = styles;
-  let changed = false;
-
-  pages.forEach(page => {
-    const nextStyles = resolveMissingStyles(resolvedStyles, page.locations);
-
-    if (nextStyles != null) {
-      resolvedStyles = nextStyles;
-      changed = true;
-    }
+    newStyles[type] = {
+      order: defaultStyle?.order ?? 10,
+      color: ColorGen().hexString()
+    };
   });
 
-  return changed ? resolvedStyles : null;
+  return newStyles;
+};
+
+const resolveMissingStylesPages = (styles: StyleConfig, pages: LocationPage[]): StyleConfig => {
+  return pages.reduce(
+    (resolvedStyles, page) => resolveMissingStyles(resolvedStyles, page.locations ?? []),
+    styles
+  );
 };
 
 export const explorerReducer = createReducer(
@@ -129,12 +120,11 @@ export const explorerReducer = createReducer(
 
     // Set all neighbors
     on(ExplorerActions.setNeighbors, (state, { objects, zoomMap }) => {
-
         const styles = resolveMissingStyles(state.styles, objects);
 
         return {
             ...state,
-            styles: styles != null ? styles : state.styles,
+            styles,
             neighbors: objects,
             zoomMap: zoomMap,
         };
@@ -142,29 +132,12 @@ export const explorerReducer = createReducer(
 
     // Set all geo objects
     on(ExplorerActions.setPages, (state, { pages, zoomMap }) => {
-
         const styles = resolveMissingStylesPages(state.styles, pages);
 
         return {
             ...state,
-            styles: styles != null ? styles : state.styles,
+            styles,
             pages,
-            zoomMap
-        };
-    }),
-
-    // Select geo object
-    on(ExplorerActions.selectGeoObject, (state, { object, zoomMap }) => {
-
-        let styles = state.styles
-
-        if (object != null)
-            styles = resolveMissingStyles(state.styles, [ object ]) as StyleConfig;
-
-        return {
-            ...state,
-            styles: styles != null ? styles : state.styles,
-            selectedObject: object,
             zoomMap
         };
     }),
@@ -225,22 +198,37 @@ export const explorerReducer = createReducer(
     })),
 
     // Forcibly sets the workflow step, clearing all history
-    on(ExplorerActions.setWorkflowStep, (state, { step, data }) => ({
-        ...state,
-        workflowStep: step,
-        workflowData: data,
-        workflowHistory: []
-    })),
-
-    // Append Workflow Step
-    on(ExplorerActions.appendWorkflowStep, (state, { step, data }) => {
-        const current: WorkflowState = {
-            step: state.workflowStep,
-            data: state.workflowData
-        };
+    on(ExplorerActions.setWorkflowStep, (state, { step, data, zoomMap }) => {
+        let styles = state.styles;
+        if (step === WorkflowStep.InspectObject && data)
+            styles = resolveMissingStyles(state.styles, [data]);
 
         return {
             ...state,
+            styles,
+            zoomMap: zoomMap ?? state.zoomMap,
+            workflowStep: step,
+            workflowData: data,
+            workflowHistory: []
+        };
+    }),
+
+    // Append Workflow Step
+    on(ExplorerActions.appendWorkflowStep, (state, { step, data, zoomMap }) => {
+        const current: WorkflowState = {
+            step: state.workflowStep,
+            data: state.workflowData,
+            zoomMap: state.zoomMap
+        };
+
+        let styles = state.styles;
+        if (step === WorkflowStep.InspectObject && data)
+            styles = resolveMissingStyles(state.styles, [data]);
+
+        return {
+            ...state,
+            styles,
+            zoomMap: zoomMap ?? state.zoomMap,
             workflowStep: step,
             workflowData: data,
             workflowHistory: [...state.workflowHistory, current]
@@ -262,6 +250,7 @@ export const explorerReducer = createReducer(
 
         return {
             ...state,
+            zoomMap: previous.zoomMap ?? false,
             workflowStep: previous.step,
             workflowData: previous.data,
             workflowHistory
@@ -311,10 +300,6 @@ export const getZoomMap = createSelector(selector, (s) => {
 
 export const getStyles = createSelector(selector, (s) => {
     return s.styles;
-});
-
-export const selectedObject = createSelector(selector, (s) => {
-    return s.selectedObject;
 });
 
 export const highlightedObject = createSelector(selector, (s) => {

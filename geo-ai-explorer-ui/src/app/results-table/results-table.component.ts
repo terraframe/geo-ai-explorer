@@ -8,7 +8,7 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { GeoObject } from '../models/geoobject.model';
 import { Observable, Subscription, take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, getPages, getWorkflowStep, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
+import { ExplorerActions, getPages, getWorkflowStep, highlightedObject, WorkflowStep } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
 import { faArrowLeft, faArrowUp } from '@fortawesome/free-solid-svg-icons';
@@ -30,8 +30,6 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     public backIcon = faArrowLeft;
 
     pages$: Observable<LocationPage[]> = this.store.select(getPages);
-
-    selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
 
     highlightedObject$: Observable<GeoObject | null> = this.store.select(highlightedObject);
 
@@ -82,7 +80,6 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     goBack() {
         this.store.dispatch(ExplorerActions.backWorkflowStep());
-        this.store.dispatch(ExplorerActions.selectGeoObject(null));
     }
 
     calculateScrollHeight(): string {
@@ -98,7 +95,6 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     onClick(obj: GeoObject): void {
         this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: obj }));
-        this.store.dispatch(ExplorerActions.selectGeoObject({ object: obj, zoomMap: true }));
     }
 
     onRowHover(obj: GeoObject): void {
@@ -144,7 +140,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
         return pages
             .map((page, index) => ({ page, index }))
-            .filter(item => item.page.count > 0)
+            // .filter(item => item.page.count > 0)
             .filter(item => this.selectedPageDisplayKeys.includes(this.getPageDisplayKey(item.page, item.index)));
     }
 

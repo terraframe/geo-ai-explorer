@@ -557,8 +557,6 @@ export class AichatComponent {
           zoomMap: true
         }));
 
-        this.store.dispatch(ExplorerActions.selectGeoObject(null));
-
         this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.DisambiguateObject }));
       })
       .catch(error => this.errorService.handleError(error))
@@ -606,8 +604,7 @@ export class AichatComponent {
 
     this.explorerService.getAttributes(uri, true)
       .then(geoObject => {
-        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.InspectObject, data: geoObject }));
-        this.store.dispatch(ExplorerActions.selectGeoObject({ object: geoObject, zoomMap: true }));
+        this.store.dispatch(ExplorerActions.setWorkflowStep({ step: WorkflowStep.InspectObject, data: geoObject, zoomMap: true }));
       })
       .catch(error => this.errorService.handleError(error))
       .finally(() => {

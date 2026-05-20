@@ -9,8 +9,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import ColorGen from "color-generator";
 import { GeoObject } from '../models/geoobject.model';
 import { Store } from '@ngrx/store';
-import { ExplorerActions, getWorkflowStep, getZoomMap, highlightedObject, selectedObject, WorkflowStep } from '../state/explorer.state';
-import { Observable, Subscription, withLatestFrom } from 'rxjs';
+import { ExplorerActions, getWorkflowState, getWorkflowStep, getZoomMap, highlightedObject, WorkflowState, WorkflowStep } from '../state/explorer.state';
+import { distinctUntilChanged, Observable, Subscription, withLatestFrom } from 'rxjs';
 import { ErrorService } from '../service/error-service.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
@@ -113,13 +113,9 @@ export class GraphExplorerComponent implements OnDestroy {
 
   onHighlightedObjectChange: Subscription;
 
-  selectedObject$: Observable<GeoObject | null> = this.store.select(selectedObject);
-
-  onSelectedObjectChange: Subscription;
-
-  workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
+  workflowState$: Observable<WorkflowState> = this.store.select(getWorkflowState);
       
-  onWorkflowStepChange: Subscription;
+  onWorkflowStateChange: Subscription;
 
   private selectedObject: GeoObject | null = null;
 
@@ -132,33 +128,41 @@ export class GraphExplorerComponent implements OnDestroy {
     private errorService: ErrorService
   ) {
 
-    this.onSelectedObjectChange = this.selectedObject$.subscribe(object => {
-      if (object) {
-        this.renderGeoObjectAndNeighbors(object);
-      } else {
-        this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
-      }
-    });
-
-    this.onHighlightedObjectChange = this.selectedObject$.subscribe(object => {
+    this.onHighlightedObjectChange = this.highlightedObject$.subscribe(object => {
       if (object) {
         this.highlightedObject = object;
       }
     });
 
-    this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
-      window.setTimeout(() => {
-        if (this.gprGraph != null && step === WorkflowStep.ViewNeighbors)
-          this.renderGraph(this.gprGraph, false) }, 100);
-    });
+    this.onWorkflowStateChange = this.workflowState$
+        .pipe(
+            distinctUntilChanged((a, b) =>
+            a.step === b.step &&
+            a.data === b.data
+            )
+        )
+        .subscribe(({ step, data }) => {
+          if (this.gprGraph != null && step === WorkflowStep.ViewNeighbors) {
+            let that = this;
+            window.setTimeout(() => {
+              if (this.gprGraph != null && step === WorkflowStep.ViewNeighbors)
+                this.renderGraph(that.gprGraph!, false)
+            }, 100);
+          } else if (step === WorkflowStep.InspectObject) {
+            if (data)
+              this.renderGeoObjectAndNeighbors(data);
+          } else {
+            // Hmm.. seems kinda sketch
+            this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
+          }
+        });
   }
 
   ngOnDestroy(): void {
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: [], zoomMap: false }));
 
-    this.onSelectedObjectChange.unsubscribe();
     this.onHighlightedObjectChange.unsubscribe();
-    this.onWorkflowStepChange.unsubscribe();
+    this.onWorkflowStateChange.unsubscribe();
   }
 
   public renderGeoObjectAndNeighbors(geoObject: GeoObject, forceRefresh: boolean = false) {
@@ -190,7 +194,9 @@ export class GraphExplorerComponent implements OnDestroy {
     }).catch(error => { this.errorService.handleError(error); this.loading = false; });
   }
 
-  public renderGraph(graph: GprGraph, zoom: boolean = false) {
+  public renderGraph(graph: GprGraph | null, zoom: boolean = false) {
+    if (graph == null) return;
+
     this.loading = true;
     this.store.dispatch(ExplorerActions.setNeighbors({ objects: graph.nodes, zoomMap: false }));
     this.gprGraph = graph;
@@ -330,7 +336,7 @@ export class GraphExplorerComponent implements OnDestroy {
   public onClickNode(node: any) {
     let selectedObject = this.gprGraph!.nodes.find(n => n.properties.uri === this.idToUri(node.id));
 
-    this.store.dispatch(ExplorerActions.selectGeoObject({ object: selectedObject!, zoomMap: true }));
+    this.store.dispatch(ExplorerActions.appendWorkflowStep({ step: WorkflowStep.InspectObject, data: selectedObject }));
   }
 
   public zoomToUri(uri: string) {
