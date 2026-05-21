@@ -1,117 +1,135 @@
-<div style="height: 100%; width: 100%;">
+<div class="results-panel">
+  <button
+    type="button"
+    class="results-collapse-toggle"
+    (click)="toggleCollapsed()"
+    [title]="collapsed ? 'Expand results' : 'Collapse results'"
+    [pTooltip]="collapsed ? 'Expand results' : 'Collapse results'"
+  >
+    <fa-icon [icon]="collapsed ? expandIcon : collapseIcon"></fa-icon>
+  </button>
+
+  <div
+    class="results-resize-handle"
+    *ngIf="!collapsed"
+    (mousedown)="startResize($event)"
+    title="Resize results panel"
+    pTooltip="Resize results panel"
+  ></div>
+
   <ng-container *ngrxLet="pages$ as pages">
 
     <ng-container *ngIf="pages?.length && hasResults(pages); else zeroResults">
 
-        <div
-            class="results-header-row"
-            *ngIf="workflowStep !== WorkflowStep.DisambiguateObject"
-            >
-            <p-button
-                severity="secondary"
-                pTooltip="Go Back"
-                (onClick)="goBack()"
-            >
-                <fa-icon [icon]="backIcon"></fa-icon>
-                <label style="cursor: pointer;">Back</label>
-            </p-button>
+      <div
+        class="results-header-row"
+        *ngIf="workflowStep !== WorkflowStep.DisambiguateObject"
+      >
+        <p-button
+          severity="secondary"
+          pTooltip="Go Back"
+          (onClick)="goBack()"
+        >
+          <fa-icon [icon]="backIcon"></fa-icon>
+          <label style="cursor: pointer;">Back</label>
+        </p-button>
 
-            <p-tabs
-                [value]="activePageDisplayKey"
-                (valueChange)="selectActivePage($event)"
-                scrollable
-                class="results-tabs"
+        <p-tabs
+          *ngIf="!collapsed"
+          [value]="activePageDisplayKey"
+          (valueChange)="selectActivePage($event)"
+          scrollable
+          class="results-tabs"
+        >
+          <p-tablist>
+            <p-tab
+              *ngFor="let option of pageDisplayOptions"
+              [value]="option.value"
+            >
+              <span class="results-table-tab-content">
+                <span class="results-table-tab-label">
+                  {{ option.label }}
+                </span>
+
+                <button
+                  type="button"
+                  class="pin-button"
+                  [class.pinned]="isPagePinned(option.value)"
+                  [disabled]="!isPagePinned(option.value) && pinnedPageDisplayKeys.length >= maxPinnedPages"
+                  (click)="togglePinnedPage(option.value); $event.stopPropagation()"
+                  [pTooltip]="isPagePinned(option.value) ? 'Unpin table' : 'Pin table'"
                 >
-                <p-tablist>
-                    <p-tab
-                        *ngFor="let option of pageDisplayOptions"
-                        [value]="option.value"
-                        >
-                        <span class="results-table-tab-content">
-                            <span class="results-table-tab-label">
-                            {{ option.label }}
-                            </span>
+                  <fa-icon [icon]="pinIcon"></fa-icon>
+                </button>
+              </span>
+            </p-tab>
+          </p-tablist>
+        </p-tabs>
+      </div>
 
-                            <button
-                            type="button"
-                            class="pin-button"
-                            [class.pinned]="isPagePinned(option.value)"
-                            [disabled]="!isPagePinned(option.value) && pinnedPageDisplayKeys.length >= maxPinnedPages"
-                            (click)="togglePinnedPage(option.value); $event.stopPropagation()"
-                            [pTooltip]="isPagePinned(option.value) ? 'Unpin table' : 'Pin table'"
-                            >
-                            <fa-icon [icon]="pinIcon"></fa-icon>
-                            </button>
-                        </span>
-                    </p-tab>
-                </p-tablist>
-            </p-tabs>
-        </div>
+      <div
+        *ngIf="!collapsed"
+        class="results-table-columns"
+        [ngClass]="{
+          'single-table': displayedPageItems.length === 1,
+          'two-tables': displayedPageItems.length === 2,
+          'three-or-more-tables': displayedPageItems.length >= 3
+        }"
+      >
+        <ng-container *ngFor="let item of displayedPageItems; trackBy: trackByPageItem">
+          <section class="results-table-column" *ngIf="item.page.count > 0">
+            <h3 class="results-table-title">
+              {{ shouldShowTypeColumn(item.page) ? 'Results' : getPageTypeLabel(item.page) }}
+            </h3>
 
-        <div class="results-table-columns"
-            [ngClass]="{
-                'single-table': displayedPageItems.length === 1,
-                'two-tables': displayedPageItems.length === 2,
-                'three-or-more-tables': displayedPageItems.length >= 3
-            }"
-            >
-            <ng-container *ngFor="let item of displayedPageItems; trackBy: trackByPageItem">
-                <section class="results-table-column" *ngIf="item.page.count > 0">
-                    <h3 class="results-table-title">
-                        {{ shouldShowTypeColumn(item.page) ? 'Results' : getPageTypeLabel(item.page) }}
-                    </h3>
+            <div class="results-table-body">
+              <p-table
+                [value]="item.page.locations"
+                [tableStyle]="{ 'min-width': '100%' }"
+                stripedRows
+                [scrollable]="true"
+                scrollHeight="flex"
+                [size]="'small'"
+                (mouseleave)="onMouseLeaveTable()"
+              >
+                <ng-template #header>
+                  <tr>
+                    <th *ngFor="let column of item.columns">
+                      {{ column.header }}
+                    </th>
+                  </tr>
+                </ng-template>
 
-                    <div class="results-table-body">
-                        <p-table
-                        [value]="item.page.locations"
-                        [tableStyle]="{ 'min-width': '100%' }"
-                        stripedRows
-                        [scrollable]="true"
-                        scrollHeight="flex"
-                        [size]="'small'"
-                        (mouseleave)="onMouseLeaveTable()"
-                        >
-                        <ng-template #header>
-                            <tr>
-                            <th>Label</th>
-                            <th>Code</th>
-                            <th *ngIf="shouldShowTypeColumn(item.page)">Type</th>
-                            </tr>
-                        </ng-template>
+                <ng-template #body let-object>
+                  <tr
+                    class="clickable"
+                    [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
+                    (click)="onClick(object)"
+                    (mouseenter)="onRowHover(object)"
+                  >
+                    <td *ngFor="let column of item.columns">
+                      {{ getColumnValue(object, column) }}
+                    </td>
+                  </tr>
+                </ng-template>
 
-                        <ng-template #body let-object>
-                            <tr
-                            class="clickable"
-                            [ngClass]="{ 'highlight': highlightedObjectUri === object.properties.uri }"
-                            (click)="onClick(object)"
-                            (mouseenter)="onRowHover(object)"
-                            >
-                            <td>{{ object.properties.label }}</td>
-                            <td>{{ object.properties.code }}</td>
-
-                            <td *ngIf="shouldShowTypeColumn(item.page)">
-                                {{ getObjectTypeLabel(object) }}
-                            </td>
-                            </tr>
-                        </ng-template>
-
-                        <ng-template #footer>
-                            <tr>
-                            <td [attr.colspan]="shouldShowTypeColumn(item.page) ? 3 : 2">
-                                <p-paginator
-                                (onPageChange)="onPageChange($event, item.index)"
-                                [first]="item.page.offset"
-                                [rows]="item.page.limit"
-                                [totalRecords]="item.page.count"
-                                />
-                            </td>
-                            </tr>
-                        </ng-template>
-                        </p-table>
-                    </div>
-                </section>
-            </ng-container>
-        </div>
+                <ng-template #footer>
+                  <tr>
+                    <td [attr.colspan]="item.columns.length || 1">
+                      <p-paginator
+                        (onPageChange)="onPageChange($event, item.index)"
+                        [first]="item.page.offset"
+                        [rows]="item.page.limit"
+                        [totalRecords]="item.page.count"
+                      />
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </section>
+        </ng-container>
+      </div>
 
     </ng-container>
 

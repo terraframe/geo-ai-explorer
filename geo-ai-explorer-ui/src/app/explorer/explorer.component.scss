@@ -136,7 +136,7 @@ p-tabs, p-tabpanels, p-tabpanel, graph-explorer {
 .explorer-root.layout-map-results {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) minmax(260px, 40vh);
+  grid-template-rows: minmax(0, 1fr) minmax(56px, var(--results-panel-height, 40vh));
   grid-template-areas:
     "map"
     "results";

@@ -15,8 +15,10 @@
  */
 package net.geoprism.geoai.explorer.core.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,9 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
@@ -45,488 +49,654 @@ import net.geoprism.geoai.explorer.core.model.Location;
 import net.geoprism.geoai.explorer.core.model.LocationPage;
 
 @Service
-public class GraphQueryService {
-    public static final String OBJECT_PREFIX = "https://localhost:4200/lpg/graph_801104/0/rdfs#";
-
-    public static final String PREFIXES = """
-                PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-                PREFIX lpg: <https://localhost:4200/lpg#>
-                PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
-                PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-                PREFIX spatialF: <http://jena.apache.org/function/spatial#>
-            """;
-
-    public static String ATTRIBUTES_QUERY = PREFIXES + """
-            SELECT ?s ?p ?o
-            FROM <https://localhost:4200/lpg/graph_801104/0#>
-            WHERE {
-              BIND(?uri as ?s) .
-              ?s ?p ?o .
-            }""";
-
-    public static String ATTRIBUTES_WITH_GEOMETRY_QUERY = PREFIXES + """
-            SELECT *
-            FROM <https://localhost:4200/lpg/graph_801104/0#>
-            WHERE {
-              {
-                SELECT ?s ?p ?o WHERE {
-                  BIND(?uri as ?s) .
-                  ?s ?p ?o .
-                }
-              }
-              UNION
-              {
-                SELECT ?s ?p ?o WHERE {
-                  BIND(?uri as ?s) .
-                  BIND(geo:asWKT as ?p) .
-
-                  ?s geo:hasGeometry ?geom .
-                  ?geom ?p ?o
-                }
-              }
-            }
-            """;
-
-    public static String NEIGHBOR_QUERY = PREFIXES + """
-                    PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-                    PREFIX lpg: <https://localhost:4200/lpg#>
-                    PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
-                    PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-                    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-                    PREFIX spatialF: <http://jena.apache.org/function/spatial#>
-
-                    SELECT
-                    ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
-                    ?e1 ?ev1 # Outgoing Edge
-                    ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
-                    ?e2 ?ev2 # Incoming Edge
-                    ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
-                    FROM lpgv:
-                    WHERE {
-                        BIND(geo:Feature as ?gf1) .
-                        BIND(?uri as ?f1) .
-
-                        # Source Object
-                        ?f1 a ?ft1 .
-                        ?f1 rdfs:label ?lbl1 .
-                        ?f1 lpgs:GeoObject-code ?code1 .
-
-                        OPTIONAL {
-                            ?f1 geo:hasGeometry ?g1 .
-                            ?g1 geo:asWKT ?wkt1 .
-                        }
-
-                        {
-                            # Outgoing Relationship
-                            ?f1 ?e1 ?f2 .
-                            ?f2 a ?ft2 .
-                            ###TYPE_FILTER_FILTER1###
-                            ?f2 rdfs:label ?lbl2 .
-                            ?f2 lpgs:GeoObject-code ?code2 .
-
-                            BIND(geo:Feature as ?gf2) .
-                            BIND(?f2 as ?ev1) .
-
-                            OPTIONAL {
-                                ?f2 geo:hasGeometry ?g2 .
-                                ?g2 geo:asWKT ?wkt2 .
-                            }
-                        }
-                        UNION
-                        {
-                            # Incoming Relationship
-                            ?f3 ?e2 ?f1 .
-                            ?f3 a ?ft3 .
-                            ###TYPE_FILTER_FILTER2###
-                            ?f3 rdfs:label ?lbl3 .
-                            ?f3 lpgs:GeoObject-code ?code3 .
-
-                            BIND(geo:Feature as ?gf3) .
-                            BIND(?f3 as ?ev2) .
-
-                            OPTIONAL {
-                                ?f3 geo:hasGeometry ?g3 .
-                                ?g3 geo:asWKT ?wkt3 .
-                            }
-                        }
-                    }
-                    LIMIT 100
-            """;
-
-    public static String NEIGHBOR_METADATA_QUERY = PREFIXES + """
-                    PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
-            PREFIX lpg: <https://localhost:4200/lpg#>
-            PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
-            PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-
-            SELECT ?type (COUNT(DISTINCT ?obj) AS ?count)
-            FROM lpgv:
-            WHERE {
-              {
-                # Type of source object
-                BIND(?uri AS ?obj)
-                ?obj a ?type .
-                ?obj lpgs:GeoObject-code ?code .
-              }
-              UNION
-              {
-                # Outgoing object types
-                ?uri ?p1 ?obj .
-                ?obj a ?type .
-                ?obj lpgs:GeoObject-code ?code .
-              }
-              UNION
-              {
-                # Incoming object types
-                ?obj ?p2 ?uri .
-                ?obj a ?type .
-                ?obj lpgs:GeoObject-code ?code .
-              }
-            }
-            GROUP BY ?type
-            ORDER BY DESC(?count)
-                    """;
-
-    @Autowired
-    protected AppProperties properties;
-
-    public RDFConnection createConnection() {
-        RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
-                .destination(properties.getSparqlUrl());
-
-        return builder.build();
-    }
-
-    public List<Location> query(String statement) {
-        return this.query(statement, 0, 1000);
-    }
-
-    public List<Location> query(String statement, int offset, int limit) {
-        // The agent sometimes includes formatting text. Just remove it...
-        statement = statement.replaceAll("```", "");
-
-        String sparql = new String(statement);
-
-        // Remove existing LIMIT and OFFSET clauses (case-insensitive)
-        sparql = sparql.replaceAll("(?i)LIMIT\\s+\\d+", "");
-        sparql = sparql.replaceAll("(?i)OFFSET\\s+\\d+", "");
-
-        // Append ORDER BY, which must come before the limit
-        if (!sparql.toUpperCase().contains("ORDER BY")) {
-            sparql += " ORDER BY ASC(?label)";
-        }
-
-        // Append new LIMIT and OFFSET
-        sparql += " LIMIT " + limit + " OFFSET " + offset;
-
-        try (RDFConnection conn = this.createConnection()) {
-            LinkedList<Location> results = new LinkedList<>();
-
-            System.out.println("JenaService.query - EXECUTING QUERY");
-            System.out.println(sparql);
-
-            conn.querySelect(sparql, (qs) -> {
-                String uri = qs.getResource("uri").getURI();
-                String type = readString(qs, "type");
-                String code = readString(qs, "code");
-                String label = readString(qs, "label");
-                String wkt = readString(qs, "wkt");
-
-                Geometry geometry = null;
-                if (StringUtils.isNotBlank(wkt)) {
-                  WKTReader reader = WKTReader.extract(wkt);
-                  geometry = reader.getGeometry();
-                }
-
-                results.add(new Location(uri, type, code, label, geometry));
-
-            });
-
-            return results;
-        }
-    }
-
-    public Long getCount(String statement) {
-        Map<String, Long> holder = new HashMap<>();
-
-        StringBuilder sparql = new StringBuilder();
-
-        int selectIndex = statement.toUpperCase().indexOf("SELECT");
-        int fromIndex = statement.toUpperCase().indexOf("FROM");
-        int whereIndex = statement.toUpperCase().indexOf("WHERE");
-        int groupByIndex = statement.toUpperCase().indexOf("GROUP BY");
-
-        // Prefix section
-        sparql.append(statement.substring(0, selectIndex));
-        sparql.append("SELECT (COUNT(distinct ?uri) AS ?count)\n");
-
-        if (groupByIndex != -1) {
-            sparql.append(statement.substring(fromIndex, groupByIndex));
-        } else if (fromIndex != -1) {
-            sparql.append(statement.substring(fromIndex));
-        } else {
-            sparql.append(statement.substring(whereIndex));
-        }
-
-        try (RDFConnection conn = this.createConnection()) {
-            conn.querySelect(sparql.toString(), (qs) -> {
-                holder.put("count", qs.getLiteral("count").getLong());
-            });
-
-            return holder.getOrDefault("count", 0L);
-        }
-    }
-
-    public Location getAttributes(final String uri, boolean includeGeometry) {
-        // if (uri.startsWith("<") && uri.endsWith(">"))
-        // {
-        // uri = uri.substring(1, uri.length() - 1);
-        // }
-
-        try (RDFConnection conn = this.createConnection()) {
-            String statement = includeGeometry ? ATTRIBUTES_WITH_GEOMETRY_QUERY : ATTRIBUTES_QUERY;
-
-            // Use ParameterizedSparqlString to inject the URI safely
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setCommandText(statement);
-            pss.setIri("uri", uri);
-
-            Location location = new Location();
-            location.setId(uri);
-            location.addProperty("uri", uri);
-
-            conn.queryResultSet(pss.asQuery(), (resultSet) -> {
-
-                if (!resultSet.hasNext()) {
-                    throw new GenericRestException("Unable to find a location with the uri [" + uri + "]");
-                }
-
-                resultSet.forEachRemaining(qs -> {
-
-                    String attribute = qs.get("p").asResource().getLocalName();
-
-                    RDFNode object = qs.get("o");
-
-                    if (attribute.equalsIgnoreCase("asWKT")) {
-                        WKTReader reader = WKTReader.extract(object.asLiteral().getString());
-                        Geometry geometry = reader.getGeometry();
-
-                        location.setGeometry(geometry);
-                    } else if (object.isLiteral()) {
-                        // TODO: Use metadata if we have it for attribute names
-                        // For now assume the attribute is in the style of
-                        // ClassName-AttributeName
-                        if (attribute.contains("-")) {
-                            attribute = attribute.split("-")[1];
-                        }
-
-                        Object value = object.asLiteral().getValue();
-
-                        location.addProperty(attribute, value);
-                    } else if (object.isResource()) {
-                        if (attribute.equalsIgnoreCase("type")) {
-                            location.addProperty("type", object.asResource().getURI());
-                        }
-                    }
-                });
-            });
-
-            return location;
-
-        }
-
-    }
-
-    public Graph neighbors(String uri, List<String> excludedTypes) {
-        if (uri.startsWith("<") && uri.endsWith(">")) {
-            uri = uri.substring(1, uri.length() - 1);
-        }
-
-        final Graph results = new Graph();
-
-        // Fetch metadata
-        try (RDFConnection conn = this.createConnection()) {
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setCommandText(NEIGHBOR_METADATA_QUERY);
-            pss.setIri("uri", uri);
-
-            conn.querySelect(pss.asQuery(), (qs) -> {
-                results.getTypeCount().put(readString(qs, "type"), qs.getLiteral("count").getInt());
-            });
-        }
-
-        // Grab the data
-        try (RDFConnection conn = this.createConnection()) {
-            String q = NEIGHBOR_QUERY.replace("###TYPE_FILTER_FILTER1###", exclusionFor("?ft2", excludedTypes))
-                    .replace("###TYPE_FILTER_FILTER2###", exclusionFor("?ft3", excludedTypes));
-
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setCommandText(q);
-            pss.setIri("uri", uri);
-
-            try (QueryExecution qe = conn.query(pss.asQuery())) {
-                ResultSet rs = qe.execSelect();
-                SparqlGraphConverter.convert(results, rs);
-            }
-        }
-
-        // The object has no neighbors
-        if (results.getNodes().size() == 0) {
-            results.setNodes(Arrays.asList(this.getAttributes(uri, true)));
-        }
-
-        return results;
-    }
-    
-    public void injectGeometries(LocationPage locations)
-    {
-      if (locations == null || locations.getLocations() == null)
-      {
-        return;
-      }
-
-      List<Location> missingGeometry = locations.getLocations().stream()
-          .filter(location -> location.getGeometry() == null)
-          .filter(location -> location.getId() != null && !location.getId().isBlank())
-          .toList();
-
-      if (missingGeometry.isEmpty())
-      {
-        return;
-      }
-
-      Map<String, Location> locationsById = locations.getLocations().stream()
-          .filter(location -> location.getId() != null)
-          .collect(Collectors.toMap(
-              Location::getId,
-              Function.identity(),
-              (a, b) -> a
-          ));
-
-      int batchSize = 5;
-
-      for (int i = 0; i < missingGeometry.size(); i += batchSize)
-      {
-        int end = Math.min(i + batchSize, missingGeometry.size());
-        List<Location> batch = missingGeometry.subList(i, end);
-
-        String sparql = buildGeometryLookupQuery(batch);
-
-        for (Location location : this.query(sparql))
-        {
-          Location match = locationsById.get(location.getId());
-
-          if (match != null && location.getGeometry() != null)
-          {
-            match.setGeometry(location.getGeometry());
-          }
-        }
-      }
-    }
-
-    private String buildGeometryLookupQuery(List<Location> locations)
-    {
-      StringBuilder sparql = new StringBuilder();
-
-      sparql.append("""
+public class GraphQueryService
+{
+  public static final String OBJECT_PREFIX                  = "https://localhost:4200/lpg/graph_801104/0/rdfs#";
+
+  public static final String PREFIXES                       = """
+          PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+          PREFIX lpg: <https://localhost:4200/lpg#>
+          PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+          PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+          PREFIX spatialF: <http://jena.apache.org/function/spatial#>
+      """;
 
-          SELECT ?uri ?wkt
-          WHERE {
-            VALUES ?uri {
-          """);
+  public static String       ATTRIBUTES_QUERY               = PREFIXES + """
+      SELECT ?s ?p ?o
+      FROM <https://localhost:4200/lpg/graph_801104/0#>
+      WHERE {
+        BIND(?uri as ?s) .
+        ?s ?p ?o .
+      }""";
 
-      for (Location location : locations)
+  public static String       ATTRIBUTES_WITH_GEOMETRY_QUERY = PREFIXES + """
+      SELECT *
+      FROM <https://localhost:4200/lpg/graph_801104/0#>
+      WHERE {
+        {
+          SELECT ?s ?p ?o WHERE {
+            BIND(?uri as ?s) .
+            ?s ?p ?o .
+          }
+        }
+        UNION
+        {
+          SELECT ?s ?p ?o WHERE {
+            BIND(?uri as ?s) .
+            BIND(geo:asWKT as ?p) .
+
+            ?s geo:hasGeometry ?geom .
+            ?geom ?p ?o
+          }
+        }
+      }
+      """;
+
+  public static String       NEIGHBOR_QUERY                 = PREFIXES + """
+              PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+              PREFIX lpg: <https://localhost:4200/lpg#>
+              PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+              PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+              PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+              PREFIX spatialF: <http://jena.apache.org/function/spatial#>
+
+              SELECT
+              ?gf1 ?ft1 ?f1 ?wkt1 ?lbl1 ?code1 # Source Object
+              ?e1 ?ev1 # Outgoing Edge
+              ?gf2 ?ft2 ?f2 ?wkt2 ?lbl2 ?code2 # Outgoing Vertex (f1 → f2)
+              ?e2 ?ev2 # Incoming Edge
+              ?gf3 ?ft3 ?f3 ?wkt3 ?lbl3 ?code3 # Incoming Vertex (f3 → f1)
+              FROM lpgv:
+              WHERE {
+                  BIND(geo:Feature as ?gf1) .
+                  BIND(?uri as ?f1) .
+
+                  # Source Object
+                  ?f1 a ?ft1 .
+                  ?f1 rdfs:label ?lbl1 .
+                  ?f1 lpgs:GeoObject-code ?code1 .
+
+                  OPTIONAL {
+                      ?f1 geo:hasGeometry ?g1 .
+                      ?g1 geo:asWKT ?wkt1 .
+                  }
+
+                  {
+                      # Outgoing Relationship
+                      ?f1 ?e1 ?f2 .
+                      ?f2 a ?ft2 .
+                      ###TYPE_FILTER_FILTER1###
+                      ?f2 rdfs:label ?lbl2 .
+                      ?f2 lpgs:GeoObject-code ?code2 .
+
+                      BIND(geo:Feature as ?gf2) .
+                      BIND(?f2 as ?ev1) .
+
+                      OPTIONAL {
+                          ?f2 geo:hasGeometry ?g2 .
+                          ?g2 geo:asWKT ?wkt2 .
+                      }
+                  }
+                  UNION
+                  {
+                      # Incoming Relationship
+                      ?f3 ?e2 ?f1 .
+                      ?f3 a ?ft3 .
+                      ###TYPE_FILTER_FILTER2###
+                      ?f3 rdfs:label ?lbl3 .
+                      ?f3 lpgs:GeoObject-code ?code3 .
+
+                      BIND(geo:Feature as ?gf3) .
+                      BIND(?f3 as ?ev2) .
+
+                      OPTIONAL {
+                          ?f3 geo:hasGeometry ?g3 .
+                          ?g3 geo:asWKT ?wkt3 .
+                      }
+                  }
+              }
+              LIMIT 100
+      """;
+
+  public static String       NEIGHBOR_METADATA_QUERY        = PREFIXES + """
+              PREFIX lpgs: <https://localhost:4200/lpg/rdfs#>
+      PREFIX lpg: <https://localhost:4200/lpg#>
+      PREFIX lpgv: <https://localhost:4200/lpg/graph_801104/0#>
+      PREFIX lpgvs: <https://localhost:4200/lpg/graph_801104/0/rdfs#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+      SELECT ?type (COUNT(DISTINCT ?obj) AS ?count)
+      FROM lpgv:
+      WHERE {
+        {
+          # Type of source object
+          BIND(?uri AS ?obj)
+          ?obj a ?type .
+          ?obj lpgs:GeoObject-code ?code .
+        }
+        UNION
+        {
+          # Outgoing object types
+          ?uri ?p1 ?obj .
+          ?obj a ?type .
+          ?obj lpgs:GeoObject-code ?code .
+        }
+        UNION
+        {
+          # Incoming object types
+          ?obj ?p2 ?uri .
+          ?obj a ?type .
+          ?obj lpgs:GeoObject-code ?code .
+        }
+      }
+      GROUP BY ?type
+      ORDER BY DESC(?count)
+              """;
+
+  @Autowired
+  protected AppProperties    properties;
+
+  public RDFConnection createConnection()
+  {
+    RDFConnectionRemoteBuilder builder = RDFConnectionRemote.create() //
+        .destination(properties.getSparqlUrl());
+
+    return builder.build();
+  }
+
+  public List<Location> query(String statement)
+  {
+    return this.query(statement, 0, 1000);
+  }
+
+  public List<Location> query(String statement, int offset, int limit)
+  {
+    // The agent sometimes includes formatting text. Just remove it...
+    statement = statement.replaceAll("```", "");
+
+    String sparql = new String(statement);
+
+    // Remove existing LIMIT and OFFSET clauses (case-insensitive)
+    sparql = sparql.replaceAll("(?i)LIMIT\\s+\\d+", "");
+    sparql = sparql.replaceAll("(?i)OFFSET\\s+\\d+", "");
+
+    // Append ORDER BY, which must come before the limit
+    if (!sparql.toUpperCase().contains("ORDER BY"))
+    {
+      sparql += " ORDER BY ASC(?label)";
+    }
+
+    // Append new LIMIT and OFFSET
+    sparql += " LIMIT " + limit + " OFFSET " + offset;
+
+    try (RDFConnection conn = this.createConnection())
+    {
+      LinkedList<Location> results = new LinkedList<>();
+
+      System.out.println("JenaService.query - EXECUTING QUERY");
+      System.out.println(sparql);
+
+      conn.querySelect(sparql, (qs) -> {
+        String uri = readUri(qs);
+        String type = readString(qs, "type");
+        String code = readString(qs, "code");
+        String label = readString(qs, "label");
+        String wkt = readString(qs, "wkt");
+
+        Geometry geometry = null;
+        if (StringUtils.isNotBlank(wkt))
+        {
+          WKTReader reader = WKTReader.extract(wkt);
+          geometry = reader.getGeometry();
+        }
+
+        Location location = new Location(uri, type, code, label, geometry);
+
+        qs.varNames().forEachRemaining(varName -> {
+          if (isCoreLocationField(varName))
+          {
+            return;
+          }
+
+          if (!qs.contains(varName))
+          {
+            return;
+          }
+
+          Object value = readPropertyValue(qs, varName);
+          if (value != null)
+          {
+            location.addProperty(varName, value);
+          }
+        });
+
+        results.add(location);
+      });
+
+      return results;
+    }
+  }
+
+  private String readUri(QuerySolution qs)
+  {
+    // 1. Prefer conventional names first
+    List<String> preferredNames = List.of("uri", "resource", "subject", "s", "id", "location", "object");
+
+    for (String name : preferredNames)
+    {
+      String uri = readUriIfPresent(qs, name);
+      if (StringUtils.isNotBlank(uri))
       {
-        sparql.append("          <")
-            .append(escapeSparqlIri(location.getId()))
-            .append(">\n");
+        return uri;
+      }
+    }
+
+    // 2. Fall back to discovering the first URI resource
+    Iterator<String> varNames = qs.varNames();
+
+    while (varNames.hasNext())
+    {
+      String varName = varNames.next();
+
+      if (isLikelyNonPrimaryUriField(varName))
+      {
+        continue;
       }
 
-      sparql.append("""
+      String uri = readUriIfPresent(qs, varName);
+      if (StringUtils.isNotBlank(uri))
+      {
+        return uri;
+      }
+    }
+
+    throw new IllegalArgumentException("Could not discover URI field in query result. Available variables: " + getAvailableVariableNames(qs));
+  }
+
+  private String readUriIfPresent(QuerySolution qs, String varName)
+  {
+    if (!qs.contains(varName))
+    {
+      return null;
+    }
+
+    RDFNode node = qs.get(varName);
+
+    if (node == null || !node.isResource())
+    {
+      return null;
+    }
+
+    Resource resource = node.asResource();
+
+    if (!resource.isURIResource())
+    {
+      return null;
+    }
+
+    return resource.getURI();
+  }
+
+  private boolean isLikelyNonPrimaryUriField(String varName)
+  {
+    return switch (varName)
+    {
+      case "type", "class", "geometry", "geom", "wkt", "label", "code" -> true;
+      default -> false;
+    };
+  }
+
+  private List<String> getAvailableVariableNames(QuerySolution qs)
+  {
+    List<String> names = new ArrayList<>();
+    qs.varNames().forEachRemaining(names::add);
+    return names;
+  }
+
+  private boolean isCoreLocationField(String varName)
+  {
+    return switch (varName)
+    {
+      case "uri", "resource", "subject", "s", "id", "location", "object", "type", "code", "label", "wkt" -> true;
+      default -> false;
+    };
+  }
+
+  private Object readPropertyValue(QuerySolution qs, String varName)
+  {
+    RDFNode node = qs.get(varName);
+
+    if (node == null)
+    {
+      return null;
+    }
+
+    if (node.isLiteral())
+    {
+      Literal literal = node.asLiteral();
+
+      Object value = literal.getValue();
+
+      // Jena may return typed values like Integer, BigDecimal, Boolean, etc.
+      // Prefer that over stringifying everything.
+      return value != null ? value : literal.getString();
+    }
+
+    if (node.isResource())
+    {
+      Resource resource = node.asResource();
+
+      if (resource.isURIResource())
+      {
+        return resource.getURI();
+      }
+
+      return resource.toString();
+    }
+
+    return node.toString();
+  }
+
+  public Long getCount(String statement)
+  {
+    Map<String, Long> holder = new HashMap<>();
+
+    StringBuilder sparql = new StringBuilder();
+
+    int selectIndex = statement.toUpperCase().indexOf("SELECT");
+    int fromIndex = statement.toUpperCase().indexOf("FROM");
+    int whereIndex = statement.toUpperCase().indexOf("WHERE");
+    int groupByIndex = statement.toUpperCase().indexOf("GROUP BY");
+
+    // Prefix section
+    sparql.append(statement.substring(0, selectIndex));
+    sparql.append("SELECT (COUNT(distinct ?uri) AS ?count)\n");
+
+    if (groupByIndex != -1)
+    {
+      sparql.append(statement.substring(fromIndex, groupByIndex));
+    }
+    else if (fromIndex != -1)
+    {
+      sparql.append(statement.substring(fromIndex));
+    }
+    else
+    {
+      sparql.append(statement.substring(whereIndex));
+    }
+
+    try (RDFConnection conn = this.createConnection())
+    {
+      conn.querySelect(sparql.toString(), (qs) -> {
+        holder.put("count", qs.getLiteral("count").getLong());
+      });
+
+      return holder.getOrDefault("count", 0L);
+    }
+  }
+
+  public Location getAttributes(final String uri, boolean includeGeometry)
+  {
+    // if (uri.startsWith("<") && uri.endsWith(">"))
+    // {
+    // uri = uri.substring(1, uri.length() - 1);
+    // }
+
+    try (RDFConnection conn = this.createConnection())
+    {
+      String statement = includeGeometry ? ATTRIBUTES_WITH_GEOMETRY_QUERY : ATTRIBUTES_QUERY;
+
+      // Use ParameterizedSparqlString to inject the URI safely
+      ParameterizedSparqlString pss = new ParameterizedSparqlString();
+      pss.setCommandText(statement);
+      pss.setIri("uri", uri);
+
+      Location location = new Location();
+      location.setId(uri);
+      location.addProperty("uri", uri);
+
+      conn.queryResultSet(pss.asQuery(), (resultSet) -> {
+
+        if (!resultSet.hasNext())
+        {
+          throw new GenericRestException("Unable to find a location with the uri [" + uri + "]");
+        }
+
+        resultSet.forEachRemaining(qs -> {
+
+          String attribute = qs.get("p").asResource().getLocalName();
+
+          RDFNode object = qs.get("o");
+
+          if (attribute.equalsIgnoreCase("asWKT"))
+          {
+            WKTReader reader = WKTReader.extract(object.asLiteral().getString());
+            Geometry geometry = reader.getGeometry();
+
+            location.setGeometry(geometry);
+          }
+          else if (object.isLiteral())
+          {
+            // TODO: Use metadata if we have it for attribute names
+            // For now assume the attribute is in the style of
+            // ClassName-AttributeName
+            if (attribute.contains("-"))
+            {
+              attribute = attribute.split("-")[1];
             }
 
+            Object value = object.asLiteral().getValue();
+
+            location.addProperty(attribute, value);
+          }
+          else if (object.isResource())
+          {
+            if (attribute.equalsIgnoreCase("type"))
             {
-              ?uri geo:hasGeometry ?geometry .
-              ?geometry geo:asWKT ?wkt .
-            }
-            UNION
-            {
-              ?uri geo:asWKT ?wkt .
+              location.addProperty("type", object.asResource().getURI());
             }
           }
-          """);
+        });
+      });
 
-      return sparql.toString();
+      return location;
+
     }
 
-    private static String escapeSparqlIri(String iri)
+  }
+
+  public Graph neighbors(String uri, List<String> excludedTypes)
+  {
+    if (uri.startsWith("<") && uri.endsWith(">"))
     {
-      return iri
-          .replace("\\", "\\\\")
-          .replace(">", "%3E");
+      uri = uri.substring(1, uri.length() - 1);
     }
 
-    private static String exclusionFor(String varName, List<String> excludedTypes) {
-        if (excludedTypes == null || excludedTypes.isEmpty()) return "";
-        Pattern iriPattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://[^\\s<>\"{}|\\\\^`]*$");
+    final Graph results = new Graph();
 
-        List<String> safeIris = excludedTypes.stream()
-            .filter(t -> t != null && iriPattern.matcher(t).matches())
-            .map(t -> "<" + t + ">")
-            .toList();
+    // Fetch metadata
+    try (RDFConnection conn = this.createConnection())
+    {
+      ParameterizedSparqlString pss = new ParameterizedSparqlString();
+      pss.setCommandText(NEIGHBOR_METADATA_QUERY);
+      pss.setIri("uri", uri);
 
-        if (safeIris.isEmpty()) return "";
-        return "FILTER(" + varName + " NOT IN (" + String.join(", ", safeIris) + ")) .";
+      conn.querySelect(pss.asQuery(), (qs) -> {
+        results.getTypeCount().put(readString(qs, "type"), qs.getLiteral("count").getInt());
+      });
     }
 
-    public static String readString(QuerySolution qs, String name) {
-      if (qs == null || !qs.contains(name)) {
-          return "";
+    // Grab the data
+    try (RDFConnection conn = this.createConnection())
+    {
+      String q = NEIGHBOR_QUERY.replace("###TYPE_FILTER_FILTER1###", exclusionFor("?ft2", excludedTypes)).replace("###TYPE_FILTER_FILTER2###", exclusionFor("?ft3", excludedTypes));
+
+      ParameterizedSparqlString pss = new ParameterizedSparqlString();
+      pss.setCommandText(q);
+      pss.setIri("uri", uri);
+
+      try (QueryExecution qe = conn.query(pss.asQuery()))
+      {
+        ResultSet rs = qe.execSelect();
+        SparqlGraphConverter.convert(results, rs);
       }
+    }
 
-      RDFNode node = qs.get(name);
+    // The object has no neighbors
+    if (results.getNodes().size() == 0)
+    {
+      results.setNodes(Arrays.asList(this.getAttributes(uri, true)));
+    }
 
-      if (node == null) {
-          return "";
-      }
-
-      if (node.isLiteral()) {
-          return node.asLiteral().getString();
-      }
-
-      if (node.isResource()) {
-          return node.asResource().getURI();
-      }
-
-      return node.toString();
+    return results;
   }
 
-  public static String getResourceUri(QuerySolution qs, String name) {
-      if (qs != null && qs.contains(name) && qs.get(name).isResource()) {
-          return qs.getResource(name).getURI();
-      }
+  public void injectGeometries(LocationPage locations)
+  {
+    if (locations == null || locations.getLocations() == null)
+    {
+      return;
+    }
 
+    List<Location> missingGeometry = locations.getLocations().stream().filter(location -> location.getGeometry() == null).filter(location -> location.getId() != null && !location.getId().isBlank()).toList();
+
+    if (missingGeometry.isEmpty())
+    {
+      return;
+    }
+
+    Map<String, Location> locationsById = locations.getLocations().stream().filter(location -> location.getId() != null).collect(Collectors.toMap(Location::getId, Function.identity(), (a, b) -> a));
+
+    int batchSize = 5;
+
+    for (int i = 0; i < missingGeometry.size(); i += batchSize)
+    {
+      int end = Math.min(i + batchSize, missingGeometry.size());
+      List<Location> batch = missingGeometry.subList(i, end);
+
+      String sparql = buildGeometryLookupQuery(batch);
+
+      for (Location location : this.query(sparql))
+      {
+        Location match = locationsById.get(location.getId());
+
+        if (match != null && location.getGeometry() != null)
+        {
+          match.setGeometry(location.getGeometry());
+        }
+      }
+    }
+  }
+
+  private String buildGeometryLookupQuery(List<Location> locations)
+  {
+    StringBuilder sparql = new StringBuilder();
+
+    sparql.append("""
+        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+        SELECT ?uri ?wkt
+        WHERE {
+          VALUES ?uri {
+        """);
+
+    for (Location location : locations)
+    {
+      sparql.append("          <").append(escapeSparqlIri(location.getId())).append(">\n");
+    }
+
+    sparql.append("""
+          }
+
+          {
+            ?uri geo:hasGeometry ?geometry .
+            ?geometry geo:asWKT ?wkt .
+          }
+          UNION
+          {
+            ?uri geo:asWKT ?wkt .
+          }
+        }
+        """);
+
+    return sparql.toString();
+  }
+
+  private static String escapeSparqlIri(String iri)
+  {
+    return iri.replace("\\", "\\\\").replace(">", "%3E");
+  }
+
+  private static String exclusionFor(String varName, List<String> excludedTypes)
+  {
+    if (excludedTypes == null || excludedTypes.isEmpty())
       return "";
+    Pattern iriPattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://[^\\s<>\"{}|\\\\^`]*$");
+
+    List<String> safeIris = excludedTypes.stream().filter(t -> t != null && iriPattern.matcher(t).matches()).map(t -> "<" + t + ">").toList();
+
+    if (safeIris.isEmpty())
+      return "";
+    return "FILTER(" + varName + " NOT IN (" + String.join(", ", safeIris) + ")) .";
   }
 
-  public static Geometry parseGeometry(String wkt) {
-      if (wkt == null || wkt.isBlank()) {
-          return null;
-      }
+  public static String readString(QuerySolution qs, String name)
+  {
+    if (qs == null || !qs.contains(name))
+    {
+      return "";
+    }
 
-      try {
-          WKTReader reader = WKTReader.extract(wkt);
-          return reader.getGeometry();
-      }
-      catch (Exception e) {
-          return null;
-      }
+    RDFNode node = qs.get(name);
+
+    if (node == null)
+    {
+      return "";
+    }
+
+    if (node.isLiteral())
+    {
+      return node.asLiteral().getString();
+    }
+
+    if (node.isResource())
+    {
+      return node.asResource().getURI();
+    }
+
+    return node.toString();
+  }
+
+  public static String getResourceUri(QuerySolution qs, String name)
+  {
+    if (qs != null && qs.contains(name) && qs.get(name).isResource())
+    {
+      return qs.getResource(name).getURI();
+    }
+
+    return "";
+  }
+
+  public static Geometry parseGeometry(String wkt)
+  {
+    if (wkt == null || wkt.isBlank())
+    {
+      return null;
+    }
+
+    try
+    {
+      WKTReader reader = WKTReader.extract(wkt);
+      return reader.getGeometry();
+    }
+    catch (Exception e)
+    {
+      return null;
+    }
   }
 
 }

@@ -152,6 +152,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     public chatMinimized: boolean = false;
 
+    public resultsPanelHeightPx = Math.round(window.innerHeight * 0.4);
+
     public pages: LocationPage[] = [{
         locations: [],
         statement: "",
@@ -242,6 +244,20 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         this.onMapObjectsChange.unsubscribe();
         this.onVectorLayersChange.unsubscribe();
         this.onHighlightedObjectChange.unsubscribe();
+    }
+
+    onResultsHeightChange(heightPx: number): void {
+        this.resultsPanelHeightPx = heightPx;
+
+        this.resizeMapAfterLayoutChange();
+    }
+
+    private resizeMapAfterLayoutChange(): void {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.map?.resize();
+            });
+        });
     }
 
     private isMapWorkflowStep(step: WorkflowStep): boolean {

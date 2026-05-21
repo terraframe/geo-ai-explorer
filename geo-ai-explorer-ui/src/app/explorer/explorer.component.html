@@ -6,7 +6,8 @@
        'layout-disambiguate': workflowStep === WorkflowStep.DisambiguateObject,
        'layout-min-chat': workflowStep === WorkflowStep.MinimizeChat,
        'layout-inspect': workflowStep === WorkflowStep.InspectObject || workflowStep === WorkflowStep.ViewNeighbors
-     }">
+     }"
+     [style.--results-panel-height.px]="resultsPanelHeightPx">
 
   <p-toast position="top-center" key="explorer" />
 
@@ -148,7 +149,9 @@
     </div>
 
     <ng-container>
-      <results-table></results-table>
+      <results-table
+        (resultsHeightChange)="onResultsHeightChange($event)"
+      ></results-table>
     </ng-container>
   </section>
 

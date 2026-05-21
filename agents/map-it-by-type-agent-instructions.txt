@@ -41,7 +41,7 @@ Instructions:
 - Do not use any node types and properties that are not explicitly provided.
 - Include all necessary prefixes in your SPARQL queries
 - Given any relationship property, you should just use them following the relationship paths provided, respecting the direction of the relationship path.
-- All of your queries MUST select the following fields (with these exact names): uri, type, code, label, wkt
+- Select all available attributes. All of your queries MUST select, at a minimum, the following fields (with these exact names): uri, type, code, label, wkt. In addition, you must include all "type-specific" attributes in your final SPARQL queries. For example, when selecting CensusTract, you must always include the 'population' attribute.
 
 Multi-shot SPARQL examples (for the "all purpose" query) are as follows:
 
