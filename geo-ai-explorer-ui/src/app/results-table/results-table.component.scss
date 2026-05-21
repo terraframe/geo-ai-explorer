@@ -1,17 +1,121 @@
 .clickable {
-    cursor: pointer;
+  cursor: pointer;
 }
+
 .highlight {
-    background-color: #ffff9977 !important;
+  background-color: #ffff9977 !important;
 }
 
 h2 {
 }
 
 fa-icon {
-    cursor: pointer;
+  cursor: pointer;
 }
 
+/* Header */
+
+.results-header-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.results-title {
+  margin: 0;
+  text-align: center;
+}
+
+/* Table tabs */
+
+.results-table-tabs {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding-bottom: 0.125rem;
+}
+
+.results-table-tab {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  max-width: 220px;
+
+  border: 1px solid var(--surface-border, #dfe3ea);
+  border-radius: 999px;
+  background: var(--surface-card, #fff);
+  color: inherit;
+
+  padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.results-table-tab:hover {
+  background: var(--surface-hover, #f6f7f9);
+}
+
+.results-table-tab.active {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 1px var(--primary-color, #3b82f6);
+}
+
+.results-table-tab.pinned {
+  background: var(--surface-ground, #f6f7f9);
+}
+
+.results-table-tab-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pin-button {
+  flex: 0 0 auto;
+
+  width: 1.7rem;
+  height: 1.7rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-color-secondary, #64748b);
+
+  cursor: pointer;
+}
+
+.pin-button:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.pin-button.pinned {
+  color: var(--primary-color, #3b82f6);
+}
+
+.pin-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Table columns */
 
 .results-table-columns {
   display: grid;
@@ -53,7 +157,7 @@ fa-icon {
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 
   /*
-    Important: don't use overflow: hidden here while debugging.
+    Important: don't use overflow: hidden here.
     It can clip PrimeNG's internal scrollbar/paginator.
   */
   overflow: visible;
@@ -70,24 +174,6 @@ fa-icon {
 
   border-bottom: 1px solid var(--surface-border, #dfe3ea);
   background: var(--surface-ground, #f6f7f9);
-}
-
-.results-header-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 340px;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0.75rem;
-}
-
-.results-title {
-  margin: 0;
-  text-align: center;
-}
-
-.results-page-selector {
-  min-width: 260px;
-  max-width: 420px;
 }
 
 .results-table-body {
@@ -114,4 +200,15 @@ fa-icon {
 
 .results-table-body ::ng-deep .p-datatable-footer {
   flex: 0 0 auto;
+}
+
+/* Zero results */
+
+.vertical-layout {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

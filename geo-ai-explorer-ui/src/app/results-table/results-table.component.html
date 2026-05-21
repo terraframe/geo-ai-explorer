@@ -16,29 +16,46 @@
                 <label style="cursor: pointer;">Back</label>
             </p-button>
 
-            <h2 class="results-title">Results</h2>
+            <p-tabs
+                [value]="activePageDisplayKey"
+                (valueChange)="selectActivePage($event)"
+                scrollable
+                class="results-tabs"
+                >
+                <p-tablist>
+                    <p-tab
+                        *ngFor="let option of pageDisplayOptions"
+                        [value]="option.value"
+                        >
+                        <span class="results-table-tab-content">
+                            <span class="results-table-tab-label">
+                            {{ option.label }}
+                            </span>
 
-            <p-multiSelect
-                [options]="pageDisplayOptions"
-                [(ngModel)]="selectedPageDisplayKeys"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Visible tables"
-                [maxSelectedLabels]="2"
-                selectedItemsLabel="{0} tables selected"
-                appendTo="body"
-                styleClass="results-page-selector"
-            />
+                            <button
+                            type="button"
+                            class="pin-button"
+                            [class.pinned]="isPagePinned(option.value)"
+                            [disabled]="!isPagePinned(option.value) && pinnedPageDisplayKeys.length >= maxPinnedPages"
+                            (click)="togglePinnedPage(option.value); $event.stopPropagation()"
+                            [pTooltip]="isPagePinned(option.value) ? 'Unpin table' : 'Pin table'"
+                            >
+                            <fa-icon [icon]="pinIcon"></fa-icon>
+                            </button>
+                        </span>
+                    </p-tab>
+                </p-tablist>
+            </p-tabs>
         </div>
 
         <div class="results-table-columns"
             [ngClass]="{
-                'single-table': getVisiblePageItems(pages).length === 1,
-                'two-tables': getVisiblePageItems(pages).length === 2,
-                'three-or-more-tables': getVisiblePageItems(pages).length >= 3
+                'single-table': displayedPageItems.length === 1,
+                'two-tables': displayedPageItems.length === 2,
+                'three-or-more-tables': displayedPageItems.length >= 3
             }"
             >
-            <ng-container *ngFor="let item of getVisiblePageItems(pages); trackBy: trackByPageItem">
+            <ng-container *ngFor="let item of displayedPageItems; trackBy: trackByPageItem">
                 <section class="results-table-column" *ngIf="item.page.count > 0">
                     <h3 class="results-table-title">
                         {{ shouldShowTypeColumn(item.page) ? 'Results' : getPageTypeLabel(item.page) }}

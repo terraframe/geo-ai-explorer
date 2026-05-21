@@ -11,15 +11,22 @@ import { Store } from '@ngrx/store';
 import { ExplorerActions, getPages, getWorkflowStep, highlightedObject, WorkflowStep } from '../state/explorer.state';
 import { ChatService } from '../service/chat-service.service';
 import { LocationPage } from '../models/chat.model';
-import { faArrowLeft, faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowUp, faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { TooltipModule } from 'primeng/tooltip';
+import { TabsModule } from 'primeng/tabs';
+
+interface PageDisplayItem {
+  page: LocationPage;
+  index: number;
+}
 
 @Component({
     selector: 'results-table',
-    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule, ButtonModule, FormsModule, MultiSelectModule],
+    imports: [TableModule, PaginatorModule, LetDirective, CommonModule, FontAwesomeModule, ButtonModule, FormsModule, MultiSelectModule, TooltipModule, TabsModule],
     templateUrl: './results-table.component.html',
     styleUrl: './results-table.component.scss',
 })
@@ -28,6 +35,7 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     private store = inject(Store);
 
     public backIcon = faArrowLeft;
+    pinIcon = faThumbtack;
 
     pages$: Observable<LocationPage[]> = this.store.select(getPages);
 
@@ -40,11 +48,18 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     workflowStep$: Observable<WorkflowStep> = this.store.select(getWorkflowStep);
     
     onWorkflowStepChange: Subscription;
+    onPagesChange: Subscription;
 
     public workflowStep: WorkflowStep = WorkflowStep.MapAndResults;
 
+    private latestPages: LocationPage[] = [];
     pageDisplayOptions: { label: string; value: string }[] = [];
-    selectedPageDisplayKeys: string[] = [];
+    displayedPageItems: PageDisplayItem[] = [];
+    
+    maxPinnedPages = 3;
+
+    activePageDisplayKey: string = '';
+    pinnedPageDisplayKeys: string[] = [];
 
     constructor(
         private chatService: ChatService
@@ -56,6 +71,11 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         this.onWorkflowStepChange = this.workflowStep$.subscribe(step => {
             this.workflowStep = step;
         });
+
+        this.onPagesChange = this.pages$.subscribe(pages => {
+            this.latestPages = pages ?? [];
+            this.rebuildPageDisplayState();
+        });
     }
 
     ngOnInit(): void {
@@ -63,7 +83,9 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-
+        this.onHighlightedObjectChange?.unsubscribe();
+        this.onWorkflowStepChange?.unsubscribe();
+        this.onPagesChange?.unsubscribe();
     }
 
     navigateToChat() {
@@ -109,6 +131,31 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         this.highlightedObjectUri = uri;
     }
 
+    private rebuildPageDisplayState(): void {
+        const pageItems = this.getPageItems(this.latestPages)
+            .filter(item => item.page.count > 0);
+
+        this.ensureValidActiveAndPinnedPages(pageItems);
+
+        this.pageDisplayOptions = pageItems.map(item => ({
+            label: this.shouldShowTypeColumn(item.page)
+                ? 'Results'
+                : this.getPageTypeLabel(item.page),
+            value: this.getPageDisplayKey(item.page, item.index)
+        }));
+
+        const displayKeys = [
+            this.activePageDisplayKey,
+            ...this.pinnedPageDisplayKeys
+        ].filter(key => !!key);
+
+        const uniqueDisplayKeys = Array.from(new Set(displayKeys));
+
+        this.displayedPageItems = pageItems.filter(item =>
+            uniqueDisplayKeys.includes(this.getPageDisplayKey(item.page, item.index))
+        );
+    }
+
     onPageChange(state: PaginatorState, pageIndex: number): void {
         this.pages$.pipe(take(1)).subscribe(pages => {
             const currentPage = pages[pageIndex];
@@ -131,45 +178,32 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         });
     }
 
-    getVisiblePageItems(pages: LocationPage[] | null | undefined): { page: LocationPage; index: number }[] {
-        if (!pages?.length) {
-            return [];
+    selectActivePage(key: string | number): void {
+        this.activePageDisplayKey = String(key);
+        this.rebuildPageDisplayState();
+    }
+
+    isPagePinned(key: string): boolean {
+        return this.pinnedPageDisplayKeys.includes(key);
+    }
+
+    togglePinnedPage(key: string): void {
+        if (this.isPagePinned(key)) {
+            this.pinnedPageDisplayKeys = this.pinnedPageDisplayKeys.filter(k => k !== key);
+            this.rebuildPageDisplayState();
+            return;
         }
 
-        this.syncPageDisplayOptions(pages);
+        if (this.pinnedPageDisplayKeys.length >= this.maxPinnedPages) {
+            return;
+        }
 
-        return pages
-            .map((page, index) => ({ page, index }))
-            // .filter(item => item.page.count > 0)
-            .filter(item => this.selectedPageDisplayKeys.includes(this.getPageDisplayKey(item.page, item.index)));
+        this.pinnedPageDisplayKeys = [...this.pinnedPageDisplayKeys, key];
+        this.rebuildPageDisplayState();
     }
 
     trackByPageItem = (index: number, item: { page: LocationPage; index: number }): string | number => {
         return this.getPageDisplayKey(item.page, item.index);
-    }
-
-    private syncPageDisplayOptions(pages: LocationPage[]): void {
-        const nextOptions = pages
-            .map((page, index) => ({
-            label: this.getPageDisplayLabel(page, index),
-            value: this.getPageDisplayKey(page, index)
-            }));
-
-        const nextKeys = nextOptions.map(option => option.value);
-
-        const optionsChanged =
-            this.pageDisplayOptions.length !== nextOptions.length ||
-            this.pageDisplayOptions.some((option, index) => option.value !== nextOptions[index]?.value);
-
-        if (optionsChanged) {
-            this.pageDisplayOptions = nextOptions;
-
-            const stillSelected = this.selectedPageDisplayKeys.filter(key => nextKeys.includes(key));
-
-            this.selectedPageDisplayKeys = stillSelected.length > 0
-            ? stillSelected
-            : nextKeys;
-        }
     }
 
     public getPageDisplayKey(page: LocationPage, index: number): string {
@@ -178,12 +212,25 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
             : `page-${index}`;
     }
 
-    private getPageDisplayLabel(page: LocationPage, index: number): string {
-        const typeLabel = this.getPageTypeLabel(page);
+    getPageItems(pages: LocationPage[]): PageDisplayItem[] {
+        return pages.map((page, index) => ({
+            page,
+            index
+        }));
+    }
 
-        return typeLabel && typeLabel !== 'Unknown'
-            ? typeLabel
-            : `Results ${index + 1}`;
+    ensureValidActiveAndPinnedPages(pageItems: PageDisplayItem[]): void {
+        const validKeys = pageItems.map(item =>
+            this.getPageDisplayKey(item.page, item.index)
+        );
+
+        if (!this.activePageDisplayKey || !validKeys.includes(this.activePageDisplayKey)) {
+            this.activePageDisplayKey = validKeys[0] ?? '';
+        }
+
+        this.pinnedPageDisplayKeys = this.pinnedPageDisplayKeys.filter(key =>
+            validKeys.includes(key)
+        );
     }
 
     hasResults(pages: LocationPage[] | null | undefined): boolean {
