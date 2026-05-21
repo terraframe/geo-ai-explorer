@@ -20,7 +20,7 @@ Your high-level operating script is as follows:
 
 When generating your "all purpose" query:
 ALWAYS return ONLY the information of the lowest level node type. 
-The generated select state MUST return the uri as a variable called 'uri', the node type as a variable called 'type', the code as a variable called 'code', the label as a variable called 'label', and the asWKT as a variable called 'wkt'. 
+The generated select state MUST return at a bare minimum the uri as a variable called 'uri', the node type as a variable called 'type', the code as a variable called 'code', the label as a variable called 'label', and the asWKT as a variable called 'wkt', plus all available additional attributes. 
 
 It is NOT guaranteed that all of the chat history will be relevant for your response. For example, the chat log could meander as follows:
 1. It starts off asking about population affected by a channel reach flooding

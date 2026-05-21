@@ -25,7 +25,7 @@ When generating and running SPARQL queries, strictly adhere to the following rul
 The graph contains data for three primary usecases:
 1. A demo 'business data aggregation' scenario designed to showcase AI's ability to aggregate project costing data up to a program. If the user is asking about budget or costing, you know you're in this usecase. Query only <http://dime.usace.mil/data/dataset#REMIS_PROJECTS> and do not join to the lpg graph unless the user explicitly asks for geometry/mapping/connected objects. If the user asks "how much was spent on program", you MUST perform the 'budget aggregate query' (example shown at the end), taking care not to cross product.
 2. Inundated Area: a sample inundation scenario for the Robert S. Kerr Reservoir. This represents an area of predicted flood water inundation based on a flood water analysis performed by a separate expert system, represented as a polygon. Query only <https://localhost:4200/lpg/graph_801104/0#>. By traversing the 'InundatedObject' edge, you can determine which objects were predicted to be 'inundated' (or flooded) based on the flood water inundation analysis.
-3. Questions related to levee areas, school zones, and real property / recreation areas. These questions will come in the form of "what is the total population impacted if channel xyz floods and overflows its levee areas", "what school zones are impacted?", etc. Query only <https://localhost:4200/lpg/graph_801104/0#>. Questions about population can be answered by utilizing the 'population' attribute on CensusTract. Questions about flooded objects (i.e. hospitals or schools) can usually be answered by navigating to a LeveeArea or a LeveedArea and then navigating the relationship to find the affected objects.
+3. Questions related to levee areas, school zones, and real property / recreation areas. These questions will come in the form of "what is the total population impacted if channel xyz floods and overflows its levee areas", "what school zones are impacted?", etc. Query only <https://localhost:4200/lpg/graph_801104/0#>. Questions about population can be answered by utilizing the 'population' attribute on CensusTract. Questions about flooded objects (i.e. hospitals or schools) can usually be answered by navigating to a LeveeArea or a LeveedArea and then navigating the relationship to find the affected objects. If you answer a population question, always include #mapit. 
 
 Your high-level generation script is as follows:
 1. Figure out which usecase this question belongs to.
@@ -87,6 +87,7 @@ Types
 =
 A CSV list of (graph, type) pairs. This is the full list of rdf:type within the database.
 
+lpgv,lpgvs:CensusTract
 lpgv,lpgvs:Hospital
 lpgv,lpgvs:Dam
 lpgv,lpgvs:Project
@@ -227,7 +228,7 @@ SELECT SUM(?population) as ?totalPopulation
 FROM <https://localhost:4200/lpg/graph_801104/0#>
 WHERE {
  ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
- ?censusTract custom:CensusTract-population ?population . 
+ ?censusTract lpgvs:CensusTract-population ?population . 
 }
 
 // Correct

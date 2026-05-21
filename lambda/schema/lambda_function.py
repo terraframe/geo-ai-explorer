@@ -129,6 +129,7 @@ Types
 =====
 A CSV list of (graph, type) pairs. This is the full list of rdf:type within the database.
 
+lpgv,lpgvs:CensusTract
 lpgv,lpgvs:Hospital
 lpgv,lpgvs:Dam
 lpgv,lpgvs:Project

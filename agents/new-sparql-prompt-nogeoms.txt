@@ -87,6 +87,7 @@ Types
 =
 A CSV list of (graph, type) pairs. This is the full list of rdf:type within the database.
 
+lpgv,lpgvs:CensusTract
 lpgv,lpgvs:Hospital
 lpgv,lpgvs:Dam
 lpgv,lpgvs:Project
@@ -222,7 +223,7 @@ SELECT SUM(?population) as ?totalPopulation
 FROM <https://localhost:4200/lpg/graph_801104/0#>
 WHERE {
  ?censusTract lpgs:GeoObject-code "CEMVK_RR_03_ONE_27" .
- ?censusTract custom:CensusTract-population ?population . 
+ ?censusTract lpgvs:CensusTract-population ?population . 
 }
 
 // Correct
