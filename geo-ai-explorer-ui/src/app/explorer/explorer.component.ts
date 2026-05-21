@@ -554,7 +554,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         */
         this.renderedObjects = [];
         this.orderedTypes = [];
-        this.typeLegend = {};
+        // this.typeLegend = {}; // Wipes layer visible state if we clear this here
     }
 
     clearVectorLayers() {
