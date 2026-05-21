@@ -1,4 +1,8 @@
+<div class="aichat-root">
+<p-confirmDialog appendTo="body"></p-confirmDialog>
+
 <div class="chat-container" [class.minimized]="minimized">
+
   <div *ngIf="mapLoading" class="spinner-overlay">
     <p-progress-spinner ariaLabel="loading" />
   </div>
@@ -38,7 +42,7 @@
           *ngIf="editingConversationId !== conversation.id"
           [title]="'Edit conversation name'"
           (click)="startEditingConversationTitle($event, conversation)">
-          ✎
+          <fa-icon [icon]="edit"></fa-icon>
         </span>
 
         <span *ngIf="conversation.loading" class="conversation-loading">●</span>
@@ -153,4 +157,6 @@
       </p-button>
     </div>
   </main>
+</div>
+
 </div>

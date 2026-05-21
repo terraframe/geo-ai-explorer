@@ -13,7 +13,8 @@ import {
   faUpRightAndDownLeftFromCenter,
   faUser,
   faPlus,
-  faXmark
+  faXmark,
+  faPencil
 } from '@fortawesome/free-solid-svg-icons';
 
 import { ChatService } from '../service/chat-service.service';
@@ -28,10 +29,12 @@ import {
 } from '../state/explorer.state';
 import { ExplorerService } from '../service/explorer.service';
 import { GeoObject } from '../models/geoobject.model';
-import { MessageService } from 'primeng/api';
 
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 interface ChatConversation {
   id: string;
@@ -51,8 +54,10 @@ interface ChatConversation {
     ButtonModule,
     ProgressSpinnerModule,
     FontAwesomeModule,
-    TooltipModule
+    TooltipModule,
+    ConfirmDialogModule
   ],
+  providers: [ConfirmationService],
   templateUrl: './aichat.component.html',
   styleUrl: './aichat.component.scss'
 })
@@ -61,6 +66,7 @@ export class AichatComponent {
   private readonly ACTIVE_CONVERSATION_STORAGE_KEY = 'aichat.activeConversationId.v1';
 
   icon = faEraser;
+  edit = faPencil;
   public newConversationIcon = faPlus;
   public closeConversationIcon = faXmark;
 
@@ -87,7 +93,8 @@ export class AichatComponent {
     private explorerService: ExplorerService,
     private errorService: ErrorService,
     private messageService: MessageService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private confirmationService: ConfirmationService
   ) {
     this.loadConversations();
 
@@ -270,6 +277,28 @@ export class AichatComponent {
   deleteConversation(event: Event, id: string): void {
     event.stopPropagation();
 
+    const conversation = this.conversations.find(c => c.id === id);
+
+    if (!conversation) {
+      return;
+    }
+
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      header: 'Delete conversation?',
+      message: `Delete "${conversation.title}"? This cannot be undone.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text',
+      accept: () => {
+        this.confirmDeleteConversation(id);
+      }
+    });
+  }
+
+  private confirmDeleteConversation(id: string): void {
     this.conversations = this.conversations.filter(c => c.id !== id);
 
     if (this.activeConversationId === id) {
